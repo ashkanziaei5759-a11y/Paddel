@@ -1,0 +1,1140 @@
+// ---------------------------------------------------------------------------
+// PERSIAN PADEL — Database Schema
+// PostgreSQL · Prisma ORM
+// ---------------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================================================
+// ENUMS
+// ===========================================================================
+
+enum Role {
+  PLAYER
+  ADMIN
+}
+
+/// سطح‌بندی بازیکنان — فقط توسط ادمین تغییر می‌کند
+enum PlayerLevel {
+  A_PLUS
+  A
+  A_MINUS
+  B_PLUS
+  B
+  B_MINUS
+  C_PLUS
+  C
+  C_MINUS
+  D_PLUS
+  D
+  D_MINUS
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum OtpPurpose {
+  SIGNUP
+  PHONE_CHANGE
+  PASSWORD_RESET
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum BookingSource {
+  PLAYER
+  ADMIN
+  TOURNAMENT
+}
+
+/// نوع تراکنش کیف پول
+enum WalletTxType {
+  TOPUP // شارژ از درگاه
+  BOOKING_PAYMENT // پرداخت رزرو
+  BOOKING_REFUND // بازگشت وجه لغو رزرو
+  TOURNAMENT_FEE // هزینه ثبت‌نام تورنومنت
+  TOURNAMENT_REFUND // بازگشت هزینه تورنومنت
+  ADMIN_CREDIT // افزایش دستی توسط ادمین
+  ADMIN_DEBIT // کاهش دستی توسط ادمین
+}
+
+enum WalletTxStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REVERSED
+}
+
+enum PaymentStatus {
+  INITIATED
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+/// نوع تراکنش امتیاز — پایه‌ی فروشگاه آینده
+enum PointsTxType {
+  TOURNAMENT_AWARD
+  ADMIN_CREDIT
+  ADMIN_DEBIT
+  ADJUSTMENT
+  STORE_PURCHASE // رزرو شده برای فروشگاه آینده
+  STORE_REFUND // رزرو شده برای فروشگاه آینده
+}
+
+enum TournamentType {
+  LEAGUE
+  GROUP_KNOCKOUT
+}
+
+enum TournamentStatus {
+  DRAFT
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum PartnerMode {
+  PLAYER_CHOICE // بازیکن، پارتنر خود را انتخاب می‌کند
+  LEADER_DRAFT // لیدرها بازیکنان را انتخاب می‌کنند
+  ADMIN_ASSIGN // ادمین تیم‌ها را می‌چیند
+}
+
+/// نحوه‌ی اعمال قانون سطح روی جایگاه‌های تیم
+enum LevelRuleType {
+  FREE // بدون محدودیت
+  EXACT // هر جایگاه باید دقیقاً سطح مشخصی داشته باشد
+  RANGE // هر جایگاه در بازه‌ای از سطوح
+  COMBINATION // مجموعه‌ای از ترکیب‌های مجاز
+}
+
+enum PartnerRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum RegistrationStatus {
+  PENDING_PARTNER // منتظر تأیید پارتنر
+  PENDING_PAYMENT
+  CONFIRMED
+  REJECTED
+  CANCELLED
+  WAITLIST
+}
+
+enum MatchStage {
+  LEAGUE
+  GROUP
+  ROUND_OF_32
+  ROUND_OF_16
+  QUARTER_FINAL
+  SEMI_FINAL
+  THIRD_PLACE
+  FINAL
+}
+
+enum MatchStatus {
+  SCHEDULED
+  ONGOING
+  COMPLETED
+  CANCELLED
+  WALKOVER
+}
+
+enum NotificationType {
+  PARTNER_REQUEST
+  PARTNER_ACCEPTED
+  PARTNER_REJECTED
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  WALLET_REFUND
+  WALLET_TOPUP
+  TOURNAMENT_STARTED
+  TOURNAMENT_REGISTERED
+  POINTS_AWARDED
+  LEVEL_CHANGED
+  DRAFT_YOUR_TURN
+  GENERAL
+}
+
+enum NotificationChannel {
+  IN_APP
+  PUSH
+  SMS
+}
+
+// ===========================================================================
+// USERS · AUTH · PROFILE
+// ===========================================================================
+
+model User {
+  id           String     @id @default(cuid())
+  username     String     @unique
+  passwordHash String
+  role         Role       @default(PLAYER)
+  status       UserStatus @default(ACTIVE)
+
+  /// شماره موبایل تأییدشده — پس از تأیید OTP ثابت می‌شود
+  phone           String?   @unique
+  phoneVerifiedAt DateTime?
+
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile            Profile?
+  wallet             Wallet?
+  sessions           Session[]
+  phoneVerifications PhoneVerification[]
+  bookings           Booking[]           @relation("BookingUser")
+  walletTxs          WalletTransaction[]
+  pointsTxs          PointsTransaction[] @relation("PointsOwner")
+  pointsTxsCreated   PointsTransaction[] @relation("PointsActor")
+  payments           Payment[]
+  notifications      Notification[]
+  sentRequests       PartnerRequest[]    @relation("RequestSender")
+  receivedRequests   PartnerRequest[]    @relation("RequestReceiver")
+  teamMemberships    TeamMember[]
+  registrations      TournamentRegistration[] @relation("RegistrationCreator")
+  draftPicks         DraftPick[]         @relation("DraftPickedPlayer")
+  auditLogs          AuditLog[]
+
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+model Profile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  firstName String
+  lastName  String
+  avatarUrl String?
+  bio       String?
+  birthDate DateTime?
+
+  /// سطح بازیکن — فقط ادمین تغییر می‌دهد
+  level         PlayerLevel @default(D)
+  levelUpdatedAt DateTime?
+  levelUpdatedBy String?
+
+  /// موجودی امتیاز (کش‌شده — منبع حقیقت: PointsTransaction)
+  points Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([level])
+  @@map("profiles")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+/// کد یک‌بارمصرف تأیید شماره موبایل
+model PhoneVerification {
+  id       String     @id @default(cuid())
+  phone    String
+  codeHash String
+  purpose  OtpPurpose @default(SIGNUP)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// داده‌های ثبت‌نام تا پیش از تأیید OTP اینجا نگه‌داری می‌شود
+  payload Json?
+
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(5)
+  consumedAt  DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+
+  @@index([phone, purpose])
+  @@index([expiresAt])
+  @@map("phone_verifications")
+}
+
+/// محدودسازی نرخ درخواست (OTP، ورود، پرداخت)
+model RateLimit {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  count     Int      @default(0)
+  windowEnd DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([windowEnd])
+  @@map("rate_limits")
+}
+
+// ===========================================================================
+// WALLET · PAYMENTS · POINTS
+// ===========================================================================
+
+model Wallet {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// موجودی به ریال — همیشه سمت سرور و درون تراکنش اتمیک تغییر می‌کند
+  balance BigInt @default(0)
+  /// نسخه برای کنترل همروندی خوش‌بینانه
+  version Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions WalletTransaction[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id       String @id @default(cuid())
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type   WalletTxType
+  status WalletTxStatus @default(SUCCESS)
+
+  /// مثبت = واریز، منفی = برداشت (ریال)
+  amount        BigInt
+  balanceBefore BigInt
+  balanceAfter  BigInt
+
+  description String?
+  /// کلید یکتا برای جلوگیری از ثبت دوباره (Idempotency)
+  referenceKey String? @unique
+
+  bookingId String?
+  booking   Booking? @relation(fields: [bookingId], references: [id])
+
+  paymentId String?
+  payment   Payment? @relation(fields: [paymentId], references: [id])
+
+  registrationId String?
+  registration   TournamentRegistration? @relation(fields: [registrationId], references: [id])
+
+  performedBy String?
+  metadata    Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([walletId, createdAt])
+  @@index([userId, createdAt])
+  @@index([type])
+  @@map("wallet_transactions")
+}
+
+/// تراکنش درگاه پرداخت — معماری قابل تعویض (زرین‌پال، زیبال، نکست‌پی، ...)
+model Payment {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// شناسه‌ی درگاه: zarinpal | zibal | nextpay | mock
+  provider String
+  amount   BigInt
+  currency String @default("IRR")
+
+  status PaymentStatus @default(INITIATED)
+
+  /// شناسه‌ی تراکنش نزد درگاه (authority / trackId / ...)
+  providerRef String?
+  /// شناسه‌ی نهایی تأیید پرداخت (refId)
+  providerVerifyRef String?
+  /// شماره کارت مبدأ در صورت وجود
+  cardPan String?
+
+  callbackUrl String?
+  description String?
+  failureCode String?
+  failureMsg  String?
+
+  rawInitResponse   Json?
+  rawVerifyResponse Json?
+
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  walletTxs WalletTransaction[]
+
+  @@unique([provider, providerRef])
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("payments")
+}
+
+/// دفتر کل امتیازها — آماده‌ی اتصال به فروشگاه آینده
+model PointsTransaction {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation("PointsOwner", fields: [userId], references: [id], onDelete: Cascade)
+
+  type   PointsTxType
+  /// مثبت = دریافت، منفی = کسر
+  amount Int
+
+  balanceBefore Int
+  balanceAfter  Int
+
+  description String?
+  referenceKey String? @unique
+
+  tournamentId String?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
+
+  performedById String?
+  performedBy   User?   @relation("PointsActor", fields: [performedById], references: [id])
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([type])
+  @@map("points_transactions")
+}
+
+// ===========================================================================
+// COURTS · PRICING · BOOKINGS
+// ===========================================================================
+
+model Court {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  imageUrl    String?
+  isActive    Boolean @default(true)
+  sortOrder   Int     @default(0)
+
+  /// قیمت پایه هر سانس به ریال
+  basePrice BigInt
+
+  /// مدت هر سانس به دقیقه — توسط ادمین قابل تنظیم
+  slotDurationMinutes Int @default(90)
+
+  /// ساعت باز/بسته شدن به دقیقه از نیمه‌شب (مثال: 600 = 10:00)
+  openingMinute Int @default(600)
+  closingMinute Int @default(1380)
+
+  /// بیشترین تعداد سانس پشت‌سرهم در یک رزرو
+  maxConsecutiveSlots Int @default(4)
+  /// حداقل فاصله تا شروع سانس برای رزرو (دقیقه)
+  minLeadTimeMinutes Int @default(30)
+  /// حداکثر تعداد روز آینده که قابل رزرو است
+  advanceBookingDays Int @default(30)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pricingRules CourtPricingRule[]
+  bookings     Booking[]
+  blackouts    CourtBlackout[]
+  tournaments  TournamentCourt[]
+  matches      TournamentMatch[]
+
+  @@index([isActive, sortOrder])
+  @@map("courts")
+}
+
+/// قیمت‌گذاری بازه‌ای — ساعات خاص، روزهای خاص
+model CourtPricingRule {
+  id      String @id @default(cuid())
+  courtId String
+  court   Court  @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  name String
+
+  /// دقیقه از نیمه‌شب، بازه‌ی [startMinute, endMinute)
+  startMinute Int
+  endMinute   Int
+
+  /// روزهای هفته: 0=شنبه ... 6=جمعه. خالی = همه‌ی روزها
+  daysOfWeek Int[]
+
+  /// قیمت هر سانس در این بازه (ریال)
+  price BigInt
+
+  /// بازه‌ی تاریخی اختیاری (تعطیلات، فصل‌ها)
+  validFrom  DateTime?
+  validUntil DateTime?
+
+  /// اولویت بالاتر برنده است
+  priority Int     @default(0)
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courtId, isActive])
+  @@map("court_pricing_rules")
+}
+
+/// بازه‌های مسدود (تعمیرات، تورنومنت، تعطیلی)
+model CourtBlackout {
+  id      String @id @default(cuid())
+  courtId String
+  court   Court  @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  startsAt DateTime
+  endsAt   DateTime
+  reason   String?
+
+  tournamentId String?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([courtId, startsAt, endsAt])
+  @@map("court_blackouts")
+}
+
+model Booking {
+  id     String @id @default(cuid())
+  code   String @unique
+  userId String
+  user   User   @relation("BookingUser", fields: [userId], references: [id])
+
+  courtId String
+  court   Court  @relation(fields: [courtId], references: [id])
+
+  startsAt DateTime
+  endsAt   DateTime
+  /// تعداد سانس‌های پشت‌سرهم
+  slotCount Int @default(1)
+
+  status BookingStatus @default(CONFIRMED)
+  source BookingSource @default(PLAYER)
+
+  /// مبلغ پرداخت‌شده (ریال)
+  totalPrice BigInt
+  /// ریز قیمت هر سانس برای شفافیت
+  priceBreakdown Json?
+
+  notes String?
+
+  tournamentId String?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cancellation BookingCancellation?
+  walletTxs    WalletTransaction[]
+  slots        BookingSlot[]
+
+  @@index([userId, startsAt])
+  @@index([courtId, startsAt])
+  @@index([status])
+  @@map("bookings")
+}
+
+/// یک ردیف به‌ازای هر سانس — قفل یکتای جلوگیری از رزرو تکراری
+model BookingSlot {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  courtId  String
+  /// شروع سانس (UTC) — کلید یکتای [courtId, startsAt] از Double Booking جلوگیری می‌کند
+  startsAt DateTime
+  endsAt   DateTime
+  price    BigInt
+
+  @@unique([courtId, startsAt])
+  @@index([bookingId])
+  @@map("booking_slots")
+}
+
+model BookingCancellation {
+  id        String  @id @default(cuid())
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  cancelledBy   String
+  cancelledRole Role
+
+  /// دقایق باقی‌مانده تا شروع رزرو در لحظه‌ی لغو
+  minutesBeforeStart Int
+  /// درصد کسر اعمال‌شده
+  penaltyPercent Int
+  penaltyAmount  BigInt
+  refundAmount   BigInt
+
+  reason      String?
+  isManualAdjustment Boolean @default(false)
+  adjustmentNote     String?
+
+  createdAt DateTime @default(now())
+
+  @@map("booking_cancellations")
+}
+
+/// قوانین جریمه‌ی لغو — قابل تنظیم توسط ادمین
+model CancellationPolicy {
+  id String @id @default(cuid())
+
+  name     String
+  /// از این دقیقه تا شروع رزرو (شامل)
+  minMinutesBefore Int
+  /// تا این دقیقه (null = بی‌نهایت)
+  maxMinutesBefore Int?
+  penaltyPercent   Int
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("cancellation_policies")
+}
+
+// ===========================================================================
+// TOURNAMENTS
+// ===========================================================================
+
+model Tournament {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  coverUrl    String?
+
+  type   TournamentType   @default(LEAGUE)
+  status TournamentStatus @default(DRAFT)
+
+  startsAt DateTime
+  endsAt   DateTime
+
+  registrationOpensAt  DateTime?
+  registrationClosesAt DateTime?
+
+  /// ظرفیت تیم‌ها
+  maxTeams Int
+  minTeams Int @default(4)
+
+  /// هزینه‌ی ثبت‌نام هر تیم (ریال) — از کیف پول سازنده‌ی تیم کسر می‌شود
+  entryFee BigInt @default(0)
+  /// هزینه به‌ازای هر بازیکن تقسیم شود؟
+  splitFeeBetweenPartners Boolean @default(false)
+
+  partnerMode PartnerMode @default(PLAYER_CHOICE)
+
+  /// تنظیمات مرحله‌ی گروهی (برای GROUP_KNOCKOUT)
+  groupCount            Int? // تعداد گروه‌ها
+  teamsPerGroup         Int?
+  advancingPerGroup     Int? @default(2)
+  hasThirdPlaceMatch    Boolean @default(false)
+  /// رفت و برگشت در لیگ
+  doubleRoundRobin      Boolean @default(false)
+
+  /// امتیاز جدول لیگ/گروهی
+  pointsForWin  Int @default(3)
+  pointsForDraw Int @default(1)
+  pointsForLoss Int @default(0)
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  levelRules    TournamentLevelRule[]
+  pointsRules   TournamentPointsRule[]
+  courts        TournamentCourt[]
+  registrations TournamentRegistration[]
+  teams         TournamentTeam[]
+  matches       TournamentMatch[]
+  groups        TournamentGroup[]
+  standings     TournamentStanding[]
+  results       TournamentResult[]
+  partnerRequests PartnerRequest[]
+  draft         TournamentDraft?
+  pointsTxs     PointsTransaction[]
+  blackouts     CourtBlackout[]
+  bookings      Booking[]
+
+  @@index([status, startsAt])
+  @@map("tournaments")
+}
+
+model TournamentCourt {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  courtId      String
+  court        Court      @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, courtId])
+  @@map("tournament_courts")
+}
+
+/// قانون سطح برای جایگاه‌های تیم — کاملاً منعطف
+model TournamentLevelRule {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  type LevelRuleType @default(FREE)
+
+  /// EXACT/RANGE: جایگاه ۱ تیم
+  slot1Levels PlayerLevel[]
+  /// EXACT/RANGE: جایگاه ۲ تیم
+  slot2Levels PlayerLevel[]
+
+  /// COMBINATION: آرایه‌ای از ترکیب‌های مجاز
+  /// [{ "slot1": "A", "slot2": "B" }, { "slot1": "A_MINUS", "slot2": "B_PLUS" }]
+  combinations Json?
+
+  /// ترتیب جایگاه‌ها مهم نیست (A+B معادل B+A)
+  orderInsensitive Boolean @default(true)
+
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tournamentId])
+  @@map("tournament_level_rules")
+}
+
+/// امتیاز تیم‌های برتر — تعداد تیم و مقدار امتیاز کاملاً دلخواه
+model TournamentPointsRule {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  /// رتبه‌ی نهایی (۱ = قهرمان)
+  rank Int
+  /// امتیاز هر بازیکنِ تیم
+  pointsPerPlayer Int
+  label String?
+
+  @@unique([tournamentId, rank])
+  @@map("tournament_points_rules")
+}
+
+model PartnerRequest {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  senderId String
+  sender   User   @relation("RequestSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  receiverId String
+  receiver   User   @relation("RequestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  status  PartnerRequestStatus @default(PENDING)
+  message String?
+
+  respondedAt DateTime?
+  expiresAt   DateTime?
+
+  registrationId String?
+  registration   TournamentRegistration? @relation(fields: [registrationId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([receiverId, status])
+  @@index([tournamentId, status])
+  @@map("partner_requests")
+}
+
+model TournamentRegistration {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation("RegistrationCreator", fields: [createdById], references: [id])
+
+  status RegistrationStatus @default(PENDING_PARTNER)
+
+  teamId String? @unique
+  team   TournamentTeam? @relation(fields: [teamId], references: [id])
+
+  feePaid  BigInt  @default(0)
+  notes    String?
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  partnerRequests PartnerRequest[]
+  walletTxs       WalletTransaction[]
+
+  @@index([tournamentId, status])
+  @@map("tournament_registrations")
+}
+
+model TournamentTeam {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  name      String
+  seed      Int?
+  isActive  Boolean @default(true)
+
+  groupId String?
+  group   TournamentGroup? @relation(fields: [groupId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members      TeamMember[]
+  registration TournamentRegistration?
+  standing     TournamentStanding?
+  result       TournamentResult?
+  matchesAsA   TournamentMatch[] @relation("TeamA")
+  matchesAsB   TournamentMatch[] @relation("TeamB")
+  matchesWon   TournamentMatch[] @relation("WinnerTeam")
+  draftPicks   DraftPick[]
+
+  @@index([tournamentId])
+  @@map("tournament_teams")
+}
+
+model TeamMember {
+  id     String         @id @default(cuid())
+  teamId String
+  team   TournamentTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// جایگاه در تیم: ۱ یا ۲
+  slot     Int
+  isLeader Boolean @default(false)
+  /// سطح بازیکن در لحظه‌ی ثبت‌نام (Snapshot)
+  levelAtRegistration PlayerLevel?
+
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, slot])
+  @@unique([teamId, userId])
+  @@index([userId])
+  @@map("team_members")
+}
+
+model TournamentGroup {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  name  String
+  order Int   @default(0)
+
+  teams     TournamentTeam[]
+  matches   TournamentMatch[]
+  standings TournamentStanding[]
+
+  @@unique([tournamentId, name])
+  @@map("tournament_groups")
+}
+
+model TournamentMatch {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  stage MatchStage
+  /// شماره‌ی دور (لیگ/گروهی) یا دور براکت
+  round Int @default(1)
+  /// جایگاه در دور — برای ساخت براکت
+  slotInRound Int @default(0)
+
+  groupId String?
+  group   TournamentGroup? @relation(fields: [groupId], references: [id])
+
+  teamAId String?
+  teamA   TournamentTeam? @relation("TeamA", fields: [teamAId], references: [id])
+  teamBId String?
+  teamB   TournamentTeam? @relation("TeamB", fields: [teamBId], references: [id])
+
+  /// شناسه‌ی مسابقه‌ای که برنده به آن می‌رود (براکت)
+  nextMatchId   String?
+  nextMatchSlot Int? // 1 = teamA، 2 = teamB
+
+  status MatchStatus @default(SCHEDULED)
+
+  scoreA Int?
+  scoreB Int?
+  /// نتیجه‌ی ست‌به‌ست: [{"a":6,"b":3},{"a":4,"b":6}]
+  setScores Json?
+
+  winnerTeamId String?
+  winnerTeam   TournamentTeam? @relation("WinnerTeam", fields: [winnerTeamId], references: [id])
+
+  scheduledAt DateTime?
+  courtId     String?
+  court       Court?    @relation(fields: [courtId], references: [id])
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tournamentId, stage, round])
+  @@map("tournament_matches")
+}
+
+model TournamentStanding {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  teamId String         @unique
+  team   TournamentTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  groupId String?
+  group   TournamentGroup? @relation(fields: [groupId], references: [id])
+
+  played Int @default(0)
+  won    Int @default(0)
+  drawn  Int @default(0)
+  lost   Int @default(0)
+
+  setsFor      Int @default(0)
+  setsAgainst  Int @default(0)
+  gamesFor     Int @default(0)
+  gamesAgainst Int @default(0)
+
+  points Int @default(0)
+  rank   Int?
+
+  updatedAt DateTime @updatedAt
+
+  @@index([tournamentId, groupId])
+  @@map("tournament_standings")
+}
+
+/// رتبه‌ی نهایی تیم‌ها + رهگیری اعطای امتیاز
+model TournamentResult {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  teamId String         @unique
+  team   TournamentTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  finalRank       Int
+  pointsAwarded   Int      @default(0)
+  pointsAwardedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tournamentId, finalRank])
+  @@map("tournament_results")
+}
+
+// ---- Leader / Captain draft --------------------------------------------
+
+model TournamentDraft {
+  id           String     @id @default(cuid())
+  tournamentId String     @unique
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  isActive     Boolean @default(false)
+  currentRound Int     @default(1)
+  /// اندیس لیدر فعلی در ترتیب انتخاب
+  currentPickIndex Int @default(0)
+  /// ترتیب شناسه‌ی تیم‌های لیدر
+  pickOrder String[]
+  /// مار پیچ (Snake): ترتیب در دورهای زوج برعکس شود
+  snakeOrder Boolean @default(true)
+
+  startedAt  DateTime?
+  finishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  picks DraftPick[]
+
+  @@map("tournament_drafts")
+}
+
+model DraftPick {
+  id      String          @id @default(cuid())
+  draftId String
+  draft   TournamentDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  teamId String
+  team   TournamentTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  playerId String
+  player   User   @relation("DraftPickedPlayer", fields: [playerId], references: [id], onDelete: Cascade)
+
+  round      Int
+  pickNumber Int
+
+  createdAt DateTime @default(now())
+
+  @@unique([draftId, playerId])
+  @@unique([draftId, pickNumber])
+  @@map("draft_picks")
+}
+
+// ===========================================================================
+// NOTIFICATIONS · SETTINGS · AUDIT
+// ===========================================================================
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type    NotificationType
+  title   String
+  body    String
+  /// لینک مقصد در اپ
+  actionUrl String?
+  data      Json?
+
+  /// کانال‌های ارسال — آماده‌ی افزودن Push و SMS
+  channels NotificationChannel[] @default([IN_APP])
+
+  readAt DateTime?
+  sentAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, readAt, createdAt])
+  @@map("notifications")
+}
+
+/// تنظیمات سراسری قابل ویرایش توسط ادمین
+model AppSetting {
+  key         String   @id
+  value       Json
+  description String?
+  updatedBy   String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("app_settings")
+}
+
+model AuditLog {
+  id     String @id @default(cuid())
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  action     String
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  ip         String?
+  userAgent  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId, createdAt])
+  @@map("audit_logs")
+}
+
+// ===========================================================================
+// STORE — اسکلت آماده برای توسعه‌ی آینده (فروشگاه با امتیاز)
+// ===========================================================================
+
+model StoreProduct {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  imageUrl    String?
+
+  /// قیمت به امتیاز
+  pricePoints Int
+  /// قیمت اختیاری به ریال (خرید ترکیبی در آینده)
+  priceRial BigInt?
+
+  stock    Int     @default(0)
+  isActive Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders StoreOrderItem[]
+
+  @@map("store_products")
+}
+
+model StoreOrder {
+  id     String @id @default(cuid())
+  userId String
+
+  totalPoints Int
+  status      String @default("PENDING")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items StoreOrderItem[]
+
+  @@index([userId, createdAt])
+  @@map("store_orders")
+}
+
+model StoreOrderItem {
+  id      String       @id @default(cuid())
+  orderId String
+  order   StoreOrder   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   StoreProduct @relation(fields: [productId], references: [id])
+
+  quantity    Int @default(1)
+  pointsEach  Int
+
+  @@map("store_order_items")
+}
