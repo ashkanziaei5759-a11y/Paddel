@@ -124,20 +124,21 @@ export const MATCH_STAGE_LABEL: Record<MatchStage, string> = {
   FINAL: 'فینال',
 };
 
+/** نگاشت نوع اعلان به آیکون برداری (نام‌ها در components/ui/Icon تعریف شده‌اند) */
 export const NOTIFICATION_ICON: Record<NotificationType, string> = {
-  PARTNER_REQUEST: '🤝',
-  PARTNER_ACCEPTED: '✅',
-  PARTNER_REJECTED: '❌',
-  BOOKING_CONFIRMED: '🎾',
-  BOOKING_CANCELLED: '🚫',
-  WALLET_REFUND: '💰',
-  WALLET_TOPUP: '💳',
-  TOURNAMENT_STARTED: '🏆',
-  TOURNAMENT_REGISTERED: '📝',
-  POINTS_AWARDED: '⭐',
-  LEVEL_CHANGED: '📈',
-  DRAFT_YOUR_TURN: '👑',
-  GENERAL: '🔔',
+  PARTNER_REQUEST: 'partner',
+  PARTNER_ACCEPTED: 'partner',
+  PARTNER_REJECTED: 'partner',
+  BOOKING_CONFIRMED: 'booking',
+  BOOKING_CANCELLED: 'booking',
+  WALLET_REFUND: 'money',
+  WALLET_TOPUP: 'wallet',
+  TOURNAMENT_STARTED: 'tournament',
+  TOURNAMENT_REGISTERED: 'tournament',
+  POINTS_AWARDED: 'points',
+  LEVEL_CHANGED: 'revenue',
+  DRAFT_YOUR_TURN: 'admin',
+  GENERAL: 'notification',
 };
 
 /** رتبه‌ی نهایی → عنوان فارسی */

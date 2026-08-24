@@ -10,6 +10,8 @@ import { formatNumber, formatToman, maskPhone } from '@/lib/utils';
 import { formatDateTime, formatJalaliDate, toFaDigits } from '@/lib/datetime';
 import { POINTS_TX_LABEL, TOURNAMENT_STATUS_LABEL } from '@/lib/constants';
 import { LogoutButton } from './LogoutButton';
+import { Icon, type IconName } from '@/components/ui/Icon';
+import { ChevronLeft, Smartphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Dot } from '@/components/ui/Dot';
 
@@ -75,24 +77,24 @@ export default async function ProfilePage() {
           </div>
 
           <div className="relative mt-5 flex items-center gap-2 rounded-2xl bg-white/10 px-4 py-3">
-            <span className="text-sm">📱</span>
+            <Smartphone className="h-4 w-4 text-sky-light/70" strokeWidth={2} aria-hidden="true" />
             <span className="num flex-1 text-xs font-bold text-white" dir="ltr">
               {user.phone ? maskPhone(user.phone) : '—'}
             </span>
             {user.phoneVerified && (
-              <span className="badge bg-success/25 text-white">تأیید شده ✓</span>
+              <span className="badge bg-success/25 text-white">تأیید شده</span>
             )}
           </div>
         </section>
 
         {/* ---- آمار ---- */}
         <section className="grid grid-cols-3 gap-3">
-          <MiniStat label="امتیاز" value={formatNumber(user.points)} icon="⭐" />
-          <MiniStat label="رزروها" value={formatNumber(bookingCount)} icon="🎾" />
+          <MiniStat label="امتیاز" value={formatNumber(user.points)} icon="points" />
+          <MiniStat label="رزروها" value={formatNumber(bookingCount)} icon="booking" />
           <MiniStat
             label="کیف پول"
             value={formatToman(wallet?.balance ?? 0n, { withUnit: false })}
-            icon="💳"
+            icon="wallet"
           />
         </section>
 
@@ -199,12 +201,12 @@ export default async function ProfilePage() {
 
         {/* ---- منو ---- */}
         <section className="card divide-y divide-brand-50 overflow-hidden">
-          <MenuItem href="/bookings" icon="📋" label="تاریخچه رزرو" />
-          <MenuItem href="/wallet/transactions" icon="🧾" label="تراکنش‌های کیف پول" />
-          <MenuItem href="/partner-requests" icon="🤝" label="درخواست‌های پارتنری" />
-          <MenuItem href="/notifications" icon="🔔" label="اعلان‌ها" badge={unread} />
-          <MenuItem href="/profile/settings" icon="⚙️" label="تنظیمات حساب" />
-          {user.role === 'ADMIN' && <MenuItem href="/admin" icon="👑" label="پنل مدیریت" />}
+          <MenuItem href="/bookings" icon="history" label="تاریخچه رزرو" />
+          <MenuItem href="/wallet/transactions" icon="receipt" label="تراکنش‌های کیف پول" />
+          <MenuItem href="/partner-requests" icon="partner" label="درخواست‌های پارتنری" />
+          <MenuItem href="/notifications" icon="notification" label="اعلان‌ها" badge={unread} />
+          <MenuItem href="/profile/settings" icon="settings" label="تنظیمات حساب" />
+          {user.role === 'ADMIN' && <MenuItem href="/admin" icon="admin" label="پنل مدیریت" />}
         </section>
 
         <LogoutButton />
@@ -213,10 +215,12 @@ export default async function ProfilePage() {
   );
 }
 
-function MiniStat({ label, value, icon }: { label: string; value: string; icon: string }) {
+function MiniStat({ label, value, icon }: { label: string; value: string; icon: IconName }) {
   return (
     <div className="card p-3 text-center">
-      <span className="text-base">{icon}</span>
+      <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+        <Icon name={icon} className="h-4 w-4" strokeWidth={2.1} />
+      </span>
       <p className="num mt-1 truncate text-sm font-black text-brand-800">{value}</p>
       <p className="mt-0.5 text-[10px] font-bold text-brand-300">{label}</p>
     </div>
@@ -230,14 +234,14 @@ function MenuItem({
   badge,
 }: {
   href: string;
-  icon: string;
+  icon: IconName;
   label: string;
   badge?: number;
 }) {
   return (
-    <Link href={href} className="flex items-center gap-3 p-4 transition hover:bg-brand-50/50">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-sm">
-        {icon}
+    <Link href={href} className="flex cursor-pointer items-center gap-3 p-4 transition hover:bg-brand-50/50">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+        <Icon name={icon} className="h-4 w-4" strokeWidth={2} />
       </span>
       <span className="flex-1 text-xs font-extrabold text-brand-700">{label}</span>
       {badge !== undefined && badge > 0 && (
@@ -245,7 +249,7 @@ function MenuItem({
           {toFaDigits(badge)}
         </span>
       )}
-      <span className="text-brand-200">‹</span>
+      <ChevronLeft className="h-4 w-4 shrink-0 text-brand-200" strokeWidth={2.4} aria-hidden="true" />
     </Link>
   );
 }

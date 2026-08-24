@@ -2,16 +2,27 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  ArrowLeftRight,
+  CalendarDays,
+  LandPlot,
+  LayoutDashboard,
+  type LucideIcon,
+  Settings,
+  TrendingUp,
+  Trophy,
+  Users,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const ITEMS = [
-  { href: '/admin', label: 'داشبورد', icon: '📊', exact: true },
-  { href: '/admin/users', label: 'کاربران', icon: '👥' },
-  { href: '/admin/courts', label: 'زمین‌ها', icon: '🏟' },
-  { href: '/admin/bookings', label: 'رزروها', icon: '📅' },
-  { href: '/admin/tournaments', label: 'تورنومنت‌ها', icon: '🏆' },
-  { href: '/admin/finance', label: 'مالی', icon: '💰' },
-  { href: '/admin/settings', label: 'تنظیمات', icon: '⚙️' },
+const ITEMS: { href: string; label: string; Icon: LucideIcon; exact?: boolean }[] = [
+  { href: '/admin', label: 'داشبورد', Icon: LayoutDashboard, exact: true },
+  { href: '/admin/users', label: 'کاربران', Icon: Users },
+  { href: '/admin/courts', label: 'زمین‌ها', Icon: LandPlot },
+  { href: '/admin/bookings', label: 'رزروها', Icon: CalendarDays },
+  { href: '/admin/tournaments', label: 'تورنومنت‌ها', Icon: Trophy },
+  { href: '/admin/finance', label: 'مالی', Icon: TrendingUp },
+  { href: '/admin/settings', label: 'تنظیمات', Icon: Settings },
 ];
 
 export function AdminNav({ fullName, username }: { fullName: string; username: string }) {
@@ -24,8 +35,11 @@ export function AdminNav({ fullName, username }: { fullName: string; username: s
       {/* ---- کناره‌ی دسکتاپ ---- */}
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-brand-gradient p-5 lg:flex">
         <div className="relative mb-8 flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-gradient text-xl">
-            👑
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-gradient">
+            <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" fill="#003049" />
+              <path d="M5 6.5c3 2 3 9 0 11M19 6.5c-3 2-3 9 0 11" stroke="#FFF" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+            </svg>
           </span>
           <div>
             <p className="text-sm font-black text-white">پنل مدیریت</p>
@@ -45,7 +59,7 @@ export function AdminNav({ fullName, username }: { fullName: string; username: s
                   : 'text-sky-light/70 hover:bg-white/10 hover:text-white',
               )}
             >
-              <span className="text-base">{item.icon}</span>
+              <item.Icon className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden="true" />
               {item.label}
             </Link>
           ))}
@@ -62,7 +76,8 @@ export function AdminNav({ fullName, username }: { fullName: string; username: s
             href="/home"
             className="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-[11px] font-bold text-sky-light/70 transition hover:bg-white/10 hover:text-white"
           >
-            ↩ بازگشت به اپلیکیشن
+            <ArrowLeftRight className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+            بازگشت به اپلیکیشن
           </Link>
         </div>
       </aside>
@@ -82,7 +97,7 @@ export function AdminNav({ fullName, username }: { fullName: string; username: s
                 isActive(item) ? 'text-brand-700' : 'text-brand-300',
               )}
             >
-              <span className="text-base">{item.icon}</span>
+              <item.Icon className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
               <span className="whitespace-nowrap text-[9px] font-bold">{item.label}</span>
             </Link>
           ))}
@@ -90,7 +105,7 @@ export function AdminNav({ fullName, username }: { fullName: string; username: s
             href="/home"
             className="flex min-w-[68px] flex-1 flex-col items-center gap-1 py-2.5 text-brand-300"
           >
-            <span className="text-base">↩</span>
+            <ArrowLeftRight className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
             <span className="whitespace-nowrap text-[9px] font-bold">اپلیکیشن</span>
           </Link>
         </div>

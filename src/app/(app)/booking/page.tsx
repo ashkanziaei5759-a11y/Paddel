@@ -28,7 +28,7 @@ export default async function BookingPage() {
         <TopBar title="رزرو زمین" subtitle="انتخاب تاریخ و ساعت" unread={unread} />
         <div className="page-pad pt-2">
           <EmptyState
-            icon="🏟"
+            icon="court"
             title="زمین فعالی وجود ندارد"
             description="در حال حاضر زمینی برای رزرو در دسترس نیست. لطفاً بعداً مراجعه کنید."
           />

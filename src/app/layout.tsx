@@ -42,20 +42,21 @@ export const viewport: Viewport = {
   themeColor: '#003049',
   width: 'device-width',
   initialScale: 1,
+  /* زوم عمدا آزاد است — قفل کردن آن مانع دسترس‌پذیری می‌شود */
   maximumScale: 5,
+  /* تمام‌صفحه پشت ناچ و نوار خانه‌ی آیفون */
   viewportFit: 'cover',
+  /* هنگام باز شدن کیبورد موبایل، چیدمان جابه‌جا نشود */
+  interactiveWidget: 'resizes-content',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fa" dir="rtl">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap"
-        />
+        {/* فونت دانا محلی است؛ وزن‌های اصلی از پیش بارگذاری می‌شوند */}
+        <link rel="preload" href="/fonts/Dana-Regular.woff2" as="font" type="font/woff2" crossOrigin="" />
+        <link rel="preload" href="/fonts/Dana-Bold.woff2" as="font" type="font/woff2" crossOrigin="" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>

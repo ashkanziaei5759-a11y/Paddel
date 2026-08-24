@@ -8,6 +8,7 @@ import { markAllRead } from '@/lib/notifications';
 import { NOTIFICATION_ICON } from '@/lib/constants';
 import { formatRelative } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
+import { Icon, type IconName } from '@/components/ui/Icon';
 
 export const metadata: Metadata = { title: 'اعلان‌ها' };
 export const dynamic = 'force-dynamic';
@@ -31,7 +32,7 @@ export default async function NotificationsPage() {
       <div className="page-pad pt-2">
         {notifications.length === 0 ? (
           <EmptyState
-            icon="🔔"
+            icon="notification"
             title="اعلانی ندارید"
             description="اعلان‌های مربوط به رزرو، کیف پول و تورنومنت‌ها اینجا نمایش داده می‌شوند."
           />
@@ -45,8 +46,8 @@ export default async function NotificationsPage() {
                     !n.readAt && 'ring-1 ring-accent/30',
                   )}
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-base">
-                    {NOTIFICATION_ICON[n.type]}
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+                    <Icon name={NOTIFICATION_ICON[n.type] as IconName} className="h-[18px] w-[18px]" strokeWidth={2} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">

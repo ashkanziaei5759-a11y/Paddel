@@ -69,7 +69,7 @@ export default async function PartnerRequestsPage() {
       <div className="page-pad pt-2">
         {incomingDto.length === 0 && outgoingDto.length === 0 ? (
           <EmptyState
-            icon="🤝"
+            icon="partner"
             title="درخواستی وجود ندارد"
             description="برای شرکت در تورنومنت‌ها، یک پارتنر انتخاب کنید و برایش درخواست بفرستید."
             actionLabel="مشاهده تورنومنت‌ها"

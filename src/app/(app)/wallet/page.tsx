@@ -10,6 +10,7 @@ import { formatDateTime } from '@/lib/datetime';
 import { WALLET_TX_LABEL } from '@/lib/constants';
 import { TopupPanel } from './TopupPanel';
 import { cn } from '@/lib/utils';
+import { Icon } from '@/components/ui/Icon';
 
 export const metadata: Metadata = { title: 'کیف پول' };
 export const dynamic = 'force-dynamic';

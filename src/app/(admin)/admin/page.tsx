@@ -6,6 +6,7 @@ import { StatCard } from '@/components/ui/StatCard';
 import { startOfLocalDay, addDays, formatDateTime, formatTime, toFaDigits } from '@/lib/datetime';
 import { formatNumber, formatToman } from '@/lib/utils';
 import { TOURNAMENT_STATUS_LABEL, BOOKING_STATUS_LABEL } from '@/lib/constants';
+import { Icon, type IconName } from '@/components/ui/Icon';
 import { Dot } from '@/components/ui/Dot';
 
 export const metadata: Metadata = { title: 'داشبورد مدیریت' };
@@ -68,15 +69,15 @@ export default async function AdminDashboard() {
             label="کل کاربران"
             value={formatNumber(userCount)}
             hint={`${toFaDigits(activeUserCount)} فعال`}
-            icon="👥"
+            icon={<Icon name="users" className="h-4 w-4" />}
             tone="dark"
           />
-          <StatCard label="رزروهای امروز" value={formatNumber(todayBookings)} icon="📅" />
-          <StatCard label="رزروهای پیش‌رو" value={formatNumber(upcomingBookings)} icon="⏭" />
+          <StatCard label="رزروهای امروز" value={formatNumber(todayBookings)} icon={<Icon name="booking" className="h-4 w-4" />} />
+          <StatCard label="رزروهای پیش‌رو" value={formatNumber(upcomingBookings)} icon={<Icon name="ticket" className="h-4 w-4" />} />
           <StatCard
             label="تورنومنت فعال"
             value={formatNumber(activeTournaments)}
-            icon="🏆"
+            icon={<Icon name="tournament" className="h-4 w-4" />}
             tone="accent"
           />
         </section>
@@ -86,27 +87,27 @@ export default async function AdminDashboard() {
             label="درآمد امروز"
             value={formatToman(todayRevenue._sum.totalPrice ?? 0n, { withUnit: false })}
             hint="تومان"
-            icon="💵"
+            icon={<Icon name="money" className="h-4 w-4" />}
           />
           <StatCard
             label="درآمد کل"
             value={formatToman(totalRevenue._sum.totalPrice ?? 0n, { withUnit: false })}
             hint="تومان"
-            icon="💰"
+            icon={<Icon name="revenue" className="h-4 w-4" />}
             tone="dark"
           />
           <StatCard
             label="موجودی کیف پول کاربران"
             value={formatToman(walletTotal._sum.balance ?? 0n, { withUnit: false })}
             hint="تومان — بدهی باشگاه"
-            icon="🏦"
+            icon={<Icon name="bank" className="h-4 w-4" />}
           />
-          <StatCard label="زمین‌های فعال" value={formatNumber(courtCount)} icon="🏟" />
+          <StatCard label="زمین‌های فعال" value={formatNumber(courtCount)} icon={<Icon name="court" className="h-4 w-4" />} />
         </section>
 
         {pendingRequests > 0 && (
           <div className="card flex items-center gap-3 bg-accent-50 p-4 ring-accent-100">
-            <span className="text-xl">🤝</span>
+            <Icon name="partner" className="h-5 w-5 text-accent-600" strokeWidth={2.1} />
             <p className="num flex-1 text-xs font-extrabold text-accent-700">
               {toFaDigits(pendingRequests)} درخواست پارتنری در انتظار پاسخ بازیکنان است.
             </p>
@@ -115,10 +116,10 @@ export default async function AdminDashboard() {
 
         {/* ---- میان‌بر ---- */}
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <QuickLink href="/admin/users" icon="👥" label="مدیریت کاربران" />
-          <QuickLink href="/admin/courts" icon="🏟" label="زمین‌ها و قیمت‌ها" />
-          <QuickLink href="/admin/tournaments/new" icon="➕" label="تورنومنت جدید" />
-          <QuickLink href="/admin/finance" icon="💰" label="گزارش مالی" />
+          <QuickLink href="/admin/users" icon="users" label="مدیریت کاربران" />
+          <QuickLink href="/admin/courts" icon="court" label="زمین‌ها و قیمت‌ها" />
+          <QuickLink href="/admin/tournaments/new" icon="tournament" label="تورنومنت جدید" />
+          <QuickLink href="/admin/finance" icon="revenue" label="گزارش مالی" />
         </section>
 
         {/* ---- آخرین رزروها ---- */}
@@ -167,11 +168,11 @@ export default async function AdminDashboard() {
   );
 }
 
-function QuickLink({ href, icon, label }: { href: string; icon: string; label: string }) {
+function QuickLink({ href, icon, label }: { href: string; icon: IconName; label: string }) {
   return (
-    <Link href={href} className="card-interactive flex items-center gap-3 p-4">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-base">
-        {icon}
+    <Link href={href} className="card-interactive flex cursor-pointer items-center gap-3 p-4">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
+        <Icon name={icon} className="h-[18px] w-[18px]" strokeWidth={2} />
       </span>
       <span className="truncate text-xs font-extrabold text-brand-700">{label}</span>
     </Link>

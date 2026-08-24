@@ -169,7 +169,7 @@ function RequestCard({ request, canRespond }: { request: RequestDto; canRespond:
         className="mt-3 block rounded-2xl bg-surface-muted px-3 py-2.5 transition hover:bg-brand-50"
       >
         <p className="truncate text-[11px] font-extrabold text-brand-700">
-          🏆 {request.tournamentName}
+          {request.tournamentName}
         </p>
         <p className="mt-1 text-[10px] font-semibold text-brand-400">
           {formatJalaliDate(new Date(request.tournamentStartsAt), { withWeekday: true })}

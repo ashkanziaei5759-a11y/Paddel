@@ -55,7 +55,7 @@ export default async function BookingsPage() {
           </h2>
           {upcoming.length === 0 ? (
             <EmptyState
-              icon="📅"
+              icon="booking"
               title="رزرو پیش‌رویی ندارید"
               actionLabel="رزرو زمین"
               actionHref="/booking"

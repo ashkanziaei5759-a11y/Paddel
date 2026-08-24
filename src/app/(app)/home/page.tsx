@@ -9,6 +9,7 @@ import { unreadCount } from '@/lib/notifications';
 import { formatDateTime, formatJalaliDate, formatRelative, formatTime, toFaDigits } from '@/lib/datetime';
 import { formatNumber, formatToman } from '@/lib/utils';
 import { TOURNAMENT_STATUS_LABEL } from '@/lib/constants';
+import { Icon, type IconName } from '@/components/ui/Icon';
 import { Dot } from '@/components/ui/Dot';
 
 export const metadata: Metadata = { title: 'خانه' };
@@ -95,8 +96,8 @@ export default async function HomePage() {
         {pendingRequests > 0 && (
           <Link href="/partner-requests" className="card-interactive block bg-accent-50 p-4 ring-accent-100">
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-gradient text-xl">
-                🤝
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-gradient text-brand-900">
+                <Icon name="partner" className="h-5 w-5" strokeWidth={2.1} />
               </span>
               <div className="flex-1">
                 <p className="text-xs font-extrabold text-accent-700">
@@ -147,7 +148,7 @@ export default async function HomePage() {
             </Link>
           ) : (
             <EmptyState
-              icon="📅"
+              icon="booking"
               title="رزرو فعالی ندارید"
               description="زمین موردنظر خود را انتخاب کنید و بازی بعدی‌تان را رزرو کنید."
               actionLabel="رزرو زمین"
@@ -159,7 +160,7 @@ export default async function HomePage() {
         {/* ---- تورنومنت‌های پیش‌رو ---- */}
         <section>
           <div className="section-title mb-3">
-            <h2>تورنومنت‌های پیش‌رو 🏆</h2>
+            <h2>تورنومنت‌های پیش‌رو</h2>
             <Link href="/tournaments" className="text-[11px] font-bold text-brand-400 hover:text-brand-600">
               همه
             </Link>
@@ -167,7 +168,7 @@ export default async function HomePage() {
 
           {upcomingTournaments.length === 0 ? (
             <EmptyState
-              icon="🏆"
+              icon="tournament"
               title="تورنومنت فعالی وجود ندارد"
               description="به‌زودی تورنومنت‌های جدید اعلام می‌شوند."
             />
@@ -217,14 +218,14 @@ export default async function HomePage() {
         <section>
           <h2 className="mb-3 text-base font-extrabold text-brand-800">دسترسی سریع</h2>
           <div className="grid grid-cols-2 gap-3">
-            <QuickAction href="/booking" icon="🎾" title="رزرو زمین" subtitle="انتخاب تاریخ و ساعت" />
-            <QuickAction href="/tournaments" icon="🏆" title="تورنومنت‌ها" subtitle="ثبت‌نام و نتایج" />
-            <QuickAction href="/wallet" icon="💳" title="کیف پول" subtitle="شارژ و تراکنش‌ها" />
-            <QuickAction href="/bookings" icon="📋" title="تاریخچه" subtitle="رزروهای گذشته" />
+            <QuickAction href="/booking" icon="booking" title="رزرو زمین" subtitle="انتخاب تاریخ و ساعت" />
+            <QuickAction href="/tournaments" icon="tournament" title="تورنومنت‌ها" subtitle="ثبت‌نام و نتایج" />
+            <QuickAction href="/wallet" icon="wallet" title="کیف پول" subtitle="شارژ و تراکنش‌ها" />
+            <QuickAction href="/bookings" icon="history" title="تاریخچه" subtitle="رزروهای گذشته" />
             {user.role === 'ADMIN' && (
               <QuickAction
                 href="/admin"
-                icon="👑"
+                icon="admin"
                 title="پنل مدیریت"
                 subtitle="مدیریت باشگاه"
                 className="col-span-2 bg-brand-gradient text-white"
@@ -245,7 +246,7 @@ function QuickAction({
   className,
 }: {
   href: string;
-  icon: string;
+  icon: IconName;
   title: string;
   subtitle: string;
   className?: string;
@@ -254,11 +255,11 @@ function QuickAction({
   return (
     <Link href={href} className={`card-interactive flex items-center gap-3 p-4 ${className ?? ''}`}>
       <span
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl ${
-          isDark ? 'bg-white/15' : 'bg-brand-50'
+        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
+          isDark ? 'bg-white/15 text-white' : 'bg-brand-50 text-brand-700'
         }`}
       >
-        {icon}
+        <Icon name={icon} className="h-5 w-5" strokeWidth={2} />
       </span>
       <span className="min-w-0">
         <span className={`block truncate text-xs font-extrabold ${isDark ? 'text-white' : 'text-brand-800'}`}>

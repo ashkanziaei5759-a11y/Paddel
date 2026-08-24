@@ -30,7 +30,7 @@ export default async function TransactionsPage() {
 
       <div className="page-pad pt-2">
         {transactions.length === 0 ? (
-          <EmptyState icon="🧾" title="تراکنشی ثبت نشده است" />
+          <EmptyState icon="receipt" title="تراکنشی ثبت نشده است" />
         ) : (
           <div className="card divide-y divide-brand-50 overflow-hidden">
             {transactions.map((tx) => (

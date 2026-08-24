@@ -3,6 +3,36 @@
 @tailwind utilities;
 
 /* ------------------------------------------------------------------------ */
+/*  فونت دانا — میزبانی محلی                                                 */
+/*  از CDN گوگل استفاده نمی‌کنیم؛ در ایران ناپایدار است و بارگذاری را کند    */
+/*  می‌کند. فایل‌ها به WOFF2 فشرده شده‌اند (~۲۶ کیلوبایت به‌ازای هر وزن).     */
+/* ------------------------------------------------------------------------ */
+
+@font-face {
+  font-family: 'Dana';
+  src: url('/fonts/Dana-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Dana';
+  src: url('/fonts/Dana-Regular.woff2') format('woff2');
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Dana';
+  src: url('/fonts/Dana-Bold.woff2') format('woff2');
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ------------------------------------------------------------------------ */
 /*  PERSIAN PADEL — Design System                                            */
 /*  Brand: #003049 · Light: #CAF0F8 · White: #FFFFFF · Accent: #FCA311       */
 /* ------------------------------------------------------------------------ */
@@ -45,6 +75,61 @@
   input[type='number']::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /*  سخت‌سازی برای وب‌اپ موبایل (iOS + Android)                              */
+  /* ---------------------------------------------------------------------- */
+
+  /**
+   * سافاری iOS هر ورودی با فونت کوچک‌تر از ۱۶ پیکسل را که لمس شود، با زوم
+   * خودکار بزرگ می‌کند و چیدمان صفحه به‌هم می‌ریزد. اندازه‌ی بصری ورودی‌ها با
+   * padding کنترل می‌شود، بنابراین بالا بردن فونت روی موبایل ظاهر را خراب نمی‌کند.
+   */
+  @media (max-width: 1023px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  /* حذف تأخیر ۳۰۰ میلی‌ثانیه‌ای لمس و جلوگیری از زوم دوضربه‌ای */
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  [role='button'] {
+    touch-action: manipulation;
+  }
+
+  /* لمس طولانی روی عناصر رابط نباید متن را انتخاب کند */
+  button,
+  [role='button'],
+  nav,
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* ورودی‌ها باید قابل انتخاب بمانند */
+  input,
+  textarea {
+    -webkit-user-select: auto;
+    user-select: auto;
+  }
+
+  /* اسکرول روان روی iOS */
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* در حالت نصب‌شده (standalone) کشیدن بیش از حد صفحه غیرفعال شود */
+  @media (display-mode: standalone) {
+    body {
+      overscroll-behavior: none;
+    }
   }
 
   ::selection {

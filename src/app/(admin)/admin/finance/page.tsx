@@ -6,6 +6,7 @@ import { addDays, formatDateTime, startOfLocalDay, toFaDigits } from '@/lib/date
 import { formatNumber, formatToman } from '@/lib/utils';
 import { PAYMENT_STATUS_LABEL, WALLET_TX_LABEL } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { Icon } from '@/components/ui/Icon';
 import { Dot } from '@/components/ui/Dot';
 
 export const metadata: Metadata = { title: 'گزارش مالی' };
@@ -69,26 +70,26 @@ export default async function AdminFinancePage() {
             label="درآمد امروز"
             value={formatToman(todayRevenue._sum.totalPrice ?? 0n, { withUnit: false })}
             hint={`${toFaDigits(todayRevenue._count)} رزرو`}
-            icon="💵"
+            icon={<Icon name="money" className="h-4 w-4" />}
             tone="dark"
           />
           <StatCard
             label="درآمد ۷ روز اخیر"
             value={formatToman(weekRevenue._sum.totalPrice ?? 0n, { withUnit: false })}
             hint={`${toFaDigits(weekRevenue._count)} رزرو`}
-            icon="📈"
+            icon={<Icon name="revenue" className="h-4 w-4" />}
           />
           <StatCard
             label="درآمد ۳۰ روز اخیر"
             value={formatToman(monthRevenue._sum.totalPrice ?? 0n, { withUnit: false })}
             hint={`${toFaDigits(monthRevenue._count)} رزرو`}
-            icon="📊"
+            icon={<Icon name="revenue" className="h-4 w-4" />}
           />
           <StatCard
             label="درآمد کل"
             value={formatToman(totalRevenue._sum.totalPrice ?? 0n, { withUnit: false })}
             hint={`${toFaDigits(totalRevenue._count)} رزرو`}
-            icon="💰"
+            icon={<Icon name="revenue" className="h-4 w-4" />}
             tone="accent"
           />
         </section>
@@ -98,25 +99,25 @@ export default async function AdminFinancePage() {
             label="شارژ موفق درگاه"
             value={formatToman(successfulPayments._sum.amount ?? 0n, { withUnit: false })}
             hint={`${toFaDigits(successfulPayments._count)} تراکنش`}
-            icon="🏦"
+            icon={<Icon name="bank" className="h-4 w-4" />}
           />
           <StatCard
             label="موجودی کیف پول کاربران"
             value={formatToman(walletTotal._sum.balance ?? 0n, { withUnit: false })}
             hint="تعهد باشگاه"
-            icon="👛"
+            icon={<Icon name="wallet" className="h-4 w-4" />}
           />
           <StatCard
             label="مجموع بازگشت وجه"
             value={formatToman(totalRefunds._sum.refundAmount ?? 0n, { withUnit: false })}
             hint={`${toFaDigits(totalRefunds._count)} لغو`}
-            icon="↩️"
+            icon={<Icon name="receipt" className="h-4 w-4" />}
           />
           <StatCard
             label="جریمه‌های لغو"
             value={formatToman(totalRefunds._sum.penaltyAmount ?? 0n, { withUnit: false })}
             hint="درآمد ناشی از لغو"
-            icon="⚖️"
+            icon={<Icon name="pricing" className="h-4 w-4" />}
           />
         </section>
 

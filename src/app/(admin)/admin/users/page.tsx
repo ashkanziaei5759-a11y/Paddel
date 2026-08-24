@@ -7,6 +7,7 @@ import { LevelBadge } from '@/components/ui/LevelBadge';
 import { UserSearch } from './UserSearch';
 import { formatNumber, formatToman, maskPhone } from '@/lib/utils';
 import { toFaDigits } from '@/lib/datetime';
+import { Icon } from '@/components/ui/Icon';
 
 export const metadata: Metadata = { title: 'مدیریت کاربران' };
 export const dynamic = 'force-dynamic';
@@ -90,8 +91,14 @@ export default async function AdminUsersPage({
                 <div className="mt-3 flex items-center justify-between gap-2">
                   {u.profile && <LevelBadge level={u.profile.level} size="sm" />}
                   <div className="flex items-center gap-3 text-[10px] font-bold text-brand-400">
-                    <span className="num">⭐ {formatNumber(u.profile?.points ?? 0)}</span>
-                    <span className="num">🎾 {toFaDigits(u._count.bookings)}</span>
+                    <span className="num flex items-center gap-1">
+                      <Icon name="points" className="h-3.5 w-3.5" strokeWidth={2.2} />
+                      {formatNumber(u.profile?.points ?? 0)}
+                    </span>
+                    <span className="num flex items-center gap-1">
+                      <Icon name="booking" className="h-3.5 w-3.5" strokeWidth={2.2} />
+                      {toFaDigits(u._count.bookings)}
+                    </span>
                     <span className="num text-brand-600">
                       {formatToman(u.wallet?.balance ?? 0n, { withUnit: false })}
                     </span>

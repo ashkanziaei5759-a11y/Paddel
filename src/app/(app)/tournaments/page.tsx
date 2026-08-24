@@ -46,7 +46,7 @@ export default async function TournamentsPage() {
 
   return (
     <>
-      <TopBar title="تورنومنت‌ها 🏆" subtitle="مسابقات باشگاه پرشین پدل" unread={unread} />
+      <TopBar title="تورنومنت‌ها" subtitle="مسابقات باشگاه پرشین پدل" unread={unread} />
 
       <div className="page-pad space-y-6 pt-2">
         <Group title="در حال برگزاری" items={active} myTeamIds={myTeamIds} />
@@ -55,7 +55,7 @@ export default async function TournamentsPage() {
 
         {tournaments.length === 0 && (
           <EmptyState
-            icon="🏆"
+            icon="tournament"
             title="هنوز تورنومنتی ثبت نشده است"
             description="به‌زودی مسابقات جدید باشگاه اعلام می‌شوند."
           />
@@ -123,7 +123,7 @@ function Group({
               <div className="p-4">
                 <div className="flex items-center justify-between text-[11px] font-bold text-brand-400">
                   <span>{formatDateTime(t.startsAt)}</span>
-                  {joined && <span className="badge-success">ثبت‌نام شده ✓</span>}
+                  {joined && <span className="badge-success">ثبت‌نام شده</span>}
                 </div>
 
                 <div className="mt-3 flex items-center justify-between text-[11px] font-bold">

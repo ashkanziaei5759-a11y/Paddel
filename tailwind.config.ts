@@ -44,8 +44,8 @@ const config: Config = {
         warning: '#E08C05',
       },
       fontFamily: {
-        sans: ['var(--font-vazir)', 'Vazirmatn', 'IRANSans', 'Tahoma', 'system-ui', 'sans-serif'],
-        display: ['var(--font-vazir)', 'Vazirmatn', 'Tahoma', 'system-ui', 'sans-serif'],
+        sans: ['Dana', 'Vazirmatn', 'IRANSans', 'Tahoma', 'system-ui', 'sans-serif'],
+        display: ['Dana', 'Vazirmatn', 'Tahoma', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         xl: '1rem',
