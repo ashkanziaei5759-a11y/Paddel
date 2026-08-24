@@ -17,3 +17,8 @@ next-env.d.ts
 tsconfig.tsbuildinfo
 prisma/dev.db
 prisma/dev.db-journal
+
+# homework automation local files
+homework-automation/.venv/
+homework-automation/config.json
+homework-automation/inspect_dump.html
