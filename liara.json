@@ -1,0 +1,13 @@
+{
+  "$schema": "https://cdn.liara.ir/schema/liara.json",
+  "platform": "docker",
+  "port": 3000,
+  "healthCheck": {
+    "command": "wget -q --spider http://127.0.0.1:3000/api/health || exit 1",
+    "interval": 30,
+    "timeout": 10,
+    "retries": 3,
+    "startPeriod": 40
+  },
+  "disks": []
+}

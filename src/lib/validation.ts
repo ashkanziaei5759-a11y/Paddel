@@ -248,3 +248,22 @@ export const draftPickSchema = z.object({
   teamId: z.string().min(1),
   playerId: z.string().min(1),
 });
+
+// --- Admin: cancellation policies ------------------------------------------
+
+export const cancellationPolicySchema = z
+  .object({
+    name: z.string().trim().min(1, 'عنوان پله الزامی است.').max(60),
+    minMinutesBefore: z.coerce.number().int().min(0).max(100000),
+    maxMinutesBefore: z.coerce.number().int().min(0).max(100000).nullable().optional(),
+    penaltyPercent: z.coerce.number().int().min(0).max(100),
+    isActive: z.boolean().default(true),
+  })
+  .refine((v) => v.maxMinutesBefore == null || v.maxMinutesBefore > v.minMinutesBefore, {
+    message: 'کران بالا باید بزرگ‌تر از کران پایین باشد.',
+    path: ['maxMinutesBefore'],
+  });
+
+export const cancellationPolicyListSchema = z.object({
+  policies: z.array(cancellationPolicySchema).min(1, 'حداقل یک پله لازم است.').max(12),
+});

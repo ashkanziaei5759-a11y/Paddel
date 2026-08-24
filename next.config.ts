@@ -3,6 +3,16 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  /* خروجی مستقل — برای اجرا در Docker و پلتفرم‌هایی مانند لیارا و آروان */
+  output: 'standalone',
+  /**
+   * ردیاب وابستگی‌های Next موتور کوئری Prisma را به‌صورت خودکار پیدا نمی‌کند،
+   * چون در زمان اجرا و بر اساس نام فایل بارگذاری می‌شود. بدون این تنظیم،
+   * ایمیج ساخته می‌شود اما هنگام نخستین کوئری خطای «Query engine not found» می‌دهد.
+   */
+  outputFileTracingIncludes: {
+    '/**': ['./node_modules/.prisma/client/**'],
+  },
   experimental: {
     optimizePackageImports: ['@prisma/client'],
   },

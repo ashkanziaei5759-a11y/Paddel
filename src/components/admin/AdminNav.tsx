@@ -11,6 +11,7 @@ const ITEMS = [
   { href: '/admin/bookings', label: 'رزروها', icon: '📅' },
   { href: '/admin/tournaments', label: 'تورنومنت‌ها', icon: '🏆' },
   { href: '/admin/finance', label: 'مالی', icon: '💰' },
+  { href: '/admin/settings', label: 'تنظیمات', icon: '⚙️' },
 ];
 
 export function AdminNav({ fullName, username }: { fullName: string; username: string }) {

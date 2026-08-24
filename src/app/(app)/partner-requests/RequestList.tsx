@@ -82,7 +82,7 @@ export function RequestList({
 function RequestCard({ request, canRespond }: { request: RequestDto; canRespond: boolean }) {
   const router = useRouter();
   const toast = useToast();
-  const [loading, setLoading] = useState<'ACCEPT' | 'REJECT' | null>(null);
+  const [loading, setLoading] = useState<'ACCEPT' | 'REJECT' | 'CANCEL' | null>(null);
 
   const [first, ...rest] = request.otherName.split(' ');
 
@@ -106,6 +106,26 @@ function RequestCard({ request, canRespond }: { request: RequestDto; canRespond:
           ? `تیم «${json.data.teamName}» ثبت شد. موفق باشید! 🏆`
           : 'درخواست رد شد.',
       );
+      router.refresh();
+    } catch {
+      toast.error('ارتباط با سرور برقرار نشد.');
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function cancelOutgoing() {
+    setLoading('CANCEL');
+    try {
+      const res = await fetch(`/api/partner-requests/${request.id}`, { method: 'DELETE' });
+      const json = await res.json();
+
+      if (!res.ok || !json.ok) {
+        toast.error(json.error || 'لغو درخواست ناموفق بود.');
+        return;
+      }
+
+      toast.success('درخواست شما لغو شد.');
       router.refresh();
     } catch {
       toast.error('ارتباط با سرور برقرار نشد.');
@@ -189,6 +209,19 @@ function RequestCard({ request, canRespond }: { request: RequestDto; canRespond:
             className="btn-accent flex-1"
           >
             {loading === 'ACCEPT' ? <Spinner /> : 'پذیرفتن'}
+          </button>
+        </div>
+      )}
+
+      {!canRespond && request.status === 'PENDING' && (
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={cancelOutgoing}
+            disabled={loading !== null}
+            className="btn-outline w-full"
+          >
+            {loading === 'CANCEL' ? <Spinner /> : 'لغو درخواست'}
           </button>
         </div>
       )}

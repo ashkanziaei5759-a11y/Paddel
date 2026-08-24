@@ -12,6 +12,7 @@ export default async function MockGatewayPage({
   searchParams: Promise<{ ref?: string; amount?: string; callback?: string }>;
 }) {
   if (process.env.PAYMENT_PROVIDER !== 'mock') notFound();
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_MOCK_PAYMENT !== 'true') notFound();
 
   const { ref, amount, callback } = await searchParams;
   if (!ref || !callback) notFound();

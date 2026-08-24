@@ -1,0 +1,55 @@
+# ---------------------------------------------------------------------------
+# PERSIAN PADEL — اجرای کامل با یک دستور
+#   docker compose up -d
+# پس از بالا آمدن:  http://localhost:3000
+# ---------------------------------------------------------------------------
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-padel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-padel_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-persian_padel}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-padel} -d ${POSTGRES_DB:-persian_padel}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # پورت پایگاه داده به بیرون باز نمی‌شود؛ فقط اپلیکیشن به آن دسترسی دارد.
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-padel}:${POSTGRES_PASSWORD:-padel_secret}@db:5432/${POSTGRES_DB:-persian_padel}?schema=public
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET را در فایل .env تعریف کنید}
+      SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-30}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Tehran}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Persian Padel}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      OTP_PROVIDER: ${OTP_PROVIDER:-console}
+      OTP_TTL_SECONDS: ${OTP_TTL_SECONDS:-120}
+      OTP_LENGTH: ${OTP_LENGTH:-5}
+      KAVENEGAR_API_KEY: ${KAVENEGAR_API_KEY:-}
+      KAVENEGAR_TEMPLATE: ${KAVENEGAR_TEMPLATE:-}
+      SMSIR_API_KEY: ${SMSIR_API_KEY:-}
+      SMSIR_TEMPLATE_ID: ${SMSIR_TEMPLATE_ID:-}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-zarinpal}
+      ZARINPAL_MERCHANT_ID: ${ZARINPAL_MERCHANT_ID:-}
+      ZARINPAL_SANDBOX: ${ZARINPAL_SANDBOX:-false}
+      ZIBAL_MERCHANT: ${ZIBAL_MERCHANT:-}
+      NEXTPAY_API_KEY: ${NEXTPAY_API_KEY:-}
+    ports:
+      - '${APP_PORT:-3000}:3000'
+
+volumes:
+  db_data:

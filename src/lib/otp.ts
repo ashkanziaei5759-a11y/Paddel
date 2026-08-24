@@ -4,6 +4,7 @@ import type { OtpPurpose, Prisma } from '@prisma/client';
 import { prisma } from './db';
 import { hashOtp, verifyOtp } from './auth/password';
 import { AppError } from './api';
+import { SmsError, getSmsProvider } from './sms';
 import { toFaDigits } from './datetime';
 
 const OTP_LENGTH = Number(process.env.OTP_LENGTH || 5);
@@ -16,23 +17,21 @@ function generateCode(): string {
 }
 
 /**
- * ارسال پیامک — پیاده‌سازی قابل تعویض.
- * در حالت توسعه کد فقط در کنسول سرور چاپ می‌شود.
+ * ارسال کد تأیید از طریق سرویس پیامک پیکربندی‌شده.
+ * در حالت توسعه (OTP_PROVIDER=console) کد فقط در کنسول سرور چاپ می‌شود.
  */
 async function deliverSms(phone: string, code: string): Promise<void> {
-  const provider = process.env.OTP_PROVIDER || 'console';
+  const provider = getSmsProvider();
 
-  if (provider === 'kavenegar' && process.env.KAVENEGAR_API_KEY) {
-    const url =
-      `https://api.kavenegar.com/v1/${process.env.KAVENEGAR_API_KEY}/verify/lookup.json` +
-      `?receptor=${encodeURIComponent(phone)}&token=${encodeURIComponent(code)}` +
-      `&template=${encodeURIComponent(process.env.KAVENEGAR_TEMPLATE || 'persian-padel-otp')}`;
-    const res = await fetch(url, { method: 'GET' });
-    if (!res.ok) throw new AppError('ارسال پیامک با خطا مواجه شد. لطفاً دوباره تلاش کنید.', 502);
-    return;
+  try {
+    await provider.sendOtp(phone, code);
+  } catch (error) {
+    if (error instanceof SmsError) {
+      console.error(`[otp] ارسال پیامک با «${error.provider}» ناموفق بود:`, error.message);
+      throw new AppError('ارسال پیامک با خطا مواجه شد. لطفاً دوباره تلاش کنید.', 502);
+    }
+    throw error;
   }
-
-  console.info(`\n[OTP] کد تأیید برای ${phone}: ${code}  (اعتبار: ${OTP_TTL_SECONDS} ثانیه)\n`);
 }
 
 export interface IssueOtpInput {

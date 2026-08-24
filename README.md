@@ -35,7 +35,8 @@
 ### مدیر
 مدیریت کاربران و سطوح · مدیریت زمین‌ها و قیمت‌گذاری زمانی · مدیریت رزروها و
 لغوها · کیف پول و امتیاز کاربران · ساخت و اداره‌ی تورنومنت‌ها · ثبت نتایج و
-اعطای خودکار امتیاز · گزارش مالی.
+اعطای خودکار امتیاز · گزارش مالی · **تنظیم پله‌های جریمه‌ی لغو** و مشاهده‌ی
+وضعیت پیکربندی سرویس‌ها.
 
 ## معماری
 
@@ -51,12 +52,28 @@ Tailwind CSS 3 · PostgreSQL 16 · Prisma 6
 
 مستندات کامل معماری و شمای پایگاه داده: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
+**راهنمای گام‌به‌گام استقرار روی سرور و اتصال دامنه:**
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
+
+> ⚠️ این پروژه روی هاست‌های اشتراکی PHP مانند **InfinityFree** اجرا نمی‌شود؛
+> به محیط Node.js و PostgreSQL نیاز دارد. جزئیات و گزینه‌های جایگزین در همان سند آمده است.
+
 ## راه‌اندازی
 
 ### پیش‌نیازها
 Node.js ۲۰ به بالا · PostgreSQL ۱۴ به بالا
 
 ### گام‌ها
+
+### ساده‌ترین راه: Docker
+
+```bash
+cp .env.example .env     # AUTH_SECRET و رمز پایگاه داده را پر کنید
+docker compose up -d     # اپلیکیشن + PostgreSQL با هم بالا می‌آیند
+docker compose exec app node_modules/.bin/prisma db seed
+```
+
+### راه‌اندازی دستی
 
 ```bash
 # ۱. نصب وابستگی‌ها
@@ -97,7 +114,7 @@ npm run build && npm run start # تولید
 | `AUTH_SECRET` | کلید امضای نشست — حداقل ۳۲ کاراکتر تصادفی |
 | `SESSION_TTL_DAYS` | طول عمر نشست (پیش‌فرض ۳۰ روز) |
 | `APP_TIMEZONE` | منطقه‌ی زمانی باشگاه (پیش‌فرض `Asia/Tehran`) |
-| `OTP_PROVIDER` | `console` (توسعه) یا `kavenegar` |
+| `OTP_PROVIDER` | `console` (توسعه) · `kavenegar` · `smsir` · `ghasedak` |
 | `OTP_TTL_SECONDS` | اعتبار کد تأیید (پیش‌فرض ۱۲۰ ثانیه) |
 | `PAYMENT_PROVIDER` | `mock` \| `zarinpal` \| `zibal` \| `nextpay` |
 | `NEXT_PUBLIC_APP_URL` | نشانی عمومی اپ (برای بازگشت از درگاه) |

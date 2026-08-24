@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /$
+Allow: /login
+Allow: /signup
+Disallow: /home
+Disallow: /booking
+Disallow: /bookings
+Disallow: /wallet
+Disallow: /profile
+Disallow: /notifications
+Disallow: /partner-requests
+Disallow: /admin
+Disallow: /api/
+Disallow: /payment/
