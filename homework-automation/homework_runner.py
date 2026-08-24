@@ -1,316 +1,251 @@
-"""Download pending homework, draft feedback, and hand each one to the teacher.
+"""Open Chrome, sign into the portal, download every homework file, check it,
+and print a report. Runs start to finish without stopping to ask anything.
 
-Nothing is ever submitted on the portal by this script. It types a draft into
-the feedback box and stops; clicking Save is the teacher's action.
-
-  python homework_runner.py            normal run
-  python homework_runner.py --inspect  dump page structure to help fill in
-                                       the selectors in config.json
+Nothing is ever submitted or saved on the portal - this only reads and
+downloads.
 """
-import argparse
 import json
-import re
 import sys
 from datetime import date, datetime
 from pathlib import Path
 
 import extract
 import feedback
+import portal
 from manifest import Manifest, desktop
 
 HERE = Path(__file__).parent
 CONFIG_PATH = HERE / "config.json"
+KEYRING_SERVICE = "homework-automation-portal1"
+
+
+def _stored_credentials() -> tuple[str | None, str | None]:
+    """Read the saved username/password from the OS credential store
+    (Windows Credential Manager). Nothing touches disk in plain text."""
+    try:
+        import keyring
+    except ImportError:
+        return None, None
+    try:
+        username = keyring.get_password(KEYRING_SERVICE, "username")
+        password = keyring.get_password(KEYRING_SERVICE, "password") if username else None
+        return username, password
+    except Exception:
+        return None, None
+
+
+def _store_credentials(username: str, password: str) -> bool:
+    try:
+        import keyring
+
+        keyring.set_password(KEYRING_SERVICE, "username", username)
+        keyring.set_password(KEYRING_SERVICE, "password", password)
+        return True
+    except Exception:
+        return False
 
 
 def load_config() -> dict:
     if not CONFIG_PATH.exists():
-        sys.exit(
-            f"No config.json found.\n"
-            f"Copy config.example.json to config.json and fill in "
-            f"chrome_profile_dir first. See README.md."
-        )
-    config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-    profile = config.get("chrome_profile_dir")
-    if not profile or "YOURNAME" in profile:
-        sys.exit(
-            "chrome_profile_dir in config.json still has the placeholder in it.\n"
-            "Set it to the dedicated 'Homework Bot' Chrome profile folder "
-            "(see README.md, Step 1)."
-        )
-    if not Path(profile).exists():
-        sys.exit(
-            f"The Chrome profile folder does not exist:\n  {profile}\n"
-            "Create the 'Homework Bot' profile in Chrome first and log into the "
-            "portal once in it so Chrome saves the password."
-        )
+        config = json.loads((HERE / "config.example.json").read_text(encoding="utf-8"))
+        CONFIG_PATH.write_text(json.dumps(config, indent=2), encoding="utf-8")
+    else:
+        config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+
+    saved_user, saved_pass = _stored_credentials()
+    username = config["portal"].get("username") or saved_user
+    password = config["portal"].get("password") or saved_pass
+
+    if not username or not password:
+        print("اجرای اول - نام کاربری و رمز پورتال لازم است.")
+        print("این‌ها به‌صورت رمزنگاری‌شده در Windows Credential Manager ذخیره")
+        print("می‌شوند (نه در یک فایل متنی)، پس فقط یک بار پرسیده می‌شود.\n")
+        username = input("  نام کاربری: ").strip()
+        password = input("  رمز عبور: ").strip()
+        if not username or not password:
+            sys.exit("هر دو لازم است. فایل .bat را دوباره اجرا کنید.")
+        if _store_credentials(username, password):
+            print("\nذخیره شد. ادامه می‌دهیم.\n")
+        else:
+            print(
+                "\n⚠ ذخیره در Credential Manager ممکن نشد؛ این بار بدون ذخیره ادامه"
+                " می‌دهیم - دفعه بعد دوباره پرسیده می‌شود.\n"
+            )
+
+    config["_username"] = username
+    config["_password"] = password
     return config
 
 
 def safe_name(value: str, fallback: str = "unknown") -> str:
+    import re
+
     cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", value).strip().strip(".")
-    cleaned = re.sub(r"\s+", " ", cleaned)
-    return cleaned[:80] or fallback
+    cleaned = " ".join(cleaned.split())
+    return cleaned[:70] or fallback
 
 
-def pause(message: str) -> None:
-    print(f"\n{message}")
-    try:
-        input("   Press Enter here to continue... ")
-    except EOFError:
-        print("   (no terminal input available, continuing)")
-
-
-# --- browser ---------------------------------------------------------------
-
-
-def launch(playwright, config):
-    return playwright.chromium.launch_persistent_context(
-        user_data_dir=config["chrome_profile_dir"],
-        channel="chrome",          # the teacher's real Chrome, so autofill works
-        headless=False,            # she has to see and edit the feedback anyway
-        accept_downloads=True,
-        no_viewport=True,
-        args=["--start-maximized"],
-    )
-
-
-def ensure_logged_in(page, config) -> None:
-    selectors = config["selectors"]
-    page.goto(config["portal"]["login_url"], wait_until="domcontentloaded")
-    page.wait_for_timeout(2500)  # give Chrome a moment to autofill
-
-    if page.locator(selectors["logged_in_marker"]).count():
-        print("Already signed in.")
-        return
-
-    login_button = page.locator(selectors["login_button"]).first
-    if login_button.count():
-        try:
-            login_button.click(timeout=5000)
-            page.wait_for_load_state("networkidle", timeout=20000)
-        except Exception:
-            pass  # fall through to the manual prompt below
-
-    if page.locator(selectors["logged_in_marker"]).count():
-        print("Signed in.")
-        return
-
-    pause(
-        "Could not confirm sign-in automatically. This happens when Chrome did not\n"
-        "autofill, or the site is asking for a code or a CAPTCHA.\n"
-        "Please sign in yourself in the Chrome window that just opened."
-    )
-
-
-# --- scraping --------------------------------------------------------------
-
-
-def collect_submissions(page, config) -> list[dict]:
-    selectors = config["selectors"]
-    page.goto(config["portal"]["homework_url"], wait_until="domcontentloaded")
-    page.wait_for_timeout(1500)
-
-    rows = page.locator(selectors["submission_row"])
-    count = rows.count()
-    if count == 0:
-        print(
-            "\nNo homework rows matched the selector:\n"
-            f"  {selectors['submission_row']}\n"
-            "Either there is nothing pending, or the page layout is different from\n"
-            "what config.json expects. Run with --inspect to see the real structure."
-        )
-        return []
-
-    found = []
-    for index in range(count):
-        row = rows.nth(index)
-        link = row.locator(selectors["download_link"]).first
-        href = link.get_attribute("href") if link.count() else None
-        if not href:
-            continue  # a header row, or a submission with no attached file
-        found.append(
-            {
-                "submission_id": href,
-                "row_index": index,
-                "student": _cell(row, selectors["student_name"], f"Student {index + 1}"),
-                "assignment": _cell(row, selectors["assignment_title"], "Assignment"),
-                "date": _cell(row, selectors["submission_date"], date.today().isoformat()),
-                "url": href,
-            }
-        )
-    print(f"Found {len(found)} submission(s) with a file attached.")
-    return found
-
-
-def _cell(row, selector: str, fallback: str) -> str:
-    cell = row.locator(selector).first
-    if not cell.count():
-        return fallback
-    return (cell.inner_text() or "").strip() or fallback
-
-
-def download(page, item, root: Path, config) -> tuple[Path | None, str]:
-    selectors = config["selectors"]
-    row = page.locator(selectors["submission_row"]).nth(item["row_index"])
-    link = row.locator(selectors["download_link"]).first
-    folder = root / safe_name(item["student"])
+def download_file(page, item, root: Path) -> tuple[Path | None, str]:
+    folder = root / safe_name(item["student"], "نامشخص")
     folder.mkdir(parents=True, exist_ok=True)
+    today = date.today().isoformat()
+    link = page.locator("a").nth(item["index"])
     try:
-        with page.expect_download(timeout=60000) as download_info:
+        with page.expect_download(timeout=90000) as info:
             link.click()
-        result = download_info.value
+        result = info.value
         ext = Path(result.suggested_filename).suffix or ".bin"
-        target = folder / f"{safe_name(item['assignment'])}_{safe_name(item['date'])}{ext}"
+        target = folder / f"{safe_name(item['assignment'], 'تکلیف')}_{today}{ext}"
+        counter = 2
+        while target.exists():
+            target = folder / f"{safe_name(item['assignment'])}_{today}_{counter}{ext}"
+            counter += 1
         result.save_as(str(target))
         return target, ""
     except Exception as exc:
-        return None, f"download failed: {exc}"
+        return None, f"دانلود نشد: {exc}"
 
 
-# --- review ----------------------------------------------------------------
+def write_report(root: Path, rows: list[dict], problems: list[str]) -> Path:
+    lines = [
+        "گزارش دانلود تکالیف",
+        f"تاریخ: {datetime.now():%Y-%m-%d %H:%M}",
+        "=" * 60,
+        "",
+    ]
+    for row in rows:
+        lines.append(f"{row['student']}  |  {row['assignment']}")
+        lines.append(f"  فایل: {row.get('file', '-')}")
+        if row.get("note"):
+            lines.append(f"  ⚠ {row['note']}")
+        elif row.get("feedback"):
+            lines.append("  بازخورد پیشنهادی:")
+            lines.append("    " + row["feedback"].replace("\n", "\n    "))
+        lines.append("")
 
-
-def review(page, item, config) -> None:
-    selectors = config["selectors"]
-    try:
-        page.goto(item["url"], wait_until="domcontentloaded")
-        page.wait_for_timeout(1000)
-        box = page.locator(selectors["feedback_box"]).first
-        if box.count():
-            box.click()
-            box.fill(item["feedback"])
-            typed = True
-        else:
-            typed = False
-    except Exception as exc:
-        print(f"  ! could not open the feedback box: {exc}")
-        typed = False
-
-    print(f"\n  {item['student']} - {item['assignment']}")
-    if typed:
-        print("  The draft is in the feedback box in Chrome. Read it, edit anything")
-        print("  you like, then click Save on the site yourself.")
+    lines.append("=" * 60)
+    if problems:
+        lines.append(f"موارد نیازمند بررسی دستی ({len(problems)}):")
+        lines.extend(f"  - {p}" for p in problems)
     else:
-        print("  The feedback box was not found, so nothing was typed. Here is the")
-        print("  draft to paste in yourself:\n")
-        print("  " + item["feedback"].replace("\n", "\n  "))
-    pause("  When you are done with this one:")
+        lines.append("همه موارد بدون مشکل پردازش شدند.")
 
-
-# --- inspect ---------------------------------------------------------------
-
-
-def inspect(page, config) -> None:
-    page.goto(config["portal"]["homework_url"], wait_until="domcontentloaded")
-    pause(
-        "Navigate the Chrome window to the page with the pending homework list.\n"
-        "When it is on screen, come back here."
-    )
-    out = HERE / "inspect_dump.html"
-    out.write_text(page.content(), encoding="utf-8")
-    print(f"\nSaved the page HTML to {out}")
-    print(f"URL: {page.url}")
-    for label, selector in (
-        ("tables", "table"),
-        ("table rows", "table tbody tr"),
-        ("textareas", "textarea"),
-        ("links with 'download' in href", "a[href*='ownload']"),
-    ):
-        print(f"  {label}: {page.locator(selector).count()}")
-    print("\nOpen inspect_dump.html, find the real row/cell/link/textarea markup,")
-    print("and put matching selectors into config.json under \"selectors\".")
-
-
-# --- main ------------------------------------------------------------------
+    path = root / f"گزارش_{date.today().isoformat()}.txt"
+    path.write_text("\n".join(lines), encoding="utf-8-sig")
+    return path
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--inspect", action="store_true", help="dump page structure and exit")
-    args = parser.parse_args()
-
     config = load_config()
     root = Path(config["download_root"]) if config.get("download_root") else desktop() / "Homework"
+    root.mkdir(parents=True, exist_ok=True)
     manifest = Manifest(root)
 
     from playwright.sync_api import sync_playwright
 
-    downloaded = drafted = 0
-    flagged: list[str] = []
+    downloaded = 0
+    problems: list[str] = []
+    rows: list[dict] = []
 
     with sync_playwright() as playwright:
+        print("در حال باز کردن کروم...")
         try:
-            context = launch(playwright, config)
+            browser = playwright.chromium.launch(
+                channel="chrome", headless=False, args=["--start-maximized"]
+            )
         except Exception as exc:
             sys.exit(
-                f"Chrome would not start: {exc}\n\n"
-                "The usual cause is that this Chrome profile is already open in "
-                "another window. Close it and run again."
+                f"کروم اجرا نشد: {exc}\n\n"
+                "اگر Google Chrome نصب نیست، از google.com/chrome نصبش کنید."
             )
-        page = context.pages[0] if context.pages else context.new_page()
-        try:
-            ensure_logged_in(page, config)
-            if args.inspect:
-                inspect(page, config)
-                return
+        context = browser.new_context(accept_downloads=True, no_viewport=True)
+        page = context.new_page()
 
-            items = collect_submissions(page, config)
+        try:
+            print("در حال ورود به سایت...")
+            ok, message = portal.login(
+                page, config["portal"]["login_url"], config["_username"], config["_password"]
+            )
+            if not ok:
+                print(f"\n✗ ورود ناموفق: {message}")
+                if "rejected" in message or "did not go through" in message:
+                    print("  اگر رمز عوض شده، از Windows Credential Manager")
+                    print("  ورودی homework-automation-portal1 را پاک کنید")
+                    print("  تا دوباره از شما پرسیده شود.")
+                context.close()
+                browser.close()
+                sys.exit(1)
+            print("✓ وارد شدیم.")
+
+            ok, where = portal.go_to_homework(page, config["portal"].get("homework_url", ""))
+            if not ok:
+                print(f"\n✗ {where}")
+                print("  آدرس صفحه تکالیف را در config.json در homework_url بگذارید.")
+                context.close()
+                browser.close()
+                sys.exit(1)
+            print(f"✓ صفحه تکالیف: {page.url}")
+
+            items = portal.find_files(page)
+            if not items:
+                print("\nهیچ فایل تکلیفی در این صفحه پیدا نشد.")
+            print(f"✓ {len(items)} فایل پیدا شد.\n")
 
             for item in items:
                 record = manifest.find(item["submission_id"]) or {}
-                if record.get("reviewed"):
-                    print(f"  skipping {item['student']} - already done this run")
-                    continue
                 item = {**item, **record}
-
-                print(f"\n{item['student']} - {item['assignment']}")
+                label = f"{item['student']} - {item['assignment']}"
 
                 path = Path(item["file"]) if item.get("file") else None
-                if not path or not path.exists():
-                    path, error = download(page, item, root, config)
+                if path and path.exists():
+                    print(f"  {label}: قبلاً دانلود شده")
+                else:
+                    path, error = download_file(page, item, root)
                     if not path:
-                        flagged.append(f"{item['student']} / {item['assignment']}: {error}")
-                        print(f"  ! {error}")
+                        problems.append(f"{label}: {error}")
+                        print(f"  ✗ {label}: {error}")
                         manifest.upsert({**item, "error": error})
+                        rows.append({**item, "note": error})
                         continue
                     downloaded += 1
-                    print(f"  saved to {path.relative_to(root)}")
+                    print(f"  ✓ {label}  →  {path.relative_to(root)}")
                 item["file"] = str(path)
 
-                if not item.get("text"):
+                if not item.get("text") and not item.get("note"):
                     text, note = extract.extract(path, config)
-                    item["text"] = text
-                    item["note"] = note
-                    if note:
-                        flagged.append(f"{item['student']} / {item['assignment']}: {note}")
-                        print(f"  ! {note} - no feedback drafted, please look at this one")
-                        manifest.upsert(item)
-                        continue
+                    item["text"], item["note"] = text, note
 
-                if not item.get("feedback"):
+                if item.get("note"):
+                    problems.append(f"{label}: {item['note']}")
+                    print(f"    ⚠ {item['note']}")
+                elif item.get("text") and not item.get("feedback"):
                     item["feedback"] = feedback.draft(
                         item["text"], item["student"], item["assignment"], config
                     )
-                    drafted += 1
+
                 manifest.upsert(item)
-                review(page, item, config)
-                manifest.upsert({**item, "reviewed": datetime.now().isoformat()})
+                rows.append(item)
         finally:
             manifest.save()
             try:
                 context.close()
+                browser.close()
             except Exception:
                 pass
 
-    print("\n" + "-" * 60)
-    print(f"Downloaded: {downloaded}    Feedback drafted: {drafted}")
-    if flagged:
-        print(f"Needs your eyes ({len(flagged)}):")
-        for line in flagged:
+    report = write_report(root, rows, problems)
+
+    print("\n" + "=" * 60)
+    print(f"دانلود شده: {downloaded}")
+    print(f"پوشه: {root}")
+    if problems:
+        print(f"نیازمند بررسی دستی: {len(problems)}")
+        for line in problems:
             print(f"  - {line}")
     else:
-        print("Nothing was flagged.")
-    print(f"Run log: {manifest.path}")
+        print("همه فایل‌ها سالم خوانده شدند.")
+    print(f"گزارش کامل: {report.name}")
+    print("=" * 60)
 
 
 if __name__ == "__main__":

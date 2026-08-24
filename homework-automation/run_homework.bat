@@ -23,11 +23,11 @@ if not exist ".venv\Scripts\python.exe" (
     call ".venv\Scripts\activate.bat"
 )
 
-python homework_runner.py %*
+python homework_runner.py
 set EXITCODE=%errorlevel%
 
 echo.
 if not "%EXITCODE%"=="0" echo The script stopped with an error ^(code %EXITCODE%^).
-echo Done. This window stays open so you can read the summary above.
+echo Done. This window stays open so you can read the report above.
 pause
 endlocal

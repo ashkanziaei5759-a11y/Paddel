@@ -1,126 +1,112 @@
-# Homework download & feedback helper
+# Homework download helper
 
-One double-click on `run_homework.bat` and this will:
+Double-click `run_homework.bat`. It will:
 
-1. Open Chrome in a dedicated profile and sign into the portal (Chrome's own
-   saved password does the signing in — the script never reads or stores it).
-2. Download every pending submission into `Desktop\Homework\<Student>\`.
-3. Read them — Word, PDF, photos (OCR), voice messages (transcribed offline).
-4. Draft feedback for each one.
-5. Type each draft into the student's feedback box in the browser and **stop**,
-   so you can read it, change it, and click Save yourself.
+1. Open Chrome by itself.
+2. Sign into the portal by itself (username/password are typed by the script,
+   not by you).
+3. Go to the homework section, find every submission, and download the files
+   into `Desktop\Homework\<Student>\`, named with the assignment and the date.
+4. Read each file (Word, PDF, photos via OCR, voice messages via offline
+   transcription) and check that it came out readable.
+5. Print a report: how many downloaded, which ones need a manual look, and a
+   suggested feedback draft for each one.
 
-**It never clicks Save or Submit.** That is always your action.
+Nothing is typed into the site and nothing is ever submitted or saved there —
+this only reads and downloads. No page is left open waiting for you to check
+anything while it runs.
 
----
+## First run
 
-## First-time setup
+1. Copy `config.example.json` to `config.json`.
+2. If you already know the URL of the homework/submissions page, put it in
+   `portal.homework_url`. If you leave it blank, the script looks for a menu
+   link that says "تکالیف" / "homework" / "assignment" and follows it itself.
+3. Double-click `run_homework.bat`.
+   - The first run installs everything (a few minutes), then starts.
+   - It will ask for the portal username and password **once**, in the
+     terminal window. They are saved encrypted in **Windows Credential
+     Manager** (not a text file) so it isn't asked again. To change or
+     remove them later: Windows Start → "Credential Manager" →
+     Windows Credentials → look for `homework-automation-portal1`.
 
-### 1. A separate Chrome profile
-
-Chrome can't have the same profile open twice, so the script needs its own —
-otherwise it will fight with your normal browsing.
-
-- Chrome → your profile picture (top right) → **Add** → name it `Homework Bot`.
-- In that new window, go to https://portal1.iran-europe.net/Login, sign in, and
-  let Chrome **save the password**.
-- Find the folder: in the Homework Bot window go to `chrome://version` and copy
-  the **Profile Path**. It looks like
-  `C:\Users\YOU\AppData\Local\Google\Chrome\User Data\Profile 2`.
-- Rename that folder to `HomeworkBot` if you like, or just use the path as-is.
-
-### 2. Fill in the config
-
-Copy `config.example.json` to `config.json` and set:
-
-- `chrome_profile_dir` — the profile path from above (keep the double
-  backslashes).
-- `portal.homework_url` — the page that lists pending homework, if it isn't the
-  login page.
-
-### 3. Install
-
-Double-click `run_homework.bat`. The first run creates a virtual environment
-and installs everything; it takes a few minutes. After that it starts in
-seconds.
+After that, every future run is just the double-click — no typing, no
+clicking, no page left open to babysit.
 
 Two extra pieces are **not** installed by pip, and are only needed for some
 file types:
 
-| You need it for | Install |
+| Needed for | Install |
 |---|---|
 | OCR of photos and scanned PDFs | [Tesseract for Windows](https://github.com/UB-Mannheim/tesseract/wiki) — tick "Add to PATH" |
 | Rendering scanned PDFs for OCR | [Poppler for Windows](https://github.com/oschwartz10612/poppler-windows/releases) — add its `bin` folder to PATH |
 
 Word docs, text PDFs and voice messages work without either.
 
-### 4. Point it at the right page elements
+## How it finds things on the page
 
-The script has to know which bit of the portal page is a student name, which is
-the download link, and which is the feedback box. The values shipped in
-`config.example.json` are **guesses** — the portal's real HTML has not been
-seen. Run:
+The portal's exact HTML wasn't available while building this, so instead of
+hard-coded selectors the script looks for things by what they *are*:
 
-    inspect_page.bat
+- **Login**: the visible password box on the login page, and the text box
+  right above it.
+- **Homework section**: the configured URL, or a menu link whose text
+  contains a homework-related word (Persian or English).
+- **Files**: any link on that page pointing at a file (by extension, or by
+  words like "دانلود"/"download" near it).
+- **Student name**: Persian or Latin name-shaped text in the same table
+  row/block as the link. This is the one guess worth double-checking — if a
+  folder is named `نامشخص` ("unknown"), that item's name wasn't recognized
+  and the file needs moving into the right folder by hand.
 
-It opens Chrome, waits for you to navigate to the homework list, then saves the
-page as `inspect_dump.html` and prints what it found. Send that file over (or
-open it yourself) and the `selectors` block in `config.json` gets filled in to
-match. This is a one-time job unless the portal changes.
+If the portal's layout doesn't match any of this (login page structure is
+unusual, or the homework page needs a click through a different menu), the
+script says exactly what it couldn't find and where, instead of failing
+silently.
 
----
+## The report
 
-## Running it
+After every run, two things are written into `Desktop\Homework\`:
 
-Double-click `run_homework.bat`.
-
-For each submission you'll see the student's name in the terminal, the draft
-already typed into the browser, and a prompt. Edit it in Chrome, click Save on
-the site, then press Enter in the terminal to move to the next one.
-
-At the end you get a summary: how many downloaded, how many drafted, and
-anything that needs your eyes.
+- `گزارش_<date>.txt` — student, assignment, file, and either a suggested
+  feedback draft or a note on why one wasn't written (bad OCR, silent
+  recording, etc).
+- `run_log_<date>.json` — the machine-readable version, used to skip files
+  already downloaded if you run it again the same day.
 
 ## If something goes wrong
 
-**"Chrome would not start"** — the Homework Bot profile is already open in
-another window. Close it.
+**"کروم اجرا نشد" (Chrome would not start)** — Google Chrome isn't installed.
+Get it from google.com/chrome.
 
-**"Could not confirm sign-in"** — the script pauses and asks you to sign in
-manually in the window it opened. Do that, press Enter, and it carries on. This
-is also what happens if the site asks for a code or a CAPTCHA.
+**"ورود ناموفق" (sign-in failed)** — either the saved password is wrong (open
+Credential Manager and remove `homework-automation-portal1` so it's asked
+again), or the site is asking for something extra (a code, a captcha) that
+this script can't answer. It stops rather than getting stuck.
 
-**"No homework rows matched"** — the page layout isn't what `config.json`
-expects. Run `inspect_page.bat` and update the selectors.
+**"هیچ فایل تکلیفی پیدا نشد" (no files found)** — either there's genuinely
+nothing pending, or the homework page needs `homework_url` set explicitly in
+`config.json`.
 
-**Something flagged instead of drafted** — the script couldn't read that file
-confidently (bad handwriting, a silent recording, an empty scan). It says so
-rather than drafting feedback on a guess. Those need reading by hand.
-
-## The run log
-
-Everything is written to `Desktop\Homework\run_log_<date>.json` as it happens,
-not at the end. If the script is interrupted, run it again — it skips anything
-already downloaded and already reviewed that day.
+**A folder named نامشخص (unknown)** — the student-name guess failed for that
+item. The file is still downloaded correctly; just move it into the right
+folder.
 
 ## Voice messages
 
-Transcription is `faster-whisper`, which runs on your own machine: no API key,
-no cost, nothing sent anywhere. The first voice message of each run takes a
-minute while the model loads. If it's too slow or too inaccurate, change
-`transcription.model` in `config.json` — `tiny` and `base` are faster, `medium`
-is slower and more accurate.
+Transcription is `faster-whisper`, running on your own machine — no API key,
+no cost, nothing sent anywhere. The first voice message of a run takes a
+minute while the model loads.
 
 ## Better feedback drafts (optional)
 
-The default drafter is offline and rule-based. It spots common patterns
-(tense slips, missing articles, over-long sentences, repeated filler words) and
-assembles a draft from them. It's a starting point, not a finished comment —
-it can't tell you whether the student's *argument* worked.
+The default drafter is offline and rule-based — it catches common patterns
+(tense slips, missing articles, run-on sentences, repeated filler words) and
+writes a short draft from them. It's a starting point, not a finished
+comment.
 
 For noticeably better drafts, set `feedback.backend` to `"anthropic"` in
 `config.json`, `pip install anthropic` in the venv, and set an
 `ANTHROPIC_API_KEY` environment variable. This sends the text of each
-submission to the Claude API. It costs a small amount per submission, and if
-the key is missing or the call fails the script quietly falls back to the
-offline drafter.
+submission to the Claude API — small cost per submission — and falls back to
+the offline drafter automatically if the key is missing or the call fails.

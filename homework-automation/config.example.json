@@ -1,28 +1,17 @@
 {
   "portal": {
     "login_url": "https://portal1.iran-europe.net/Login",
-    "homework_url": "https://portal1.iran-europe.net/Login"
+    "homework_url": "",
+    "username": "",
+    "password": ""
   },
-  "chrome_profile_dir": "C:\\Users\\YOURNAME\\AppData\\Local\\Google\\Chrome\\User Data\\HomeworkBot",
-  "download_root": null,
+  "download_root": "",
   "transcription": {
-    "backend": "faster-whisper",
     "model": "small",
     "language": null
   },
   "feedback": {
     "backend": "heuristic",
     "anthropic_model": "claude-opus-5"
-  },
-  "selectors": {
-    "logged_in_marker": "a[href*='Logout'], a[href*='SignOut'], .user-menu",
-    "login_button": "button[type='submit'], input[type='submit']",
-    "submission_row": "table tbody tr",
-    "student_name": "td:nth-child(1)",
-    "assignment_title": "td:nth-child(2)",
-    "submission_date": "td:nth-child(3)",
-    "download_link": "a[href*='Download'], a[href*='File'], a[download]",
-    "open_submission_link": "a",
-    "feedback_box": "textarea"
   }
 }
