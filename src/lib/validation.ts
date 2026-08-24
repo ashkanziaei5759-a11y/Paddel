@@ -267,3 +267,43 @@ export const cancellationPolicySchema = z
 export const cancellationPolicyListSchema = z.object({
   policies: z.array(cancellationPolicySchema).min(1, 'حداقل یک پله لازم است.').max(12),
 });
+
+// --- Store -----------------------------------------------------------------
+
+export const storePurchaseSchema = z.object({
+  productId: z.string().min(1, 'کالا مشخص نشده است.'),
+  quantity: z.coerce.number().int().min(1, 'تعداد باید حداقل ۱ باشد.').max(10, 'حداکثر ۱۰ عدد.'),
+  method: z.enum(['POINTS', 'WALLET'], {
+    errorMap: () => ({ message: 'روش پرداخت معتبر نیست.' }),
+  }),
+});
+
+export const storeProductSchema = z
+  .object({
+    name: z.string().trim().min(1, 'نام کالا الزامی است.').max(80),
+    description: z.string().trim().max(400).optional().nullable(),
+    imageUrl: z.string().trim().max(500).optional().nullable(),
+    category: z.enum(['RACKET', 'BALL', 'APPAREL', 'ACCESSORY', 'SERVICE']),
+    pricePoints: z.coerce.number().int().min(0).max(1000000).optional().nullable(),
+    priceToman: z.coerce.number().int().min(0).max(1000000000).optional().nullable(),
+    stock: z.coerce.number().int().min(0).max(100000),
+    isActive: z.boolean().default(true),
+    sortOrder: z.coerce.number().int().min(0).max(999).default(0),
+  })
+  .refine((v) => (v.pricePoints ?? 0) > 0 || (v.priceToman ?? 0) > 0, {
+    message: 'حداقل یکی از قیمت امتیازی یا ریالی باید تعیین شود.',
+    path: ['pricePoints'],
+  });
+
+// --- Banners ---------------------------------------------------------------
+
+export const bannerSchema = z.object({
+  title: z.string().trim().min(1, 'عنوان بنر الزامی است.').max(80),
+  subtitle: z.string().trim().max(160).optional().nullable(),
+  imageUrl: z.string().trim().min(1, 'نشانی تصویر الزامی است.').max(500),
+  linkUrl: z.string().trim().max(500).optional().nullable(),
+  sortOrder: z.coerce.number().int().min(0).max(999).default(0),
+  isActive: z.boolean().default(true),
+  startsAt: z.string().datetime({ offset: true }).optional().nullable(),
+  endsAt: z.string().datetime({ offset: true }).optional().nullable(),
+});

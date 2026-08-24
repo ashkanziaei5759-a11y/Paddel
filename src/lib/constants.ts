@@ -1,5 +1,8 @@
 import type {
   BookingStatus,
+  StoreCategory,
+  StoreOrderStatus,
+  StorePaymentMethod,
   MatchStage,
   NotificationType,
   PartnerRequestStatus,
@@ -60,6 +63,8 @@ export const WALLET_TX_LABEL: Record<WalletTxType, string> = {
   BOOKING_REFUND: 'بازگشت وجه رزرو',
   TOURNAMENT_FEE: 'هزینه ثبت‌نام تورنومنت',
   TOURNAMENT_REFUND: 'بازگشت هزینه تورنومنت',
+  STORE_PURCHASE: 'خرید از فروشگاه',
+  STORE_REFUND: 'بازگشت وجه فروشگاه',
   ADMIN_CREDIT: 'افزایش توسط مدیریت',
   ADMIN_DEBIT: 'کاهش توسط مدیریت',
 };
@@ -169,3 +174,25 @@ export const SETTING_KEYS = {
   TOPUP_PRESETS: 'wallet.topup.presets',
   CLUB_CONTACT: 'club.contact',
 } as const;
+
+// --- فروشگاه --------------------------------------------------------------
+
+export const STORE_CATEGORY_LABEL: Record<StoreCategory, string> = {
+  RACKET: 'راکت',
+  BALL: 'توپ',
+  APPAREL: 'پوشاک',
+  ACCESSORY: 'لوازم جانبی',
+  SERVICE: 'خدمات باشگاه',
+};
+
+export const STORE_ORDER_STATUS_LABEL: Record<StoreOrderStatus, string> = {
+  PENDING: 'در حال آماده‌سازی',
+  READY: 'آماده‌ی تحویل',
+  DELIVERED: 'تحویل داده شد',
+  CANCELLED: 'لغو شده',
+};
+
+export const STORE_PAYMENT_LABEL: Record<StorePaymentMethod, string> = {
+  POINTS: 'پرداخت با امتیاز',
+  WALLET: 'پرداخت از کیف پول',
+};

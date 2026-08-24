@@ -8,7 +8,13 @@ import { availabilityQuerySchema } from '@/lib/validation';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-/** وضعیت سانس‌های یک روز — برای یک زمین یا همه‌ی زمین‌های فعال */
+/**
+ * وضعیت سانس‌های یک روز.
+ *
+ * جریان رزرو ابتدا تاریخ و سپس ساعت را می‌پرسد، بنابراین پاسخ برای همه‌ی
+ * زمین‌های فعال برگردانده می‌شود تا بتوان برای هر ساعت نشان داد کدام زمین‌ها
+ * آزادند — بدون رفت‌وبرگشت اضافی به سرور.
+ */
 export async function GET(req: NextRequest) {
   try {
     const user = await requireUser();
@@ -19,10 +25,7 @@ export async function GET(req: NextRequest) {
     });
 
     const courts = await prisma.court.findMany({
-      where: {
-        isActive: true,
-        ...(input.courtId ? { id: input.courtId } : {}),
-      },
+      where: { isActive: true, ...(input.courtId ? { id: input.courtId } : {}) },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       include: { pricingRules: { where: { isActive: true } } },
     });

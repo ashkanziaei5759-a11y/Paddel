@@ -254,6 +254,76 @@ async function main() {
     },
   });
 
+  // ---- ۷. بنرهای صفحه‌ی اصلی ----
+  if ((await prisma.banner.count()) === 0) {
+    await prisma.banner.createMany({
+      data: [
+        {
+          title: 'جام تابستانه پرشین پدل',
+          subtitle: 'ثبت‌نام باز است — تیم خود را بسازید و برای قهرمانی بجنگید.',
+          imageUrl: '/images/login/court-1.jpg',
+          linkUrl: '/tournaments',
+          sortOrder: 0,
+        },
+        {
+          title: 'فروشگاه باشگاه راه‌اندازی شد',
+          subtitle: 'راکت، توپ و لوازم ورزشی را با امتیاز یا از کیف پول بخرید.',
+          imageUrl: '/images/login/court-3.jpg',
+          linkUrl: '/market',
+          sortOrder: 1,
+        },
+        {
+          title: 'ساعات پرتقاضا رزرو کنید',
+          subtitle: 'زمین‌های عصر زودتر تکمیل می‌شوند — همین حالا رزرو کنید.',
+          imageUrl: '/images/login/court-2.jpg',
+          linkUrl: '/booking',
+          sortOrder: 2,
+        },
+      ],
+    });
+    console.info('✅ ۳ بنر نمونه ساخته شد');
+  }
+
+  // ---- ۸. کالاهای فروشگاه ----
+  const PRODUCTS = [
+    { name: 'راکت پدل حرفه‌ای', slug: 'pro-racket', category: 'RACKET' as const,
+      description: 'راکت کربنی مخصوص بازیکنان سطح A و B با تعادل میانی.',
+      pricePoints: 1200, priceToman: 4_800_000, stock: 6 },
+    { name: 'راکت پدل مبتدی', slug: 'starter-racket', category: 'RACKET' as const,
+      description: 'سبک و کنترل‌پذیر، مناسب شروع بازی.',
+      pricePoints: 600, priceToman: 2_200_000, stock: 10 },
+    { name: 'بسته ۳ عددی توپ پدل', slug: 'ball-pack-3', category: 'BALL' as const,
+      description: 'توپ استاندارد مسابقات، بسته‌ی سه‌تایی.',
+      pricePoints: 90, priceToman: 380_000, stock: 40 },
+    { name: 'تیشرت باشگاه', slug: 'club-tshirt', category: 'APPAREL' as const,
+      description: 'تیشرت رسمی پرشین پدل با پارچه‌ی خنک.',
+      pricePoints: 250, priceToman: 890_000, stock: 18 },
+    { name: 'مچ‌بند ورزشی', slug: 'wristband', category: 'ACCESSORY' as const,
+      description: 'جفت مچ‌بند جذب عرق.', pricePoints: 60, priceToman: 190_000, stock: 30 },
+    { name: 'یک جلسه تمرین خصوصی', slug: 'private-session', category: 'SERVICE' as const,
+      description: 'یک جلسه تمرین ۶۰ دقیقه‌ای با مربی باشگاه.',
+      pricePoints: 800, priceToman: null, stock: 8 },
+  ];
+
+  for (const [index, p] of PRODUCTS.entries()) {
+    await prisma.storeProduct.upsert({
+      where: { slug: p.slug },
+      update: {},
+      create: {
+        name: p.name,
+        slug: p.slug,
+        description: p.description,
+        category: p.category,
+        pricePoints: p.pricePoints,
+        priceRial: p.priceToman ? toman(p.priceToman) : null,
+        stock: p.stock,
+        isActive: true,
+        sortOrder: index,
+      },
+    });
+  }
+  console.info(`✅ ${PRODUCTS.length} کالای فروشگاه آماده شد`);
+
   console.info('\n🎉 مقداردهی اولیه با موفقیت انجام شد.\n');
 }
 

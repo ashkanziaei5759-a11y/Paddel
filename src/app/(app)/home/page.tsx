@@ -10,6 +10,7 @@ import { formatDateTime, formatJalaliDate, formatRelative, formatTime, toFaDigit
 import { formatNumber, formatToman } from '@/lib/utils';
 import { TOURNAMENT_STATUS_LABEL } from '@/lib/constants';
 import { Icon, type IconName } from '@/components/ui/Icon';
+import { BannerCarousel } from '@/components/home/BannerCarousel';
 import { Dot } from '@/components/ui/Dot';
 
 export const metadata: Metadata = { title: 'خانه' };
@@ -19,7 +20,7 @@ export default async function HomePage() {
   const user = await requirePage();
   const now = new Date();
 
-  const [wallet, unread, nextBooking, bookingCount, upcomingTournaments, pendingRequests] =
+  const [wallet, unread, nextBooking, bookingCount, upcomingTournaments, pendingRequests, banners] =
     await Promise.all([
       prisma.wallet.findUnique({ where: { userId: user.id }, select: { balance: true } }),
       unreadCount(user.id),
@@ -36,6 +37,16 @@ export default async function HomePage() {
         include: { _count: { select: { teams: true } } },
       }),
       prisma.partnerRequest.count({ where: { receiverId: user.id, status: 'PENDING' } }),
+      prisma.banner.findMany({
+        where: {
+          placement: 'HOME_TOP',
+          isActive: true,
+          OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+          AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
+        },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+        take: 6,
+      }),
     ]);
 
   const balance = wallet?.balance ?? 0n;
@@ -45,6 +56,19 @@ export default async function HomePage() {
       <TopBar user={user} unread={unread} />
 
       <div className="page-pad stagger space-y-5 pt-1">
+        {/* ---- بنرهای باشگاه ---- */}
+        {banners.length > 0 && (
+          <BannerCarousel
+            banners={banners.map((b) => ({
+              id: b.id,
+              title: b.title,
+              subtitle: b.subtitle,
+              imageUrl: b.imageUrl,
+              linkUrl: b.linkUrl,
+            }))}
+          />
+        )}
+
         {/* ---- کارت وضعیت بازیکن ---- */}
         <section className="card-dark p-5">
           <div className="relative flex items-start justify-between gap-4">
@@ -221,6 +245,7 @@ export default async function HomePage() {
             <QuickAction href="/booking" icon="booking" title="رزرو زمین" subtitle="انتخاب تاریخ و ساعت" />
             <QuickAction href="/tournaments" icon="tournament" title="تورنومنت‌ها" subtitle="ثبت‌نام و نتایج" />
             <QuickAction href="/wallet" icon="wallet" title="کیف پول" subtitle="شارژ و تراکنش‌ها" />
+            <QuickAction href="/market" icon="ticket" title="فروشگاه" subtitle="خرید با امتیاز" />
             <QuickAction href="/bookings" icon="history" title="تاریخچه" subtitle="رزروهای گذشته" />
             {user.role === 'ADMIN' && (
               <QuickAction

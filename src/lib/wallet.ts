@@ -14,6 +14,7 @@ export interface WalletMutation {
   bookingId?: string;
   paymentId?: string;
   registrationId?: string;
+  storeOrderId?: string;
   performedBy?: string;
   metadata?: Prisma.InputJsonValue;
   /** اجازه‌ی منفی شدن موجودی (فقط اصلاحات ادمین) */
@@ -75,6 +76,7 @@ export async function mutateWallet(
       bookingId: input.bookingId,
       paymentId: input.paymentId,
       registrationId: input.registrationId,
+      storeOrderId: input.storeOrderId,
       performedBy: input.performedBy,
       metadata: input.metadata,
     },

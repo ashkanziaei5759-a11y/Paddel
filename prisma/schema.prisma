@@ -69,6 +69,8 @@ enum WalletTxType {
   BOOKING_REFUND // بازگشت وجه لغو رزرو
   TOURNAMENT_FEE // هزینه ثبت‌نام تورنومنت
   TOURNAMENT_REFUND // بازگشت هزینه تورنومنت
+  STORE_PURCHASE // خرید از فروشگاه باشگاه
+  STORE_REFUND // بازگشت وجه سفارش فروشگاه
   ADMIN_CREDIT // افزایش دستی توسط ادمین
   ADMIN_DEBIT // کاهش دستی توسط ادمین
 }
@@ -185,6 +187,33 @@ enum NotificationChannel {
   SMS
 }
 
+/// نحوه‌ی پرداخت در فروشگاه
+enum StorePaymentMethod {
+  POINTS // فقط با امتیاز
+  WALLET // فقط از کیف پول
+}
+
+enum StoreOrderStatus {
+  PENDING // ثبت شده، در انتظار آماده‌سازی
+  READY // آماده‌ی تحویل در باشگاه
+  DELIVERED // تحویل داده شد
+  CANCELLED // لغو و بازگردانی شد
+}
+
+/// دسته‌بندی کالاهای فروشگاه
+enum StoreCategory {
+  RACKET // راکت
+  BALL // توپ
+  APPAREL // پوشاک
+  ACCESSORY // لوازم جانبی
+  SERVICE // خدمات باشگاه
+}
+
+/// جایگاه نمایش بنر
+enum BannerPlacement {
+  HOME_TOP
+}
+
 // ===========================================================================
 // USERS · AUTH · PROFILE
 // ===========================================================================
@@ -223,6 +252,7 @@ model User {
   registrations      TournamentRegistration[] @relation("RegistrationCreator")
   draftPicks         DraftPick[]         @relation("DraftPickedPlayer")
   auditLogs          AuditLog[]
+  storeOrders        StoreOrder[]
 
   @@index([role])
   @@index([status])
@@ -357,6 +387,9 @@ model WalletTransaction {
 
   registrationId String?
   registration   TournamentRegistration? @relation(fields: [registrationId], references: [id])
+
+  storeOrderId String?
+  storeOrder   StoreOrder? @relation(fields: [storeOrderId], references: [id])
 
   performedBy String?
   metadata    Json?
@@ -1083,58 +1116,104 @@ model AuditLog {
 }
 
 // ===========================================================================
-// STORE — اسکلت آماده برای توسعه‌ی آینده (فروشگاه با امتیاز)
+// BANNERS — بنرهای چرخشی صفحه‌ی اصلی (کاملاً قابل مدیریت توسط ادمین)
+// ===========================================================================
+
+model Banner {
+  id       String          @id @default(cuid())
+  title    String
+  subtitle String?
+  imageUrl String
+
+  /// مقصد کلیک — نشانی داخلی اپ یا لینک بیرونی
+  linkUrl String?
+
+  placement BannerPlacement @default(HOME_TOP)
+  sortOrder Int             @default(0)
+  isActive  Boolean         @default(true)
+
+  /// بازه‌ی نمایش اختیاری — بنر خارج از این بازه نشان داده نمی‌شود
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([placement, isActive, sortOrder])
+  @@map("banners")
+}
+
+// ===========================================================================
+// STORE — فروشگاه باشگاه: خرید با امتیاز یا از کیف پول
 // ===========================================================================
 
 model StoreProduct {
-  id          String  @id @default(cuid())
+  id          String        @id @default(cuid())
   name        String
-  slug        String  @unique
+  slug        String        @unique
   description String?
   imageUrl    String?
+  category    StoreCategory @default(ACCESSORY)
 
-  /// قیمت به امتیاز
-  pricePoints Int
-  /// قیمت اختیاری به ریال (خرید ترکیبی در آینده)
+  /// قیمت به امتیاز — اگر null باشد با امتیاز قابل خرید نیست
+  pricePoints Int?
+  /// قیمت به ریال — اگر null باشد با کیف پول قابل خرید نیست
   priceRial BigInt?
 
-  stock    Int     @default(0)
-  isActive Boolean @default(false)
+  stock     Int     @default(0)
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  orders StoreOrderItem[]
+  orderItems StoreOrderItem[]
 
+  @@index([isActive, category, sortOrder])
   @@map("store_products")
 }
 
 model StoreOrder {
   id     String @id @default(cuid())
+  code   String @unique
   userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  totalPoints Int
-  status      String @default("PENDING")
+  method StorePaymentMethod
+  status StoreOrderStatus   @default(PENDING)
+
+  /// بسته به روش پرداخت، یکی از این دو پر می‌شود
+  totalPoints Int    @default(0)
+  totalRial   BigInt @default(0)
+
+  note String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  items StoreOrderItem[]
+  items     StoreOrderItem[]
+  walletTxs WalletTransaction[]
 
   @@index([userId, createdAt])
+  @@index([status])
   @@map("store_orders")
 }
 
 model StoreOrderItem {
-  id      String       @id @default(cuid())
+  id      String     @id @default(cuid())
   orderId String
-  order   StoreOrder   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order   StoreOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   productId String
   product   StoreProduct @relation(fields: [productId], references: [id])
 
-  quantity    Int @default(1)
-  pointsEach  Int
+  /// نام کالا در لحظه‌ی خرید — اگر بعداً تغییر کند، سفارش دست‌نخورده می‌ماند
+  nameSnapshot String
+  quantity     Int    @default(1)
+  pointsEach   Int    @default(0)
+  rialEach     BigInt @default(0)
 
+  @@index([orderId])
   @@map("store_order_items")
 }

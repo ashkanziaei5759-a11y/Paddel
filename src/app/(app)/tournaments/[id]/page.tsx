@@ -3,9 +3,9 @@ import { notFound } from 'next/navigation';
 import { requirePage } from '@/lib/auth/rbac';
 import { prisma } from '@/lib/db';
 import { TopBar } from '@/components/nav/TopBar';
-import { LevelBadge } from '@/components/ui/LevelBadge';
 import { StandingsTable, type StandingRow } from '@/components/tournament/StandingsTable';
 import { Bracket, type BracketMatch } from '@/components/tournament/Bracket';
+import { TeamCard } from '@/components/tournament/TeamCard';
 import { RegisterPanel } from './RegisterPanel';
 import { unreadCount } from '@/lib/notifications';
 import { describeRule } from '@/lib/tournaments/level-rules';
@@ -238,33 +238,23 @@ export default async function TournamentDetailPage({
             </h2>
             <div className="space-y-2">
               {tournament.teams.map((team) => (
-                <div
+                <TeamCard
                   key={team.id}
-                  className={`card p-4 ${team.id === myMembership?.id ? 'ring-1 ring-accent/40' : ''}`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-xs font-extrabold text-brand-800">{team.name}</p>
-                    {team.result && (
-                      <span className="badge-accent num shrink-0">
-                        {rankLabel(team.result.finalRank)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {team.members.map((m) => (
-                      <span
-                        key={m.id}
-                        className="flex items-center gap-1.5 rounded-xl bg-surface-muted px-2.5 py-1.5"
-                      >
-                        <span className="text-[11px] font-bold text-brand-600">
-                          {m.user.profile?.firstName} {m.user.profile?.lastName}
-                        </span>
-                        {m.user.profile && <LevelBadge level={m.user.profile.level} size="sm" />}
-                        {m.isLeader && <span className="text-[10px]">👑</span>}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+                  highlight={team.id === myMembership?.id}
+                  rankLabel={team.result ? rankLabel(team.result.finalRank) : undefined}
+                  team={{
+                    id: team.id,
+                    name: team.name,
+                    members: team.members.map((m) => ({
+                      userId: m.userId,
+                      firstName: m.user.profile?.firstName ?? '؟',
+                      lastName: m.user.profile?.lastName ?? '',
+                      avatarUrl: m.user.profile?.avatarUrl ?? null,
+                      level: m.user.profile?.level ?? null,
+                      isLeader: m.isLeader,
+                    })),
+                  }}
+                />
               ))}
             </div>
           </section>
