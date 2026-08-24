@@ -527,6 +527,7 @@ function LevelPicker({
             key={level}
             type="button"
             onClick={() => onToggle(level)}
+            dir="ltr"
             className={cn(
               'h-9 rounded-xl text-[11px] font-black transition-all',
               selected.includes(level)
@@ -580,7 +581,7 @@ function CombinationEditor({
                 className="field flex-1"
               >
                 {LEVEL_ORDER.map((l) => (
-                  <option key={l} value={l}>{LEVEL_LABEL[l]}</option>
+                  <option key={l} value={l} dir="ltr">{LEVEL_LABEL[l]}</option>
                 ))}
               </select>
               <span className="text-xs font-black text-brand-300">+</span>
@@ -594,7 +595,7 @@ function CombinationEditor({
                 className="field flex-1"
               >
                 {LEVEL_ORDER.map((l) => (
-                  <option key={l} value={l}>{LEVEL_LABEL[l]}</option>
+                  <option key={l} value={l} dir="ltr">{LEVEL_LABEL[l]}</option>
                 ))}
               </select>
               <button

@@ -45,7 +45,7 @@ export function UserSearch({
         <select id="level" value={level} onChange={(e) => setLevel(e.target.value)} className="field">
           <option value="">همه</option>
           {LEVEL_ORDER.map((l) => (
-            <option key={l} value={l}>{LEVEL_LABEL[l]}</option>
+            <option key={l} value={l} dir="ltr">{LEVEL_LABEL[l]}</option>
           ))}
         </select>
       </div>

@@ -137,7 +137,7 @@ export function UserAdminPanel({
           <label className="label" htmlFor="level">سطح بازیکن</label>
           <select id="level" name="level" defaultValue={level} className="field">
             {LEVEL_ORDER.map((l) => (
-              <option key={l} value={l}>{LEVEL_LABEL[l]}</option>
+              <option key={l} value={l} dir="ltr">{LEVEL_LABEL[l]}</option>
             ))}
           </select>
           <p className="helper">تغییر سطح فقط توسط مدیریت امکان‌پذیر است.</p>

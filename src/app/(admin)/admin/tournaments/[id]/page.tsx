@@ -169,7 +169,7 @@ export default async function AdminTournamentDetail({
                           {m.isLeader && ' 👑'}
                         </span>
                         {m.user.profile && (
-                          <span className="shrink-0 text-[10px] font-black text-brand-400">
+                          <span dir="ltr" className="shrink-0 text-[10px] font-black text-brand-400">
                             {LEVEL_LABEL[m.user.profile.level]}
                           </span>
                         )}

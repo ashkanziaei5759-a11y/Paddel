@@ -30,7 +30,9 @@ export function LevelBadge({
 
   return (
     <span className={cn('inline-flex items-center gap-1.5', className)}>
+      {/* dir=ltr جداسازی دوجهته: بدون آن، «A−» در متن فارسی به شکل «−A» دیده می‌شود */}
       <span
+        dir="ltr"
         className={cn(
           'inline-flex items-center justify-center rounded-xl font-black tracking-tight',
           TIER_STYLE[tier],

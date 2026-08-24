@@ -36,13 +36,13 @@ export function TeamCard({
   return (
     <div className={cn('card p-4', highlight && 'ring-1 ring-accent/40')}>
       <div className="flex items-center gap-3">
-        {/* دایره‌های عکس پروفایل، کنار هم */}
-        <div className="flex shrink-0 flex-row-reverse items-center">
+        {/* دایره‌های عکس پروفایل، کنار هم و با هم‌پوشانی */}
+        <div className="flex shrink-0 items-center">
           {team.members.map((m, i) => (
             <div
               key={m.userId}
-              className={cn('relative', i > 0 && '-mr-3.5')}
-              style={{ zIndex: team.members.length - i }}
+              className="relative"
+              style={{ marginInlineStart: i > 0 ? '-0.875rem' : 0, zIndex: team.members.length - i }}
             >
               <Avatar
                 firstName={m.firstName}
@@ -52,7 +52,15 @@ export function TeamCard({
                 className="ring-2 ring-white"
               />
               {m.level && (
-                <span className="absolute -bottom-1 -left-1 flex h-5 min-w-5 items-center justify-center rounded-lg bg-brand-800 px-1 text-[9px] font-black text-white ring-2 ring-white">
+                /* نشان سطح روی لبه‌ی بیرونی هر دایره می‌نشیند تا زیر دایره‌ی کناری پنهان نشود.
+                   dir=ltr لازم است وگرنه «A−» به شکل «−A» دیده می‌شود. */
+                <span
+                  dir="ltr"
+                  className={cn(
+                    'absolute -bottom-1 flex h-5 min-w-5 items-center justify-center rounded-lg bg-brand-800 px-1 text-[9px] font-black text-white ring-2 ring-white',
+                    i === 0 ? '-right-1' : '-left-1',
+                  )}
+                >
                   {LEVEL_LABEL[m.level]}
                 </span>
               )}
