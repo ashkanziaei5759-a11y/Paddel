@@ -31,6 +31,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-padel}:${POSTGRES_PASSWORD:-padel_secret}@db:5432/${POSTGRES_DB:-persian_padel}?schema=public
+      DIRECT_URL: postgresql://${POSTGRES_USER:-padel}:${POSTGRES_PASSWORD:-padel_secret}@db:5432/${POSTGRES_DB:-persian_padel}?schema=public
       AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET را در فایل .env تعریف کنید}
       SESSION_TTL_DAYS: ${SESSION_TTL_DAYS:-30}
       APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Tehran}

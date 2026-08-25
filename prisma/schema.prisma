@@ -9,7 +9,11 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // اتصال روزمره‌ی اپ — روی میزبان‌های بدون‌سرور معمولاً از استخر اتصال (pooler) می‌آید
+  url       = env("DATABASE_URL")
+  // مهاجرت‌ها به اتصال مستقیم نیاز دارند؛ pgBouncer آن را پشتیبانی نمی‌کند.
+  // اگر استخر اتصال ندارید، همان مقدار DATABASE_URL را بگذارید.
+  directUrl = env("DIRECT_URL")
 }
 
 // ===========================================================================

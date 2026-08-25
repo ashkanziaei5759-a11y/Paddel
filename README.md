@@ -52,7 +52,10 @@ Tailwind CSS 3 · PostgreSQL 16 · Prisma 6
 
 مستندات کامل معماری و شمای پایگاه داده: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
-**راهنمای گام‌به‌گام استقرار روی سرور و اتصال دامنه:**
+**استقرار رایگان در ۲۰ دقیقه (Vercel + Neon، دامنه و HTTPS رایگان، بدون نصب چیزی):**
+[`docs/DEPLOY-FREE.md`](docs/DEPLOY-FREE.md)
+
+**راهنمای کامل استقرار روی سرور و اتصال دامنه:**
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
 
 > ⚠️ این پروژه روی هاست‌های اشتراکی PHP مانند **InfinityFree** اجرا نمی‌شود؛

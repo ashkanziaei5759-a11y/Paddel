@@ -18,7 +18,8 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
-    title: 'Persian Padel',
+    /* برچسبی که در iOS زیر آیکون صفحه‌ی خانه می‌نشیند */
+    title: 'پرشین پدل',
     statusBarStyle: 'black-translucent',
   },
   formatDetection: { telephone: false },
