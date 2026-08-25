@@ -5,19 +5,24 @@ Double-click `run_homework.bat`. It will:
 1. Open Chrome by itself.
 2. Sign into the portal by itself (username/password are typed by the script,
    not by you).
-3. Go to the homework section, find every submission, and download the files
-   into `Desktop\Homework\<Student>\`, named with the assignment and the date.
-4. Read each file (Word, PDF, photos via OCR, voice messages via offline
-   transcription) and draft feedback for it.
-5. Open each submission **one at a time**, type the drafted feedback into its
-   feedback box, and wait. You read it, edit it if you like, and click
-   **Submit on the site yourself**. The moment you do, the script notices and
-   moves to the next student automatically — no key press needed.
-6. Print a report at the end: how many downloaded, how many were submitted,
-   and anything that needs a manual look.
+3. Go to the "لیست تکالیف تائید نشده" (pending review) list and click
+   **مشاهده تکالیف** on the first row.
+4. On that submission's page: download the uploaded file(s) into
+   `Desktop\Homework\<Student>\`, read them (Word, PDF, photos via OCR, voice
+   messages via offline transcription), and draft feedback.
+5. Type the draft into the **"توضیحات شما برای زبان آموز..."** box, then
+   wait. You read it, edit it if you like, choose the status, and click
+   **ثبت** yourself.
+6. The moment you do, the script notices and re-opens the list — which now
+   has one fewer pending row — and clicks **مشاهده تکالیف** on the next one.
+   No key press, nothing left for you to click except ثبت itself.
+7. When the pending list is empty, it stops and prints a report: how many
+   were processed, how many were submitted, and anything that needs a
+   manual look.
 
-**This script never clicks Submit or Save on the portal.** That is always
-your action, on every single submission.
+**This script never clicks ثبت (Submit) or picks a status.** Grading is
+always your decision, on every single submission — the script only fills in
+the text box and waits.
 
 ## First run
 
@@ -51,34 +56,35 @@ Word docs, text PDFs and voice messages work without either.
 
 ## How it finds things on the page
 
-The portal's exact HTML wasn't available while building this, so instead of
-hard-coded selectors the script looks for things by what they *are*:
+The pending-review list, the "مشاهده تکالیف" button, the feedback box, and
+the "ثبت" button are all matched by their real text/shape on the portal, not
+a hard-coded selector — so small layout tweaks (a moved column, a slightly
+reworded button) don't break it outright, and every fallback still degrades
+to a keyword search rather than failing silently:
 
 - **Login**: the visible password box on the login page, and the text box
   right above it.
-- **Homework section**: the configured URL, or a menu link whose text
-  contains a homework-related word (Persian or English).
-- **Files**: any link on that page pointing at a file (by extension, or by
-  words like "دانلود"/"download" near it).
-- **Student name**: Persian or Latin name-shaped text in the same table
-  row/block as the link. This is the one guess worth double-checking — if a
-  folder is named `نامشخص` ("unknown"), that item's name wasn't recognized
-  and the file needs moving into the right folder by hand.
-- **The submission's own page** (for the review step): a second link in the
-  same row as the download link, whose text suggests it opens the item
-  ("مشاهده", "جزئیات", "بازخورد", "view", "details", "feedback"...). If no
-  such link exists, it falls back to the download link's own page.
-- **The feedback box**: the visible `<textarea>` on that page.
-- **"You submitted it"**: the script never clicks Submit — it watches for the
-  page navigating away, or the feedback box disappearing/becoming disabled,
-  either of which normally happens right after a form is posted. If it
-  doesn't see either within 30 minutes it moves on anyway and flags that
-  submission in the report.
+- **Pending list**: rows containing a "مشاهده تکالیف" button (or a close
+  variant - "مشاهده", "بررسی", "view", "review"). Student/class/session are
+  read from that row's own table cells.
+- **Uploaded files**: every link on the opened submission's page pointing at
+  a file, by extension or by words like "دانلود"/"فایل" near it — this
+  covers both the "فایل های آپلود شده" and "صوت های ضبط شده" sections.
+  Files are fetched directly over the browser's own session rather than by
+  clicking, since some file links just open inline instead of triggering a
+  download.
+- **The feedback box**: the visible `<textarea>` on the page, preferring one
+  whose placeholder matches the portal's real wording ("توضیحات", "استاد
+  عزیز") over any other textarea that might be on the page.
+- **"You submitted it"**: the script never clicks ثبت — it watches for the
+  page navigating away (the normal case, since ثبت returns to the pending
+  list) or the feedback box disappearing/becoming disabled. If it sees
+  neither within 30 minutes it moves on anyway and flags that submission in
+  the report.
 
 If the portal's layout doesn't match any of this (login page structure is
-unusual, or the homework page needs a click through a different menu), the
-script says exactly what it couldn't find and where, instead of failing
-silently.
+unusual, or the pending list needs a different starting page), the script
+says exactly what it couldn't find, instead of failing silently.
 
 ## The report
 
@@ -92,27 +98,29 @@ After every run, two things are written into `Desktop\Homework\`:
 
 ## If something goes wrong
 
-**"کروم اجرا نشد" (Chrome would not start)** — Google Chrome isn't installed.
-Get it from google.com/chrome.
+**"Chrome would not start"** — Google Chrome isn't installed. Get it from
+google.com/chrome.
 
-**"ورود ناموفق" (sign-in failed)** — either the saved password is wrong (open
-Credential Manager and remove `homework-automation-portal1` so it's asked
-again), or the site is asking for something extra (a code, a captcha) that
-this script can't answer. It stops rather than getting stuck.
+**"Sign-in failed"** — either the saved password is wrong (open Credential
+Manager and remove `homework-automation-portal1` so it's asked again), or
+the site is asking for something extra (a code, a captcha) that this script
+can't answer. It stops rather than getting stuck.
 
-**"هیچ فایل تکلیفی پیدا نشد" (no files found)** — either there's genuinely
-nothing pending, or the homework page needs `homework_url` set explicitly in
-`config.json`.
+**Stops immediately with no rows processed** — the pending list page didn't
+have a recognizable "مشاهده تکالیف" button. Set `homework_url` in
+`config.json` to the exact pending-review list page and try again.
 
 **A folder named نامشخص (unknown)** — the student-name guess failed for that
-item. The file is still downloaded correctly; just move it into the right
-folder.
+item. The files are still downloaded correctly; just move the folder's
+contents into the right one.
 
-**"no feedback box found on this submission's page"** — the review step
-couldn't find a `<textarea>` on the page it opened for that item. The draft
-is still saved in the report file, so it can be pasted in by hand; if this
-happens for every item, `homework_url`'s page layout probably needs a
-"view/details" link that this heuristic isn't recognizing yet.
+**"no uploaded file found on this submission's page"** — the script opened
+a submission but found nothing file-shaped to download. Worth a manual look
+at that one.
+
+**"no feedback box found on this submission's page"** — couldn't find a
+`<textarea>` on the opened submission's page. The draft is still saved in
+the report file, so it can be pasted in by hand.
 
 **"no Submit detected after 30 minutes"** — the script waited half an hour
 for the page to change after you clicked Submit and didn't see it. Either the

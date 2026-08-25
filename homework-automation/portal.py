@@ -1,12 +1,18 @@
-"""Finding things on the portal without being told where they are.
+"""Talking to the specific homework portal seen in screenshots:
 
-The portal's HTML is not known ahead of time, so nothing here relies on a
-hand-written CSS selector. Each function looks for the thing by what it *is*
-- a password field is an input of type password, a homework file is a link
-that points at a file - and reports honestly when it cannot find it.
+- A "پdلیست تکالیف تائید نشده" (pending-review homework list) page: one row
+  per submission, with a green "مشاهده تکالیف" button per row.
+- Clicking it opens a detail page with the uploaded file(s)
+  ("فایل های آپلود شده" / "صوت های ضبط شده"), a feedback textarea
+  ("توضیحات شما برای زبان آموز..."), a status dropdown, and a "ثبت" button.
+- Submitting normally returns to the pending list, which then has one fewer
+  row (the one just handled no longer shows as pending).
+
+Everything still degrades to a keyword/shape search rather than a fixed
+selector, since even a confirmed layout can shift a little (new column, a
+renamed button) without warning.
 """
-import re
-from urllib.parse import unquote, urlparse
+from urllib.parse import unquote, urljoin, urlparse
 
 FILE_EXTS = (
     ".pdf", ".doc", ".docx", ".rtf", ".txt",
@@ -15,19 +21,21 @@ FILE_EXTS = (
     ".zip", ".rar",
 )
 
-# Words that mark a link as "this is the homework section", in English and
-# Persian. The portal is Persian-language, so both matter.
 HOMEWORK_WORDS = (
     "تکلیف", "تکالیف", "تمرین", "تمرینات", "آپلود", "ارسالی",
     "homework", "assignment", "exercise", "submission", "task",
 )
 DOWNLOAD_WORDS = ("دانلود", "دریافت", "فایل", "download", "attachment", "file")
 LOGGED_OUT_WORDS = ("logout", "signout", "sign-out", "خروج")
-OPEN_WORDS = (
-    "مشاهده", "بازکردن", "جزئیات", "نمایش", "بازخورد", "نمره",
-    "view", "details", "open", "review", "feedback", "grade",
-)
+
+# The exact button seen on the real portal, plus generic fallbacks in case
+# the wording differs elsewhere (a different class page, a future version).
+REVIEW_BUTTON_WORDS = ("مشاهده تکالیف", "مشاهده", "بررسی", "view", "review")
 SUBMIT_WORDS = ("ثبت", "ارسال", "ذخیره", "submit", "save", "send")
+# The feedback textarea's real placeholder starts with "استاد عزیز" and
+# mentions "توضیحات"/"تکالیف" - used to prefer it over any other textarea
+# on the page (an upload-notes box, a search box, etc).
+FEEDBACK_HINTS = ("توضیحات", "استاد عزیز", "زبان آموز")
 
 
 def _visible(locator) -> bool:
@@ -37,8 +45,17 @@ def _visible(locator) -> bool:
         return False
 
 
+def _text(locator) -> str:
+    try:
+        return (locator.inner_text() or "").strip()
+    except Exception:
+        return ""
+
+
+# --- login -------------------------------------------------------------
+
+
 def login(page, url: str, username: str, password: str) -> tuple[bool, str]:
-    """Fill in the login form and submit it. Returns (ok, message)."""
     page.goto(url, wait_until="domcontentloaded")
     page.wait_for_timeout(1500)
 
@@ -72,8 +89,6 @@ def login(page, url: str, username: str, password: str) -> tuple[bool, str]:
     if _looks_signed_in(page):
         return True, "signed in"
 
-    # Still on a page with a password box means the credentials bounced, or
-    # the site wants something extra (a code, a captcha).
     visible_error = _error_text(page)
     if visible_error:
         return False, f"the site rejected the sign-in: {visible_error}"
@@ -81,8 +96,6 @@ def login(page, url: str, username: str, password: str) -> tuple[bool, str]:
 
 
 def _username_field_near(page, password_field):
-    """The username box is the visible text input that comes before the
-    password box in the document."""
     inputs = page.locator(
         "input[type='text'], input[type='email'], input[type='tel'], input:not([type])"
     ).all()
@@ -100,12 +113,7 @@ def _username_field_near(page, password_field):
 
 
 def _submit_button(page):
-    for selector in (
-        "button[type='submit']",
-        "input[type='submit']",
-        "form button",
-        "button",
-    ):
+    for selector in ("button[type='submit']", "input[type='submit']", "form button", "button"):
         for candidate in page.locator(selector).all():
             if _visible(candidate):
                 return candidate
@@ -123,25 +131,20 @@ def _error_text(page) -> str:
     for selector in (".validation-summary-errors", ".alert-danger", ".error", "[role='alert']"):
         node = page.locator(selector).first
         if node.count() and _visible(node):
-            text = (node.inner_text() or "").strip()
+            text = _text(node)
             if text:
                 return " ".join(text.split())[:200]
     return ""
 
 
 def go_to_homework(page, explicit_url: str) -> tuple[bool, str]:
-    """Reach the homework section: use the configured URL if there is one,
-    otherwise follow the menu link that looks like homework."""
     if explicit_url:
         page.goto(explicit_url, wait_until="domcontentloaded")
         page.wait_for_timeout(1500)
         return True, explicit_url
 
     for link in page.locator("a").all():
-        try:
-            text = (link.inner_text() or "").strip()
-        except Exception:
-            continue
+        text = _text(link)
         if text and any(word in text.lower() for word in HOMEWORK_WORDS):
             try:
                 link.click()
@@ -152,64 +155,100 @@ def go_to_homework(page, explicit_url: str) -> tuple[bool, str]:
     return False, "could not find a homework/assignments link in the menu"
 
 
-def find_files(page) -> list[dict]:
-    """Every link on the page that points at a downloadable file, with
-    whatever student and assignment text sits around it."""
-    found: list[dict] = []
-    seen: set[str] = set()
+# --- the pending-review list --------------------------------------------
 
-    for index, link in enumerate(page.locator("a").all()):
-        try:
-            href = link.get_attribute("href") or ""
-            text = " ".join((link.inner_text() or "").split())
-        except Exception:
-            continue
-        if not href or href.startswith(("#", "javascript:", "mailto:")):
-            continue
-        if not _is_file_link(href, text):
-            continue
-        if href in seen:
-            continue
-        seen.add(href)
 
-        context = _row_text(link)
-        found.append(
+def find_pending_reviews(page) -> list[dict]:
+    """Every row in the pending list that has a 'مشاهده تکالیف' (or similar)
+    button, with the student/class/session text read from its cells."""
+    buttons = _review_buttons(page)
+    items: list[dict] = []
+    for i in range(buttons.count()):
+        button = buttons.nth(i)
+        row = button.locator("xpath=ancestor::tr[1]")
+        if not row.count():
+            continue
+        cells = [_text(c) for c in row.locator("td").all()]
+        student = _pick_cell(cells, 1) or "نامشخص"
+        klass = _pick_cell(cells, 2)
+        session = _pick_cell(cells, 4)
+        submit_time = _pick_cell(cells, 5)
+        assignment = f"جلسه {session} - {klass}".strip(" -") if (session or klass) else "تکلیف"
+        items.append(
             {
-                "submission_id": href,
-                "url": href,
-                "detail_url": _detail_link(link, href) or href,
-                "index": index,
-                "link_text": text,
-                "student": _guess_student(context, text),
-                "assignment": _guess_assignment(context, text, href),
-                "context": context,
+                "submission_id": "|".join([student, klass, session, submit_time]),
+                "student": student,
+                "class": klass,
+                "assignment": assignment,
             }
         )
-    return found
+    return items
 
 
-def _detail_link(download_link, download_href: str) -> str | None:
-    """The page that actually holds this submission's feedback box is
-    usually a separate "view/open" link in the same row as the download
-    link, not the raw file itself."""
-    for ancestor in ("tr", "li", "div"):
-        try:
-            row = download_link.locator(f"xpath=ancestor::{ancestor}[1]")
-            if not row.count():
-                continue
-            for candidate in row.locator("a").all():
-                href = candidate.get_attribute("href") or ""
-                if not href or href == download_href:
-                    continue
-                if href.startswith(("#", "javascript:", "mailto:")):
-                    continue
-                text = ((candidate.inner_text() or "")).lower()
-                if any(word in text or word in href.lower() for word in OPEN_WORDS):
-                    return href
-            break
-        except Exception:
+def _review_buttons(page):
+    """Links or buttons whose visible text matches the review-button words,
+    tried most-specific phrase first."""
+    for phrase in REVIEW_BUTTON_WORDS:
+        found = page.locator("a, button").filter(has_text=phrase)
+        if found.count():
+            return found
+    return page.locator("a, button").filter(has_text="مشاهده")
+
+
+def _pick_cell(cells: list[str], index: int) -> str:
+    return cells[index] if 0 <= index < len(cells) else ""
+
+
+def open_next_pending(page, already_done: set[str]) -> tuple[dict | None, str]:
+    """Re-read the pending list fresh and click into the first row not
+    already handled this run. Re-reading each time (rather than working off
+    a stale list) is what lets this notice the list shrinking as items get
+    submitted."""
+    items = find_pending_reviews(page)
+    remaining = [i for i in items if i["submission_id"] not in already_done]
+    if not remaining:
+        return None, ""
+
+    target = remaining[0]
+    buttons = _review_buttons(page)
+    for i in range(buttons.count()):
+        button = buttons.nth(i)
+        row = button.locator("xpath=ancestor::tr[1]")
+        cells = [_text(c) for c in row.locator("td").all()] if row.count() else []
+        row_id = "|".join(
+            [_pick_cell(cells, 1), _pick_cell(cells, 2), _pick_cell(cells, 4), _pick_cell(cells, 5)]
+        )
+        if row_id == target["submission_id"]:
+            try:
+                button.click()
+                page.wait_for_load_state("networkidle", timeout=20000)
+                return target, ""
+            except Exception as exc:
+                return None, f"could not open the review page: {exc}"
+    return None, "matched a pending row but lost it before clicking - portal may have refreshed"
+
+
+# --- the detail/review page ----------------------------------------------
+
+
+def find_submission_files(page) -> list[str]:
+    """Absolute URLs of every uploaded file on the currently open detail
+    page (photos, PDFs, voice recordings)."""
+    found: list[str] = []
+    seen: set[str] = set()
+    for link in page.locator("a").all():
+        href = link.get_attribute("href") or ""
+        if not href or href.startswith(("#", "javascript:", "mailto:")):
             continue
-    return None
+        text = _text(link)
+        if not _is_file_link(href, text):
+            continue
+        absolute = urljoin(page.url, href)
+        if absolute in seen:
+            continue
+        seen.add(absolute)
+        found.append(absolute)
+    return found
 
 
 def _is_file_link(href: str, text: str) -> bool:
@@ -220,62 +259,19 @@ def _is_file_link(href: str, text: str) -> bool:
     return any(word in haystack for word in DOWNLOAD_WORDS)
 
 
-def _row_text(link) -> str:
-    """Text of the table row (or nearest block) the link sits in - that is
-    where the student's name usually is."""
-    for ancestor in ("tr", "li", "div"):
-        try:
-            node = link.locator(f"xpath=ancestor::{ancestor}[1]")
-            if node.count():
-                text = " ".join((node.inner_text() or "").split())
-                if 3 < len(text) < 400:
-                    return text
-        except Exception:
-            continue
-    return ""
-
-
-PERSIAN_NAME = re.compile(r"[؀-ۿ]{2,}(?:\s+[؀-ۿ]{2,}){1,2}")
-LATIN_NAME = re.compile(r"\b[A-Z][a-z]{1,20}(?:\s+[A-Z][a-z]{1,20}){1,2}\b")
-
-
-def _guess_student(context: str, link_text: str) -> str:
-    """Names are the one thing worth guessing at, since folders are named
-    after them. A wrong guess is visible in the report and easy to fix."""
-    for pattern in (PERSIAN_NAME, LATIN_NAME):
-        for match in pattern.findall(context):
-            if not any(word in match.lower() for word in DOWNLOAD_WORDS + HOMEWORK_WORDS):
-                return match.strip()
-    return "نامشخص"
-
-
-def _guess_assignment(context: str, link_text: str, href: str) -> str:
-    filename = unquote(urlparse(href).path).rsplit("/", 1)[-1]
-    stem = filename.rsplit(".", 1)[0]
-    if stem and len(stem) > 2 and not stem.isdigit():
-        return stem
-    if link_text and not any(word in link_text.lower() for word in DOWNLOAD_WORDS):
-        return link_text
-    return "تکلیف"
-
-
-# --- opening a submission and waiting for the teacher to submit it --------
-
-
-def open_submission(page, item: dict) -> tuple[bool, str]:
-    """Go to the page that holds this submission's feedback box."""
-    try:
-        page.goto(item["detail_url"], wait_until="domcontentloaded")
-        page.wait_for_timeout(1200)
-        return True, ""
-    except Exception as exc:
-        return False, f"could not open the submission page: {exc}"
-
-
 def feedback_box(page):
-    """The visible textarea on the page - where the teacher writes feedback."""
+    """The textarea the teacher writes feedback into. Prefers one whose
+    placeholder matches the real portal's wording, so a stray textarea
+    elsewhere on the page (a search box, an upload-notes field) isn't
+    picked by mistake."""
     boxes = [b for b in page.locator("textarea").all() if _visible(b)]
-    return boxes[0] if boxes else None
+    if not boxes:
+        return None
+    for box in boxes:
+        placeholder = (box.get_attribute("placeholder") or "")
+        if any(hint in placeholder for hint in FEEDBACK_HINTS):
+            return box
+    return boxes[0]
 
 
 def find_submit_button(page):
@@ -284,24 +280,18 @@ def find_submit_button(page):
             if not _visible(candidate):
                 continue
             try:
-                text = (candidate.inner_text() or candidate.get_attribute("value") or "").lower()
+                text = (candidate.inner_text() or candidate.get_attribute("value") or "").strip()
             except Exception:
                 continue
-            if any(word in text for word in SUBMIT_WORDS):
+            if text in SUBMIT_WORDS or any(word in text.lower() for word in SUBMIT_WORDS):
                 return candidate
     return None
 
 
 def wait_for_teacher_submit(page, box, timeout_ms: int = 30 * 60 * 1000) -> bool:
-    """Block until the teacher clicks Submit/ثبت herself.
-
-    Detected by any of: the page navigating away, the feedback box
-    disappearing or becoming disabled, or a submit-labelled button
-    becoming disabled (all common signs a form was just posted). Polls
-    rather than a single wait_for so it survives whichever of these the
-    portal actually does. Returns False on timeout - the caller decides
-    what to do (this script never clicks Submit itself).
-    """
+    """Block until the teacher clicks ثبت herself: the page navigating away
+    (the normal case - it returns to the pending list) or the feedback box
+    disappearing/becoming disabled both count. Never clicks Submit itself."""
     start_url = page.url
     elapsed = 0
     interval = 500
@@ -318,7 +308,6 @@ def wait_for_teacher_submit(page, box, timeout_ms: int = 30 * 60 * 1000) -> bool
                 if not still_there:
                     return True
         except Exception:
-            # the page navigated mid-check, which is itself the signal
             return True
         page.wait_for_timeout(interval)
         elapsed += interval

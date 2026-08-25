@@ -1,9 +1,10 @@
-"""Open Chrome, sign into the portal, download every homework file, check it,
-draft feedback, and then open each submission one by one so the teacher can
-review the draft and click Submit herself. As soon as she submits one, the
-script moves to the next automatically - no key press needed. This script
-never clicks Submit/Save on the portal itself; that stays the teacher's
-action on every single one.
+"""Open Chrome, sign into the portal, and go through the pending-homework
+list one submission at a time: open it, download its file(s), draft
+feedback, type the draft into the feedback box, and wait. The moment the
+teacher clicks Submit/ثبت on the site herself, the script notices and
+re-reads the (now one-shorter) pending list to open the next one - no key
+press needed. This script never clicks Submit/ثبت itself; that is always
+the teacher's action, every single time.
 
 Terminal output is kept in English on purpose: the classic Windows Command
 Prompt (conhost.exe) that a double-clicked .bat file opens uses a raster
@@ -13,9 +14,11 @@ the desktop-icon script's message boxes, use a real font and show Persian
 fine - only this console does not.
 """
 import json
+import re
 import sys
 from datetime import date, datetime
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 import extract
 import feedback
@@ -35,11 +38,10 @@ for _stream in (sys.stdout, sys.stderr):
 HERE = Path(__file__).parent
 CONFIG_PATH = HERE / "config.json"
 KEYRING_SERVICE = "homework-automation-portal1"
+MAX_SUBMISSIONS_PER_RUN = 500  # a hard ceiling so a stuck loop can't run forever
 
 
 def _stored_credentials() -> tuple[str | None, str | None]:
-    """Read the saved username/password from the OS credential store
-    (Windows Credential Manager). Nothing touches disk in plain text."""
     try:
         import keyring
     except ImportError:
@@ -96,46 +98,52 @@ def load_config() -> dict:
 
 
 def safe_name(value: str, fallback: str = "unknown") -> str:
-    import re
-
     cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", value).strip().strip(".")
     cleaned = " ".join(cleaned.split())
     return cleaned[:70] or fallback
 
 
-def download_file(page, item, root: Path) -> tuple[Path | None, str]:
-    folder = root / safe_name(item["student"], "نامشخص")
+def download_submission_files(context, urls: list[str], student: str, assignment: str, root: Path) -> list[str]:
+    """Fetch each file straight over HTTP using the browser's own session
+    (cookies included), rather than relying on a click triggering a
+    download event - a plain <a href="...jpg"> often just opens the image
+    instead of downloading it, and this works either way."""
+    folder = root / safe_name(student, "نامشخص")
     folder.mkdir(parents=True, exist_ok=True)
     today = date.today().isoformat()
-    link = page.locator("a").nth(item["index"])
-    try:
-        with page.expect_download(timeout=90000) as info:
-            link.click()
-        result = info.value
-        ext = Path(result.suggested_filename).suffix or ".bin"
-        target = folder / f"{safe_name(item['assignment'], 'تکلیف')}_{today}{ext}"
+    saved: list[str] = []
+
+    for i, url in enumerate(urls, start=1):
+        ext = Path(unquote(urlparse(url).path)).suffix or ".bin"
+        suffix = f"_{i}" if len(urls) > 1 else ""
+        target = folder / f"{safe_name(assignment, 'تکلیف')}_{today}{suffix}{ext}"
         counter = 2
         while target.exists():
-            target = folder / f"{safe_name(item['assignment'])}_{today}_{counter}{ext}"
+            target = folder / f"{safe_name(assignment)}_{today}{suffix}_{counter}{ext}"
             counter += 1
-        result.save_as(str(target))
-        return target, ""
-    except Exception as exc:
-        return None, f"download failed: {exc}"
+        try:
+            response = context.request.get(url)
+            if not response.ok:
+                print(f"    ! download failed (HTTP {response.status}): {url}")
+                continue
+            target.write_bytes(response.body())
+            saved.append(str(target))
+        except Exception as exc:
+            print(f"    ! download failed: {exc}")
+    return saved
 
 
 def write_report(root: Path, rows: list[dict], problems: list[str]) -> Path:
-    # The report file itself is Persian - a real editor/Notepad renders it
-    # fine, unlike the console.
     lines = [
-        "گزارش دانلود تکالیف",
+        "گزارش دانلود و بازخورد تکالیف",
         f"تاریخ: {datetime.now():%Y-%m-%d %H:%M}",
         "=" * 60,
         "",
     ]
     for row in rows:
         lines.append(f"{row['student']}  |  {row['assignment']}")
-        lines.append(f"  فایل: {row.get('file', '-')}")
+        files = row.get("files") or []
+        lines.append(f"  فایل‌ها: {', '.join(files) if files else '-'}")
         if row.get("note"):
             lines.append(f"  ⚠ {row['note']}")
         elif row.get("feedback"):
@@ -159,40 +167,66 @@ def write_report(root: Path, rows: list[dict], problems: list[str]) -> Path:
     return path
 
 
-def review_submission(page, item: dict) -> None:
-    """Open this submission's own page, type the drafted feedback into its
-    feedback box, and wait for the teacher to click Submit on the site
-    herself - then this returns and the caller moves on to the next
-    submission automatically. This script never clicks Submit."""
+def process_one(page, context, item: dict, config: dict, root: Path) -> dict:
+    """Download this submission's file(s), draft feedback, type it in, and
+    wait for the teacher's own Submit click. Returns the record to save."""
     label = f"{item['student']} - {item['assignment']}"
-    ok, error = portal.open_submission(page, item)
-    if not ok:
-        item["review_note"] = error
-        print(f"  ! {label}: {error}")
-        return
+    record: dict = {**item}
+
+    urls = portal.find_submission_files(page)
+    if not urls:
+        record["note"] = "no uploaded file found on this submission's page"
+        print(f"  ! {label}: {record['note']}")
+        return record
+
+    saved = download_submission_files(context, urls, item["student"], item["assignment"], root)
+    if not saved:
+        record["note"] = "found file(s) but none could be downloaded"
+        print(f"  ! {label}: {record['note']}")
+        return record
+    record["files"] = saved
+    print(f"  OK {label}  ->  {len(saved)} file(s)")
+
+    texts, extract_notes = [], []
+    for file_str in saved:
+        text, note = extract.extract(Path(file_str), config)
+        if text:
+            texts.append(text)
+        if note:
+            extract_notes.append(f"{Path(file_str).name}: {note}")
+
+    if not texts:
+        record["note"] = "; ".join(extract_notes) or "could not read any of the downloaded files"
+        print(f"    ! flagged: {record['note']}")
+        return record
+    if extract_notes:
+        print(f"    (note: {'; '.join(extract_notes)})")
+
+    combined_text = "\n\n".join(texts)
+    record["feedback"] = feedback.draft(combined_text, item["student"], item["assignment"], config)
 
     box = portal.feedback_box(page)
     if box is None:
-        item["review_note"] = "no feedback box found on this submission's page"
-        print(f"  ! {label}: no feedback box found - draft is in the report file")
-        return
+        record["review_note"] = "no feedback box found on this submission's page"
+        print(f"  ! {label}: {record['review_note']} - draft is in the report file")
+        return record
 
     try:
         box.click()
-        box.fill(item["feedback"])
+        box.fill(record["feedback"])
     except Exception as exc:
-        item["review_note"] = f"could not type into the feedback box: {exc}"
-        print(f"  ! {label}: {item['review_note']}")
-        return
+        record["review_note"] = f"could not type into the feedback box: {exc}"
+        print(f"  ! {label}: {record['review_note']}")
+        return record
 
     print(f"  -> {label}: feedback typed in. Waiting for you to click Submit on the site...")
-    submitted = portal.wait_for_teacher_submit(page, box)
-    if submitted:
-        item["reviewed"] = datetime.now().isoformat()
-        print(f"     submitted - moving to the next student.")
+    if portal.wait_for_teacher_submit(page, box):
+        record["reviewed"] = datetime.now().isoformat()
+        print("     submitted - moving to the next student.")
     else:
-        item["review_note"] = "timed out waiting for Submit (30 min) - moved on without it"
-        print(f"     ! no Submit detected after 30 minutes - moving on anyway.")
+        record["review_note"] = "timed out waiting for Submit (30 min) - moved on without it"
+        print("     ! no Submit detected after 30 minutes - moving on anyway.")
+    return record
 
 
 def main() -> None:
@@ -200,10 +234,10 @@ def main() -> None:
     root = Path(config["download_root"]) if config.get("download_root") else desktop() / "Homework"
     root.mkdir(parents=True, exist_ok=True)
     manifest = Manifest(root)
+    already_done = {i["submission_id"] for i in manifest.items if i.get("reviewed") or i.get("note")}
 
     from playwright.sync_api import sync_playwright
 
-    downloaded = 0
     problems: list[str] = []
     rows: list[dict] = []
 
@@ -240,71 +274,38 @@ def main() -> None:
             ok, where = portal.go_to_homework(page, config["portal"].get("homework_url", ""))
             if not ok:
                 print(f"\nX {where}")
-                print("  Set homework_url in config.json to the homework page's URL.")
+                print("  Set homework_url in config.json to the pending-list page's URL.")
                 context.close()
                 browser.close()
                 sys.exit(1)
-            print(f"OK - homework page: {page.url}")
+            homework_url = page.url
+            print(f"OK - homework list: {homework_url}\n")
 
-            items = portal.find_files(page)
-            if not items:
-                print("\nNo homework files found on this page.")
-            print(f"OK - {len(items)} file(s) found.\n")
+            for _ in range(MAX_SUBMISSIONS_PER_RUN):
+                item, error = portal.open_next_pending(page, already_done)
+                if error:
+                    problems.append(error)
+                    print(f"X {error}")
+                    break
+                if item is None:
+                    break
 
-            # Phase 1: download and read everything while still on the list
-            # page - downloading clicks a link by its row position on *this*
-            # page, so nothing here may navigate away yet.
-            merged_items: list[dict] = []
-            for item in items:
-                record = manifest.find(item["submission_id"]) or {}
-                item = {**item, **record}
-                label = f"{item['student']} - {item['assignment']}"
-
-                path = Path(item["file"]) if item.get("file") else None
-                if path and path.exists():
-                    print(f"  {label}: already downloaded")
-                else:
-                    path, error = download_file(page, item, root)
-                    if not path:
-                        problems.append(f"{label}: {error}")
-                        print(f"  X {label}: {error}")
-                        manifest.upsert({**item, "error": error})
-                        rows.append({**item, "note": error})
-                        continue
-                    downloaded += 1
-                    print(f"  OK {label}  ->  {path.relative_to(root)}")
-                item["file"] = str(path)
-
-                if not item.get("text") and not item.get("note"):
-                    text, note = extract.extract(path, config)
-                    item["text"], item["note"] = text, note
-
-                if item.get("note"):
-                    problems.append(f"{label}: {item['note']}")
-                    print(f"    ! flagged: {item['note']}")
-                elif item.get("text") and not item.get("feedback"):
-                    item["feedback"] = feedback.draft(
-                        item["text"], item["student"], item["assignment"], config
+                record = process_one(page, context, item, config, root)
+                already_done.add(item["submission_id"])
+                manifest.upsert(record)
+                rows.append(record)
+                if record.get("note"):
+                    problems.append(f"{record['student']} - {record['assignment']}: {record['note']}")
+                if record.get("review_note"):
+                    problems.append(
+                        f"{record['student']} - {record['assignment']}: {record['review_note']}"
                     )
 
-                manifest.upsert(item)
-                merged_items.append(item)
+                # Back to the (now shorter) pending list for the next one.
+                page.goto(homework_url, wait_until="domcontentloaded")
+                page.wait_for_timeout(1000)
 
-            # Phase 2: go through each one that has a feedback draft, open
-            # its own page, type the draft in, and wait for the teacher to
-            # submit it herself before moving to the next one.
-            reviewable = [i for i in merged_items if i.get("feedback") and not i.get("reviewed")]
-            if reviewable:
-                print(f"\nOpening {len(reviewable)} submission(s) for review, one at a time.")
-                print("Nothing is ever submitted automatically - click Submit yourself")
-                print("on each one and the script moves to the next by itself.\n")
-            for item in reviewable:
-                review_submission(page, item)
-                if item.get("review_note"):
-                    problems.append(f"{item['student']} - {item['assignment']}: {item['review_note']}")
-                manifest.upsert(item)
-
-            rows.extend(merged_items)
+            print("\nNo more pending submissions found." if not problems else "")
         finally:
             manifest.save()
             try:
@@ -314,16 +315,17 @@ def main() -> None:
                 pass
 
     report = write_report(root, rows, problems)
+    reviewed = sum(1 for r in rows if r.get("reviewed"))
 
     print("\n" + "=" * 60)
-    print(f"Downloaded: {downloaded}")
+    print(f"Processed: {len(rows)}   Submitted: {reviewed}")
     print(f"Folder: {root}")
     if problems:
         print(f"Needs a manual look: {len(problems)}")
         for line in problems:
             print(f"  - {line}")
     else:
-        print("Everything was read without problems.")
+        print("Everything went through without problems.")
     print(f"Full report (in Persian): {report.name}")
     print("=" * 60)
 
