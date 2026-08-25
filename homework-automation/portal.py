@@ -23,6 +23,11 @@ HOMEWORK_WORDS = (
 )
 DOWNLOAD_WORDS = ("دانلود", "دریافت", "فایل", "download", "attachment", "file")
 LOGGED_OUT_WORDS = ("logout", "signout", "sign-out", "خروج")
+OPEN_WORDS = (
+    "مشاهده", "بازکردن", "جزئیات", "نمایش", "بازخورد", "نمره",
+    "view", "details", "open", "review", "feedback", "grade",
+)
+SUBMIT_WORDS = ("ثبت", "ارسال", "ذخیره", "submit", "save", "send")
 
 
 def _visible(locator) -> bool:
@@ -172,6 +177,7 @@ def find_files(page) -> list[dict]:
             {
                 "submission_id": href,
                 "url": href,
+                "detail_url": _detail_link(link, href) or href,
                 "index": index,
                 "link_text": text,
                 "student": _guess_student(context, text),
@@ -180,6 +186,30 @@ def find_files(page) -> list[dict]:
             }
         )
     return found
+
+
+def _detail_link(download_link, download_href: str) -> str | None:
+    """The page that actually holds this submission's feedback box is
+    usually a separate "view/open" link in the same row as the download
+    link, not the raw file itself."""
+    for ancestor in ("tr", "li", "div"):
+        try:
+            row = download_link.locator(f"xpath=ancestor::{ancestor}[1]")
+            if not row.count():
+                continue
+            for candidate in row.locator("a").all():
+                href = candidate.get_attribute("href") or ""
+                if not href or href == download_href:
+                    continue
+                if href.startswith(("#", "javascript:", "mailto:")):
+                    continue
+                text = ((candidate.inner_text() or "")).lower()
+                if any(word in text or word in href.lower() for word in OPEN_WORDS):
+                    return href
+            break
+        except Exception:
+            continue
+    return None
 
 
 def _is_file_link(href: str, text: str) -> bool:
@@ -227,3 +257,69 @@ def _guess_assignment(context: str, link_text: str, href: str) -> str:
     if link_text and not any(word in link_text.lower() for word in DOWNLOAD_WORDS):
         return link_text
     return "تکلیف"
+
+
+# --- opening a submission and waiting for the teacher to submit it --------
+
+
+def open_submission(page, item: dict) -> tuple[bool, str]:
+    """Go to the page that holds this submission's feedback box."""
+    try:
+        page.goto(item["detail_url"], wait_until="domcontentloaded")
+        page.wait_for_timeout(1200)
+        return True, ""
+    except Exception as exc:
+        return False, f"could not open the submission page: {exc}"
+
+
+def feedback_box(page):
+    """The visible textarea on the page - where the teacher writes feedback."""
+    boxes = [b for b in page.locator("textarea").all() if _visible(b)]
+    return boxes[0] if boxes else None
+
+
+def find_submit_button(page):
+    for selector in ("button", "input[type='submit']", "input[type='button']"):
+        for candidate in page.locator(selector).all():
+            if not _visible(candidate):
+                continue
+            try:
+                text = (candidate.inner_text() or candidate.get_attribute("value") or "").lower()
+            except Exception:
+                continue
+            if any(word in text for word in SUBMIT_WORDS):
+                return candidate
+    return None
+
+
+def wait_for_teacher_submit(page, box, timeout_ms: int = 30 * 60 * 1000) -> bool:
+    """Block until the teacher clicks Submit/ثبت herself.
+
+    Detected by any of: the page navigating away, the feedback box
+    disappearing or becoming disabled, or a submit-labelled button
+    becoming disabled (all common signs a form was just posted). Polls
+    rather than a single wait_for so it survives whichever of these the
+    portal actually does. Returns False on timeout - the caller decides
+    what to do (this script never clicks Submit itself).
+    """
+    start_url = page.url
+    elapsed = 0
+    interval = 500
+    while elapsed < timeout_ms:
+        try:
+            if page.url != start_url:
+                return True
+            if box is not None:
+                still_there = False
+                try:
+                    still_there = box.is_visible() and box.is_enabled()
+                except Exception:
+                    still_there = False
+                if not still_there:
+                    return True
+        except Exception:
+            # the page navigated mid-check, which is itself the signal
+            return True
+        page.wait_for_timeout(interval)
+        elapsed += interval
+    return False

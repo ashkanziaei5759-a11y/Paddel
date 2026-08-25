@@ -8,13 +8,16 @@ Double-click `run_homework.bat`. It will:
 3. Go to the homework section, find every submission, and download the files
    into `Desktop\Homework\<Student>\`, named with the assignment and the date.
 4. Read each file (Word, PDF, photos via OCR, voice messages via offline
-   transcription) and check that it came out readable.
-5. Print a report: how many downloaded, which ones need a manual look, and a
-   suggested feedback draft for each one.
+   transcription) and draft feedback for it.
+5. Open each submission **one at a time**, type the drafted feedback into its
+   feedback box, and wait. You read it, edit it if you like, and click
+   **Submit on the site yourself**. The moment you do, the script notices and
+   moves to the next student automatically — no key press needed.
+6. Print a report at the end: how many downloaded, how many were submitted,
+   and anything that needs a manual look.
 
-Nothing is typed into the site and nothing is ever submitted or saved there —
-this only reads and downloads. No page is left open waiting for you to check
-anything while it runs.
+**This script never clicks Submit or Save on the portal.** That is always
+your action, on every single submission.
 
 ## First run
 
@@ -61,6 +64,16 @@ hard-coded selectors the script looks for things by what they *are*:
   row/block as the link. This is the one guess worth double-checking — if a
   folder is named `نامشخص` ("unknown"), that item's name wasn't recognized
   and the file needs moving into the right folder by hand.
+- **The submission's own page** (for the review step): a second link in the
+  same row as the download link, whose text suggests it opens the item
+  ("مشاهده", "جزئیات", "بازخورد", "view", "details", "feedback"...). If no
+  such link exists, it falls back to the download link's own page.
+- **The feedback box**: the visible `<textarea>` on that page.
+- **"You submitted it"**: the script never clicks Submit — it watches for the
+  page navigating away, or the feedback box disappearing/becoming disabled,
+  either of which normally happens right after a form is posted. If it
+  doesn't see either within 30 minutes it moves on anyway and flags that
+  submission in the report.
 
 If the portal's layout doesn't match any of this (login page structure is
 unusual, or the homework page needs a click through a different menu), the
@@ -94,6 +107,19 @@ nothing pending, or the homework page needs `homework_url` set explicitly in
 **A folder named نامشخص (unknown)** — the student-name guess failed for that
 item. The file is still downloaded correctly; just move it into the right
 folder.
+
+**"no feedback box found on this submission's page"** — the review step
+couldn't find a `<textarea>` on the page it opened for that item. The draft
+is still saved in the report file, so it can be pasted in by hand; if this
+happens for every item, `homework_url`'s page layout probably needs a
+"view/details" link that this heuristic isn't recognizing yet.
+
+**"no Submit detected after 30 minutes"** — the script waited half an hour
+for the page to change after you clicked Submit and didn't see it. Either the
+portal took the click without navigating or disabling the box (in which case
+the submission likely still went through fine — just check on the site), or
+the click didn't land. It moves to the next student regardless rather than
+hanging forever.
 
 ## Voice messages
 

@@ -1,8 +1,9 @@
 """Open Chrome, sign into the portal, download every homework file, check it,
-and print a report. Runs start to finish without stopping to ask anything.
-
-Nothing is ever submitted or saved on the portal - this only reads and
-downloads.
+draft feedback, and then open each submission one by one so the teacher can
+review the draft and click Submit herself. As soon as she submits one, the
+script moves to the next automatically - no key press needed. This script
+never clicks Submit/Save on the portal itself; that stays the teacher's
+action on every single one.
 
 Terminal output is kept in English on purpose: the classic Windows Command
 Prompt (conhost.exe) that a double-clicked .bat file opens uses a raster
@@ -140,6 +141,10 @@ def write_report(root: Path, rows: list[dict], problems: list[str]) -> Path:
         elif row.get("feedback"):
             lines.append("  بازخورد پیشنهادی:")
             lines.append("    " + row["feedback"].replace("\n", "\n    "))
+            if row.get("reviewed"):
+                lines.append("  ✓ ثبت شد در سایت")
+            elif row.get("review_note"):
+                lines.append(f"  ⚠ {row['review_note']}")
         lines.append("")
 
     lines.append("=" * 60)
@@ -152,6 +157,42 @@ def write_report(root: Path, rows: list[dict], problems: list[str]) -> Path:
     path = root / f"گزارش_{date.today().isoformat()}.txt"
     path.write_text("\n".join(lines), encoding="utf-8-sig")
     return path
+
+
+def review_submission(page, item: dict) -> None:
+    """Open this submission's own page, type the drafted feedback into its
+    feedback box, and wait for the teacher to click Submit on the site
+    herself - then this returns and the caller moves on to the next
+    submission automatically. This script never clicks Submit."""
+    label = f"{item['student']} - {item['assignment']}"
+    ok, error = portal.open_submission(page, item)
+    if not ok:
+        item["review_note"] = error
+        print(f"  ! {label}: {error}")
+        return
+
+    box = portal.feedback_box(page)
+    if box is None:
+        item["review_note"] = "no feedback box found on this submission's page"
+        print(f"  ! {label}: no feedback box found - draft is in the report file")
+        return
+
+    try:
+        box.click()
+        box.fill(item["feedback"])
+    except Exception as exc:
+        item["review_note"] = f"could not type into the feedback box: {exc}"
+        print(f"  ! {label}: {item['review_note']}")
+        return
+
+    print(f"  -> {label}: feedback typed in. Waiting for you to click Submit on the site...")
+    submitted = portal.wait_for_teacher_submit(page, box)
+    if submitted:
+        item["reviewed"] = datetime.now().isoformat()
+        print(f"     submitted - moving to the next student.")
+    else:
+        item["review_note"] = "timed out waiting for Submit (30 min) - moved on without it"
+        print(f"     ! no Submit detected after 30 minutes - moving on anyway.")
 
 
 def main() -> None:
@@ -210,6 +251,10 @@ def main() -> None:
                 print("\nNo homework files found on this page.")
             print(f"OK - {len(items)} file(s) found.\n")
 
+            # Phase 1: download and read everything while still on the list
+            # page - downloading clicks a link by its row position on *this*
+            # page, so nothing here may navigate away yet.
+            merged_items: list[dict] = []
             for item in items:
                 record = manifest.find(item["submission_id"]) or {}
                 item = {**item, **record}
@@ -243,7 +288,23 @@ def main() -> None:
                     )
 
                 manifest.upsert(item)
-                rows.append(item)
+                merged_items.append(item)
+
+            # Phase 2: go through each one that has a feedback draft, open
+            # its own page, type the draft in, and wait for the teacher to
+            # submit it herself before moving to the next one.
+            reviewable = [i for i in merged_items if i.get("feedback") and not i.get("reviewed")]
+            if reviewable:
+                print(f"\nOpening {len(reviewable)} submission(s) for review, one at a time.")
+                print("Nothing is ever submitted automatically - click Submit yourself")
+                print("on each one and the script moves to the next by itself.\n")
+            for item in reviewable:
+                review_submission(page, item)
+                if item.get("review_note"):
+                    problems.append(f"{item['student']} - {item['assignment']}: {item['review_note']}")
+                manifest.upsert(item)
+
+            rows.extend(merged_items)
         finally:
             manifest.save()
             try:
