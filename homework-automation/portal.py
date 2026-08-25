@@ -12,6 +12,7 @@ Everything still degrades to a keyword/shape search rather than a fixed
 selector, since even a confirmed layout can shift a little (new column, a
 renamed button) without warning.
 """
+import re
 from urllib.parse import unquote, urljoin, urlparse
 
 FILE_EXTS = (
@@ -231,32 +232,76 @@ def open_next_pending(page, already_done: set[str]) -> tuple[dict | None, str]:
 # --- the detail/review page ----------------------------------------------
 
 
+# Site-asset paths that happen to end in an image extension but are never
+# a student's submission (logos, icons, background art). Filtered out of
+# the raw-HTML fallback scan only, since the DOM walk already only looks at
+# elements that are plausibly "the submitted file".
+ASSET_PATH_HINTS = ("logo", "icon", "favicon", "/assets/", "/static/", "/img/site", "sprite")
+
+FILE_URL_IN_HTML = re.compile(
+    r"""(?:href|src|data-(?:src|url|file|href))\s*=\s*["']([^"']+\.(?:"""
+    + "|".join(ext.lstrip(".") for ext in FILE_EXTS)
+    + r"""))["']""",
+    re.IGNORECASE,
+)
+
+
 def find_submission_files(page) -> list[str]:
     """Absolute URLs of every uploaded file on the currently open detail
-    page (photos, PDFs, voice recordings)."""
+    page (photos, PDFs, voice recordings).
+
+    An uploaded image is often shown as a thumbnail with no plain
+    <a href="...">, opened through a lightbox/JS click instead - so this
+    doesn't only look at anchors. It walks every element that can carry a
+    file URL (links, images, audio/video sources), then falls back to a
+    raw-HTML regex scan to catch anything baked into an onclick handler or
+    a data-* attribute this script doesn't know the name of.
+    """
     found: list[str] = []
     seen: set[str] = set()
-    for link in page.locator("a").all():
-        href = link.get_attribute("href") or ""
-        if not href or href.startswith(("#", "javascript:", "mailto:")):
-            continue
-        text = _text(link)
-        if not _is_file_link(href, text):
-            continue
-        absolute = urljoin(page.url, href)
-        if absolute in seen:
-            continue
-        seen.add(absolute)
-        found.append(absolute)
+
+    for selector, attr in (
+        ("a[href]", "href"),
+        ("img[src]", "src"),
+        ("source[src]", "src"),
+        ("video[src]", "src"),
+        ("audio[src]", "src"),
+        ("[data-src]", "data-src"),
+        ("[data-url]", "data-url"),
+        ("[data-file]", "data-file"),
+        ("[data-href]", "data-href"),
+    ):
+        for el in page.locator(selector).all():
+            value = el.get_attribute(attr) or ""
+            if not value or value.startswith(("data:", "javascript:", "#", "mailto:")):
+                continue
+            if not _is_file_url(value):
+                continue
+            absolute = urljoin(page.url, value)
+            if absolute not in seen:
+                seen.add(absolute)
+                found.append(absolute)
+
+    if not found:
+        try:
+            html = page.content()
+        except Exception:
+            html = ""
+        for match in FILE_URL_IN_HTML.finditer(html):
+            value = match.group(1)
+            if any(hint in value.lower() for hint in ASSET_PATH_HINTS):
+                continue
+            absolute = urljoin(page.url, value)
+            if absolute not in seen:
+                seen.add(absolute)
+                found.append(absolute)
+
     return found
 
 
-def _is_file_link(href: str, text: str) -> bool:
-    path = unquote(urlparse(href).path).lower()
-    if path.endswith(FILE_EXTS):
-        return True
-    haystack = f"{href} {text}".lower()
-    return any(word in haystack for word in DOWNLOAD_WORDS)
+def _is_file_url(value: str) -> bool:
+    path = unquote(urlparse(value).path).lower()
+    return path.endswith(FILE_EXTS)
 
 
 def feedback_box(page):
