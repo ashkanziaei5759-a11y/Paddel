@@ -3,6 +3,13 @@ and print a report. Runs start to finish without stopping to ask anything.
 
 Nothing is ever submitted or saved on the portal - this only reads and
 downloads.
+
+Terminal output is kept in English on purpose: the classic Windows Command
+Prompt (conhost.exe) that a double-clicked .bat file opens uses a raster
+font that has no Persian glyphs, so Persian text there renders as empty
+boxes even though it's correct data. The report file written to disk, and
+the desktop-icon script's message boxes, use a real font and show Persian
+fine - only this console does not.
 """
 import json
 import sys
@@ -13,6 +20,16 @@ import extract
 import feedback
 import portal
 from manifest import Manifest, desktop
+
+# Student and assignment names come from the portal and are Persian text.
+# The classic Windows console can't encode every character its codepage
+# doesn't have, which otherwise crashes print() mid-run with
+# UnicodeEncodeError. Swap unencodable characters for '?' instead of dying.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(errors="replace")
+    except (AttributeError, ValueError):
+        pass
 
 HERE = Path(__file__).parent
 CONFIG_PATH = HERE / "config.json"
@@ -57,19 +74,19 @@ def load_config() -> dict:
     password = config["portal"].get("password") or saved_pass
 
     if not username or not password:
-        print("اجرای اول - نام کاربری و رمز پورتال لازم است.")
-        print("این‌ها به‌صورت رمزنگاری‌شده در Windows Credential Manager ذخیره")
-        print("می‌شوند (نه در یک فایل متنی)، پس فقط یک بار پرسیده می‌شود.\n")
-        username = input("  نام کاربری: ").strip()
-        password = input("  رمز عبور: ").strip()
+        print("First run - the portal username and password are needed.")
+        print("They are saved encrypted in Windows Credential Manager (not a")
+        print("text file), so this is only asked once.\n")
+        username = input("  Username: ").strip()
+        password = input("  Password: ").strip()
         if not username or not password:
-            sys.exit("هر دو لازم است. فایل .bat را دوباره اجرا کنید.")
+            sys.exit("Both are needed. Run the desktop icon again.")
         if _store_credentials(username, password):
-            print("\nذخیره شد. ادامه می‌دهیم.\n")
+            print("\nSaved. Continuing.\n")
         else:
             print(
-                "\n⚠ ذخیره در Credential Manager ممکن نشد؛ این بار بدون ذخیره ادامه"
-                " می‌دهیم - دفعه بعد دوباره پرسیده می‌شود.\n"
+                "\n! Could not save to Credential Manager; continuing without "
+                "saving - you'll be asked again next time.\n"
             )
 
     config["_username"] = username
@@ -103,10 +120,12 @@ def download_file(page, item, root: Path) -> tuple[Path | None, str]:
         result.save_as(str(target))
         return target, ""
     except Exception as exc:
-        return None, f"دانلود نشد: {exc}"
+        return None, f"download failed: {exc}"
 
 
 def write_report(root: Path, rows: list[dict], problems: list[str]) -> Path:
+    # The report file itself is Persian - a real editor/Notepad renders it
+    # fine, unlike the console.
     lines = [
         "گزارش دانلود تکالیف",
         f"تاریخ: {datetime.now():%Y-%m-%d %H:%M}",
@@ -148,48 +167,48 @@ def main() -> None:
     rows: list[dict] = []
 
     with sync_playwright() as playwright:
-        print("در حال باز کردن کروم...")
+        print("Opening Chrome...")
         try:
             browser = playwright.chromium.launch(
                 channel="chrome", headless=False, args=["--start-maximized"]
             )
         except Exception as exc:
             sys.exit(
-                f"کروم اجرا نشد: {exc}\n\n"
-                "اگر Google Chrome نصب نیست، از google.com/chrome نصبش کنید."
+                f"Chrome would not start: {exc}\n\n"
+                "If Google Chrome isn't installed, get it from google.com/chrome."
             )
         context = browser.new_context(accept_downloads=True, no_viewport=True)
         page = context.new_page()
 
         try:
-            print("در حال ورود به سایت...")
+            print("Signing into the portal...")
             ok, message = portal.login(
                 page, config["portal"]["login_url"], config["_username"], config["_password"]
             )
             if not ok:
-                print(f"\n✗ ورود ناموفق: {message}")
+                print(f"\nX Sign-in failed: {message}")
                 if "rejected" in message or "did not go through" in message:
-                    print("  اگر رمز عوض شده، از Windows Credential Manager")
-                    print("  ورودی homework-automation-portal1 را پاک کنید")
-                    print("  تا دوباره از شما پرسیده شود.")
+                    print("  If the password changed, open Windows Credential")
+                    print("  Manager and remove the homework-automation-portal1")
+                    print("  entry so you're asked again.")
                 context.close()
                 browser.close()
                 sys.exit(1)
-            print("✓ وارد شدیم.")
+            print("OK - signed in.")
 
             ok, where = portal.go_to_homework(page, config["portal"].get("homework_url", ""))
             if not ok:
-                print(f"\n✗ {where}")
-                print("  آدرس صفحه تکالیف را در config.json در homework_url بگذارید.")
+                print(f"\nX {where}")
+                print("  Set homework_url in config.json to the homework page's URL.")
                 context.close()
                 browser.close()
                 sys.exit(1)
-            print(f"✓ صفحه تکالیف: {page.url}")
+            print(f"OK - homework page: {page.url}")
 
             items = portal.find_files(page)
             if not items:
-                print("\nهیچ فایل تکلیفی در این صفحه پیدا نشد.")
-            print(f"✓ {len(items)} فایل پیدا شد.\n")
+                print("\nNo homework files found on this page.")
+            print(f"OK - {len(items)} file(s) found.\n")
 
             for item in items:
                 record = manifest.find(item["submission_id"]) or {}
@@ -198,17 +217,17 @@ def main() -> None:
 
                 path = Path(item["file"]) if item.get("file") else None
                 if path and path.exists():
-                    print(f"  {label}: قبلاً دانلود شده")
+                    print(f"  {label}: already downloaded")
                 else:
                     path, error = download_file(page, item, root)
                     if not path:
                         problems.append(f"{label}: {error}")
-                        print(f"  ✗ {label}: {error}")
+                        print(f"  X {label}: {error}")
                         manifest.upsert({**item, "error": error})
                         rows.append({**item, "note": error})
                         continue
                     downloaded += 1
-                    print(f"  ✓ {label}  →  {path.relative_to(root)}")
+                    print(f"  OK {label}  ->  {path.relative_to(root)}")
                 item["file"] = str(path)
 
                 if not item.get("text") and not item.get("note"):
@@ -217,7 +236,7 @@ def main() -> None:
 
                 if item.get("note"):
                     problems.append(f"{label}: {item['note']}")
-                    print(f"    ⚠ {item['note']}")
+                    print(f"    ! flagged: {item['note']}")
                 elif item.get("text") and not item.get("feedback"):
                     item["feedback"] = feedback.draft(
                         item["text"], item["student"], item["assignment"], config
@@ -236,15 +255,15 @@ def main() -> None:
     report = write_report(root, rows, problems)
 
     print("\n" + "=" * 60)
-    print(f"دانلود شده: {downloaded}")
-    print(f"پوشه: {root}")
+    print(f"Downloaded: {downloaded}")
+    print(f"Folder: {root}")
     if problems:
-        print(f"نیازمند بررسی دستی: {len(problems)}")
+        print(f"Needs a manual look: {len(problems)}")
         for line in problems:
             print(f"  - {line}")
     else:
-        print("همه فایل‌ها سالم خوانده شدند.")
-    print(f"گزارش کامل: {report.name}")
+        print("Everything was read without problems.")
+    print(f"Full report (in Persian): {report.name}")
     print("=" * 60)
 
 

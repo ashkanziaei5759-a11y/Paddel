@@ -144,7 +144,7 @@ def go_to_homework(page, explicit_url: str) -> tuple[bool, str]:
                 return True, page.url
             except Exception:
                 continue
-    return False, "could not find a homework/تکالیف link in the menu"
+    return False, "could not find a homework/assignments link in the menu"
 
 
 def find_files(page) -> list[dict]:
