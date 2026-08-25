@@ -22,3 +22,4 @@ prisma/dev.db-journal
 homework-automation/.venv/
 homework-automation/config.json
 homework-automation/inspect_dump.html
+homework-automation/__pycache__/
