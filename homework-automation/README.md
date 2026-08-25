@@ -22,7 +22,10 @@ anything while it runs.
 2. If you already know the URL of the homework/submissions page, put it in
    `portal.homework_url`. If you leave it blank, the script looks for a menu
    link that says "تکالیف" / "homework" / "assignment" and follows it itself.
-3. Double-click `run_homework.bat`.
+3. Double-click `make_desktop_icon.vbs`. This makes a **"دانلود تکالیف"**
+   icon on the Desktop — that icon is what you use from now on, not this
+   folder.
+4. Double-click the new Desktop icon.
    - The first run installs everything (a few minutes), then starts.
    - It will ask for the portal username and password **once**, in the
      terminal window. They are saved encrypted in **Windows Credential
@@ -30,7 +33,7 @@ anything while it runs.
      remove them later: Windows Start → "Credential Manager" →
      Windows Credentials → look for `homework-automation-portal1`.
 
-After that, every future run is just the double-click — no typing, no
+After that, every future run is just double-clicking the Desktop icon — no
 clicking, no page left open to babysit.
 
 Two extra pieces are **not** installed by pip, and are only needed for some
