@@ -136,7 +136,7 @@ export default async function HomePage() {
         {pendingRequests > 0 && (
           <Link href="/partner-requests" className="card-interactive block bg-accent-50 p-4 ring-accent-100">
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-gradient text-brand-900">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-gradient text-on-accent">
                 <Icon name="partner" className="h-5 w-5" strokeWidth={2.1} />
               </span>
               <div className="flex-1">

@@ -10,7 +10,7 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-dvh w-full lg:grid-cols-[1.05fr_1fr]">
       {/* ---- پوستر باشگاه (فقط دسکتاپ) ---- */}
-      <div className="relative hidden overflow-hidden bg-brand-950 lg:block">
+      <div className="relative hidden overflow-hidden bg-scrim lg:block">
         <ImageSlider
           images={LOGIN_SLIDES.map((s) => s.src)}
           alts={LOGIN_SLIDES.map((s) => s.alt)}
@@ -42,7 +42,7 @@ export default function LoginPage() {
             interval={5000}
             className="opacity-100"
           />
-          <div className="absolute inset-0 bg-brand-950/80 backdrop-blur-[3px]" />
+          <div className="absolute inset-0 bg-scrim/85 backdrop-blur-[3px]" />
         </div>
 
         {/* بافت ظریف خطوط زمین در پس‌زمینه‌ی فرم */}
@@ -70,7 +70,7 @@ export default function LoginPage() {
             </span>
           </Link>
 
-          <div className="rounded-4xl bg-white p-7 shadow-premium lg:bg-white/70 lg:backdrop-blur-xl">
+          <div className="rounded-4xl bg-card p-7 shadow-premium lg:bg-white/70 lg:backdrop-blur-xl">
             <div className="mb-7">
               <h1 className="text-2xl font-black text-brand-800">خوش برگشتی</h1>
               <p className="mt-2 text-sm font-semibold leading-7 text-brand-400">

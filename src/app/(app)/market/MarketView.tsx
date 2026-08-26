@@ -136,7 +136,7 @@ export function MarketView({
                 'shrink-0 cursor-pointer rounded-2xl px-4 py-2.5 text-[11px] font-extrabold transition-all',
                 filter === c
                   ? 'bg-brand-gradient text-white shadow-card'
-                  : 'bg-white text-brand-500 shadow-card ring-1 ring-brand-900/[.04]',
+                  : 'bg-card text-brand-500 shadow-card ring-1 ring-brand-900/[.04]',
               )}
             >
               {c === 'ALL' ? 'همه' : STORE_CATEGORY_LABEL[c]}
@@ -167,7 +167,7 @@ export function MarketView({
                 </span>
               )}
               {p.stock === 0 && (
-                <span className="absolute inset-0 grid place-items-center bg-brand-950/55 text-[11px] font-black text-white">
+                <span className="absolute inset-0 grid place-items-center bg-scrim/65 text-[11px] font-black text-white">
                   ناموجود
                 </span>
               )}
@@ -223,7 +223,7 @@ export function MarketView({
                 <button
                   type="button"
                   onClick={() => setQty((q) => Math.max(1, q - 1))}
-                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-white text-brand-600 shadow-card"
+                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-card text-brand-600 shadow-card"
                   aria-label="کاهش تعداد"
                 >
                   <Minus className="h-4 w-4" strokeWidth={2.4} aria-hidden="true" />
@@ -234,7 +234,7 @@ export function MarketView({
                 <button
                   type="button"
                   onClick={() => setQty((q) => Math.min(active.stock, 10, q + 1))}
-                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-white text-brand-600 shadow-card"
+                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-card text-brand-600 shadow-card"
                   aria-label="افزایش تعداد"
                 >
                   <Plus className="h-4 w-4" strokeWidth={2.4} aria-hidden="true" />

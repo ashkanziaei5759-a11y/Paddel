@@ -58,7 +58,7 @@ export function TopupPanel() {
               'num rounded-2xl border px-3 py-3 text-xs font-extrabold transition-all duration-200',
               !custom && amount === value
                 ? 'border-transparent bg-brand-gradient text-white shadow-card'
-                : 'border-brand-100 bg-surface-muted text-brand-600 hover:border-brand-200 hover:bg-white',
+                : 'border-brand-100 bg-surface-muted text-brand-600 hover:border-brand-200 hover:bg-card',
             )}
           >
             {toFaDigits(value.toLocaleString('en-US'))}

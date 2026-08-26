@@ -196,7 +196,7 @@ export function DockLabel({
           exit={{ opacity: 0, y: 4 }}
           transition={{ duration: 0.18 }}
           className={cn(
-            'absolute -top-8 left-1/2 w-fit whitespace-pre rounded-xl bg-brand-800 px-2.5 py-1 text-[10px] font-bold text-white shadow-card',
+            'absolute -top-8 left-1/2 w-fit whitespace-pre rounded-xl bg-primary px-2.5 py-1 text-[10px] font-bold text-on-primary shadow-card',
             className,
           )}
           role="tooltip"

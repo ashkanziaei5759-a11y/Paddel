@@ -195,7 +195,7 @@ function HostSheet({
                     'flex w-full items-center gap-3 rounded-2xl border p-3 text-right transition',
                     active
                       ? 'border-transparent bg-brand-gradient text-white'
-                      : 'border-brand-100 bg-white text-brand-700',
+                      : 'border-brand-100 bg-card text-brand-700',
                   )}
                 >
                   <span className="num text-sm font-black">{formatTime(new Date(b.startsAt))}</span>
@@ -281,7 +281,7 @@ function HostSheet({
             onChange={(e) => setNotes(e.target.value)}
             maxLength={200}
             placeholder="مثلاً: بازی دوستانه، سطح متوسط"
-            className="h-12 w-full rounded-2xl border border-brand-100 bg-surface-muted px-4 text-sm text-brand-800 outline-none focus:border-brand-500 focus:bg-white"
+            className="h-12 w-full rounded-2xl border border-brand-100 bg-surface-muted px-4 text-sm text-brand-800 outline-none focus:border-brand-500 focus:bg-card"
           />
         </div>
 

@@ -20,7 +20,7 @@ export function StatCard({
       ? 'bg-brand-gradient text-white ring-0'
       : tone === 'accent'
         ? 'bg-accent-50 text-accent-700 ring-accent-100'
-        : 'bg-white text-brand-800 ring-brand-900/[.04]';
+        : 'bg-card text-brand-800 ring-brand-900/[.04]';
 
   return (
     <div className={cn('relative overflow-hidden rounded-3xl p-4 shadow-card ring-1', toneCls, className)}>

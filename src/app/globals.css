@@ -38,13 +38,83 @@
 /* ------------------------------------------------------------------------ */
 
 @layer base {
+  /* ---------------------------------------------------------------------- */
+  /*  توکن‌های رنگ                                                          */
+  /*                                                                        */
+  /*  کد کامپوننت‌ها همان کلاس‌های brand-800 و bg-card و … را نگه می‌دارد؛   */
+  /*  فقط معنی این نام‌ها با تعویض تم عوض می‌شود. قاعده در سراسر پروژه یکی   */
+  /*  است: عدد کوچک‌تر = سطح، عدد بزرگ‌تر = متن. در تم تیره همین نردبان      */
+  /*  وارونه می‌شود، بنابراین «brand-800» همچنان یعنی «پررنگ‌ترین متن».      */
+  /*                                                                        */
+  /*  مقادیر «R G B» هستند تا text-brand-800/60 و مانند آن کار کند.          */
+  /* ---------------------------------------------------------------------- */
   :root {
+    --c-brand: 0 48 73;
+    --c-brand-50: 233 243 248;
+    --c-brand-100: 202 240 248;
+    --c-brand-200: 155 216 232;
+    --c-brand-300: 99 181 207;
+    --c-brand-400: 47 138 174;
+    --c-brand-500: 11 95 135;
+    --c-brand-600: 0 69 106;
+    --c-brand-700: 0 48 73;
+    --c-brand-800: 0 36 56;
+    --c-brand-900: 0 24 36;
+    --c-brand-950: 0 15 23;
+    --c-sky-light: 202 240 248;
+
+    --c-app: 245 249 252;
+    --c-card: 255 255 255;
+    --c-inset: 245 249 252;
+    --c-sunken: 237 244 248;
+
+    --c-success: 18 143 99;
+    --c-danger: 211 63 63;
+    --c-warning: 224 140 5;
+    /* رنگ نارنجی برند در هر دو تم یکی است، پس متن روی آن هم ثابت می‌ماند */
+    --c-on-accent: 0 24 36;
+
     --brand: #003049;
     --brand-soft: #caf0f8;
     --accent: #fca311;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
     --nav-height: 4.5rem;
+
+    color-scheme: light;
+  }
+
+  /*  تم تیره — نردبان وارونه می‌شود: سطح‌ها تیره و متن‌ها روشن.
+      زمینه‌ی صفحه از کارت‌ها تیره‌تر است و «inset» از کارت روشن‌تر، تا سه
+      لایه‌ی صفحه ← کارت ← تراشه در تاریکی هم از هم تفکیک شوند. */
+  :root[data-theme='dark'] {
+    --c-brand-50: 28 33 40;
+    --c-brand-100: 40 47 57;
+    --c-brand-200: 55 64 77;
+    --c-brand-300: 110 122 136;
+    --c-brand-400: 139 152 166;
+    --c-brand-500: 169 181 194;
+    --c-brand-600: 195 205 216;
+    --c-brand-700: 220 228 236;
+    --c-brand-800: 237 242 247;
+    --c-brand-900: 245 248 251;
+    --c-brand-950: 255 255 255;
+    --c-sky-light: 202 240 248;
+
+    --c-app: 9 11 15;
+    --c-card: 23 26 32;
+    --c-inset: 33 38 46;
+    --c-sunken: 15 18 23;
+
+    --c-success: 63 199 148;
+    --c-danger: 255 120 105;
+    --c-warning: 252 163 17;
+    --c-on-accent: 0 24 36;
+    --c-scrim: 0 8 14;
+    --c-primary: 0 127 255;
+    --c-on-primary: 255 255 255;
+
+    color-scheme: dark;
   }
 
   * {
@@ -57,7 +127,7 @@
   }
 
   body {
-    @apply bg-surface-muted text-brand-800 font-sans antialiased;
+    @apply bg-app text-brand-800 font-sans antialiased;
     text-rendering: optimizeLegibility;
     font-feature-settings: 'ss01', 'ss02';
     overscroll-behavior-y: none;
@@ -169,7 +239,12 @@
 
   /* ---------- Cards ---------- */
   .card {
-    @apply rounded-3xl bg-white shadow-card ring-1 ring-brand-900/[.04];
+    @apply rounded-3xl bg-card shadow-card ring-1 ring-brand-900/[.06];
+  }
+
+  /* در تاریکی سایه دیده نمی‌شود، پس مرز کارت را کمی پررنگ‌تر می‌کنیم */
+  :root[data-theme='dark'] .card {
+    @apply ring-brand-200/60;
   }
 
   .card-interactive {
@@ -218,15 +293,15 @@
   }
 
   .btn-primary {
-    @apply btn bg-brand-700 text-white shadow-card hover:bg-brand-600 hover:shadow-card-hover;
+    @apply btn bg-primary text-on-primary shadow-card hover:opacity-90 hover:shadow-card-hover;
   }
 
   .btn-accent {
-    @apply btn bg-accent-gradient text-brand-900 shadow-card hover:shadow-glow;
+    @apply btn bg-accent-gradient text-on-accent shadow-card hover:shadow-glow;
   }
 
   .btn-outline {
-    @apply btn border border-brand-200 bg-white text-brand-700 hover:border-brand-300 hover:bg-brand-50;
+    @apply btn border border-brand-200 bg-card text-brand-700 hover:border-brand-300 hover:bg-brand-50;
   }
 
   .btn-ghost {
@@ -249,7 +324,7 @@
   .field {
     @apply w-full rounded-2xl border border-brand-100 bg-surface-muted px-4 py-3.5 text-sm text-brand-800
            placeholder:text-brand-300 transition-all duration-200
-           focus:border-brand-300 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-100;
+           focus:border-brand-300 focus:bg-card focus:outline-none focus:ring-4 focus:ring-brand-100;
   }
 
   .field-error {

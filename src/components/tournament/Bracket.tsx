@@ -77,7 +77,7 @@ function Side({
     <div
       className={cn(
         'flex items-center justify-between gap-2 px-3 py-2.5',
-        isWinner ? 'bg-accent-50' : 'bg-white',
+        isWinner ? 'bg-accent-50' : 'bg-card',
       )}
     >
       <span

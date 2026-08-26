@@ -49,7 +49,7 @@ export function TeamCard({
                 lastName={m.lastName}
                 src={m.avatarUrl}
                 size="md"
-                className="ring-2 ring-white"
+                className="ring-2 ring-card"
               />
               {m.level && (
                 /* نشان سطح روی لبه‌ی بیرونی هر دایره می‌نشیند تا زیر دایره‌ی کناری پنهان نشود.
@@ -57,7 +57,7 @@ export function TeamCard({
                 <span
                   dir="ltr"
                   className={cn(
-                    'absolute -bottom-1 flex h-5 min-w-5 items-center justify-center rounded-lg bg-brand-800 px-1 text-[9px] font-black text-white ring-2 ring-white',
+                    'absolute -bottom-1 flex h-5 min-w-5 items-center justify-center rounded-lg bg-primary px-1 text-[9px] font-black text-on-primary ring-2 ring-card',
                     i === 0 ? '-right-1' : '-left-1',
                   )}
                 >

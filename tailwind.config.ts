@@ -6,22 +6,25 @@ const config: Config = {
     extend: {
       colors: {
         /* ---- Persian Padel brand ---- */
+        /* پالت از متغیرهای CSS خوانده می‌شود تا با تعویض تم، همه‌ی کامپوننت‌ها
+           بدون تغییر کلاس‌هایشان عوض شوند. مقادیر به‌صورت «R G B» هستند تا
+           پیراینده‌های شفافیت (مثل text-brand-800/60) کار کنند. */
         brand: {
-          DEFAULT: '#003049',
-          50: '#E9F3F8',
-          100: '#CAF0F8',
-          200: '#9BD8E8',
-          300: '#63B5CF',
-          400: '#2F8AAE',
-          500: '#0B5F87',
-          600: '#00456A',
-          700: '#003049',
-          800: '#002438',
-          900: '#001824',
-          950: '#000F17',
+          DEFAULT: 'rgb(var(--c-brand) / <alpha-value>)',
+          50: 'rgb(var(--c-brand-50) / <alpha-value>)',
+          100: 'rgb(var(--c-brand-100) / <alpha-value>)',
+          200: 'rgb(var(--c-brand-200) / <alpha-value>)',
+          300: 'rgb(var(--c-brand-300) / <alpha-value>)',
+          400: 'rgb(var(--c-brand-400) / <alpha-value>)',
+          500: 'rgb(var(--c-brand-500) / <alpha-value>)',
+          600: 'rgb(var(--c-brand-600) / <alpha-value>)',
+          700: 'rgb(var(--c-brand-700) / <alpha-value>)',
+          800: 'rgb(var(--c-brand-800) / <alpha-value>)',
+          900: 'rgb(var(--c-brand-900) / <alpha-value>)',
+          950: 'rgb(var(--c-brand-950) / <alpha-value>)',
         },
         sky: {
-          light: '#CAF0F8',
+          light: 'rgb(var(--c-sky-light) / <alpha-value>)',
         },
         /* آبی الکتریک — نمونه‌برداری‌شده از لوگو و پوستر باشگاه.
            رنگ «انرژی» است: حالت فعال، درخشش و تأکیدهای پرشتاب. */
@@ -47,13 +50,20 @@ const config: Config = {
           700: '#8A5403',
         },
         surface: {
-          DEFAULT: '#FFFFFF',
-          muted: '#F5F9FC',
-          sunken: '#EDF4F8',
+          DEFAULT: 'rgb(var(--c-card) / <alpha-value>)',
+          muted: 'rgb(var(--c-inset) / <alpha-value>)',
+          sunken: 'rgb(var(--c-sunken) / <alpha-value>)',
         },
-        success: '#128F63',
-        danger: '#D33F3F',
-        warning: '#E08C05',
+        /* زمینه‌ی خود صفحه — از inset جداست چون در تم تیره باید تیره‌تر از کارت‌ها باشد */
+        app: 'rgb(var(--c-app) / <alpha-value>)',
+        'on-accent': 'rgb(var(--c-on-accent) / <alpha-value>)',
+        scrim: 'rgb(var(--c-scrim) / <alpha-value>)',
+        primary: 'rgb(var(--c-primary) / <alpha-value>)',
+        'on-primary': 'rgb(var(--c-on-primary) / <alpha-value>)',
+        card: 'rgb(var(--c-card) / <alpha-value>)',
+        success: 'rgb(var(--c-success) / <alpha-value>)',
+        danger: 'rgb(var(--c-danger) / <alpha-value>)',
+        warning: 'rgb(var(--c-warning) / <alpha-value>)',
       },
       fontFamily: {
         sans: ['Dana', 'Vazirmatn', 'IRANSans', 'Tahoma', 'system-ui', 'sans-serif'],

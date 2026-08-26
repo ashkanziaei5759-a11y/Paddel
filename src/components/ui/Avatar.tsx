@@ -24,7 +24,7 @@ export function Avatar({ firstName, lastName, src, size = 'md', className, ring 
       className={cn(
         'relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-gradient font-black text-white',
         SIZE[size],
-        ring && 'ring-2 ring-accent ring-offset-2 ring-offset-white',
+        ring && 'ring-2 ring-accent ring-offset-2 ring-offset-card',
         className,
       )}
     >

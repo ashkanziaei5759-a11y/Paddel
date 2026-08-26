@@ -233,7 +233,7 @@ export function BookingFlow({
                 onClick={() => reachable && setStep(s.key)}
                 className={cn(
                   'flex w-full items-center gap-2 rounded-2xl px-3 py-2.5 text-right transition-colors',
-                  active ? 'bg-brand-gradient text-white shadow-card' : 'bg-white text-brand-400',
+                  active ? 'bg-brand-gradient text-white shadow-card' : 'bg-card text-brand-400',
                   !reachable && 'opacity-45',
                 )}
               >
@@ -326,7 +326,7 @@ export function BookingFlow({
                             ? 'border-transparent bg-brand-100 text-brand-700'
                             : full
                               ? 'cursor-not-allowed border-transparent bg-danger/10 text-danger/70'
-                              : 'border-brand-100 bg-white text-brand-700 hover:border-brand-200',
+                              : 'border-brand-100 bg-card text-brand-700 hover:border-brand-200',
                       )}
                     >
                       <span className="num text-xs font-black">
@@ -356,7 +356,7 @@ export function BookingFlow({
 
             <div className="mt-4 flex flex-wrap items-center gap-3 text-[10px] font-bold text-brand-300">
               <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded bg-white ring-1 ring-brand-100" /> آزاد
+                <span className="h-2.5 w-2.5 rounded bg-card ring-1 ring-brand-100" /> آزاد
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded bg-brand-700" /> انتخاب شما
@@ -424,7 +424,7 @@ export function BookingFlow({
                       active
                         ? 'border-transparent bg-brand-gradient text-white shadow-card'
                         : opt.available
-                          ? 'border-brand-100 bg-white hover:border-brand-200'
+                          ? 'border-brand-100 bg-card hover:border-brand-200'
                           : 'cursor-not-allowed border-transparent bg-danger/[.07]',
                     )}
                   >

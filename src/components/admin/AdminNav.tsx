@@ -88,7 +88,7 @@ export function AdminNav({ fullName, username }: { fullName: string; username: s
 
       {/* ---- نوار موبایل ---- */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-brand-100/80 bg-white/90 backdrop-blur-xl lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-brand-100/80 bg-card/90 backdrop-blur-xl lg:hidden"
         style={{ paddingBottom: 'var(--safe-bottom)' }}
       >
         <div className="no-scrollbar flex items-stretch overflow-x-auto px-1">

@@ -47,7 +47,7 @@ export function BannerCarousel({
 
   const inner = (
     <div
-      className="relative h-[148px] w-full overflow-hidden rounded-3xl bg-brand-gradient shadow-card"
+      className="relative h-[148px] w-full overflow-hidden rounded-3xl bg-night-gradient shadow-card"
       onTouchStart={(e) => {
         touchStartX.current = e.touches[0].clientX;
       }}
@@ -73,7 +73,7 @@ export function BannerCarousel({
         />
       )}
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-brand-950/85 via-brand-950/45 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-scrim/88 via-scrim/50 to-transparent" />
       <div className="pointer-events-none absolute inset-0 bg-court-lines opacity-40" />
 
       <div className="relative flex h-full flex-col justify-end p-4">

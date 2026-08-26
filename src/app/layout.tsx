@@ -3,6 +3,7 @@ import './globals.css';
 import { ToastProvider } from '@/components/ui/Toast';
 import { ServiceWorkerRegistrar } from '@/components/pwa/ServiceWorkerRegistrar';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
+import { ThemeScript } from '@/components/theme/ThemeScript';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
@@ -40,7 +41,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#000E2A',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F5F9FC' },
+    { media: '(prefers-color-scheme: dark)', color: '#090B0F' },
+  ],
   width: 'device-width',
   initialScale: 1,
   /* زوم عمدا آزاد است — قفل کردن آن مانع دسترس‌پذیری می‌شود */
@@ -60,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" href="/fonts/Dana-Bold.woff2" as="font" type="font/woff2" crossOrigin="" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <ThemeScript />
       </head>
       <body>
         <ToastProvider>

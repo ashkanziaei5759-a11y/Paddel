@@ -127,12 +127,12 @@ export function MatchCard({
                   lastName={p.lastName}
                   src={p.avatarUrl}
                   size="md"
-                  className={cn(p.isHost && 'ring-2 ring-accent ring-offset-2 ring-offset-white')}
+                  className={cn(p.isHost && 'ring-2 ring-accent ring-offset-2 ring-offset-card')}
                 />
                 {p.level && (
                   <span
                     dir="ltr"
-                    className="absolute -bottom-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-lg bg-brand-800 px-1 text-[9px] font-black text-white ring-2 ring-white"
+                    className="absolute -bottom-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-lg bg-primary px-1 text-[9px] font-black text-on-primary ring-2 ring-card"
                   >
                     {LEVEL_LABEL[p.level]}
                   </span>

@@ -248,7 +248,7 @@ function MenuItem({
       </span>
       <span className="flex-1 text-xs font-extrabold text-brand-700">{label}</span>
       {badge !== undefined && badge > 0 && (
-        <span className="num flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-black text-brand-900">
+        <span className="num flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-black text-on-accent">
           {toFaDigits(badge)}
         </span>
       )}

@@ -36,13 +36,13 @@ export function Sheet({
         type="button"
         aria-label="بستن"
         onClick={onClose}
-        className="absolute inset-0 animate-fade-in bg-brand-950/50 backdrop-blur-sm"
+        className="absolute inset-0 animate-fade-in bg-scrim/60 backdrop-blur-sm"
       />
       <div
         role="dialog"
         aria-modal="true"
         className={cn(
-          'relative z-10 max-h-[88vh] w-full max-w-[520px] animate-slide-up overflow-y-auto rounded-t-4xl bg-white p-5 shadow-premium sm:animate-scale-in sm:rounded-4xl',
+          'relative z-10 max-h-[88vh] w-full max-w-[520px] animate-slide-up overflow-y-auto rounded-t-4xl bg-card p-5 shadow-premium sm:animate-scale-in sm:rounded-4xl',
           className,
         )}
       >

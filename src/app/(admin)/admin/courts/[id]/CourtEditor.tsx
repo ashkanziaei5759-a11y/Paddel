@@ -87,7 +87,7 @@ export function CourtEditor({ court }: { court: CourtDto }) {
           aria-label={isActive ? 'غیرفعال کردن زمین' : 'فعال کردن زمین'}
         >
           <span
-            className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${isActive ? 'right-1' : 'right-6'}`}
+            className={`absolute top-1 h-5 w-5 rounded-full bg-card shadow transition-all ${isActive ? 'right-1' : 'right-6'}`}
           />
         </button>
       </div>

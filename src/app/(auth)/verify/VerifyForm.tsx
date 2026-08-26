@@ -137,7 +137,7 @@ export function VerifyForm({ verificationId }: { verificationId: string }) {
             maxLength={1}
             aria-label={`رقم ${index + 1} کد تأیید`}
             className={`num h-14 w-12 rounded-2xl border bg-surface-muted text-center text-xl font-black text-brand-800 transition-all
-              focus:border-accent focus:bg-white focus:outline-none focus:ring-4 focus:ring-accent/15
+              focus:border-accent focus:bg-card focus:outline-none focus:ring-4 focus:ring-accent/15
               ${error ? 'border-danger/40' : 'border-brand-100'}`}
           />
         ))}

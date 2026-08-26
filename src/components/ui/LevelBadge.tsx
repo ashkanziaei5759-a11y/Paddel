@@ -3,8 +3,8 @@ import { LEVEL_LABEL, levelTier } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 const TIER_STYLE: Record<string, string> = {
-  A: 'bg-accent-gradient text-brand-900 shadow-glow',
-  B: 'bg-brand-700 text-white',
+  A: 'bg-accent-gradient text-on-accent shadow-glow',
+  B: 'bg-primary text-on-primary',
   C: 'bg-brand-100 text-brand-700',
   D: 'bg-brand-50 text-brand-500',
 };

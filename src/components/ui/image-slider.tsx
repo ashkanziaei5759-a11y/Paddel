@@ -97,8 +97,8 @@ const ImageSlider = React.forwardRef<HTMLDivElement, ImageSliderProps>(
             className={cn(
               'pointer-events-none absolute inset-0',
               overlay === 'strong'
-                ? 'bg-gradient-to-t from-brand-950/85 via-brand-900/35 to-brand-900/20'
-                : 'bg-gradient-to-t from-brand-950/40 to-transparent',
+                ? 'bg-gradient-to-t from-scrim/85 via-scrim/35 to-scrim/20'
+                : 'bg-gradient-to-t from-scrim/40 to-transparent',
             )}
           />
         )}

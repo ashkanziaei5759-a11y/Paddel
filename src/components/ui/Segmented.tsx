@@ -23,7 +23,7 @@ export function Segmented<T extends string>({
           className={cn(
             'flex-1 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-200',
             value === opt.value
-              ? 'bg-white text-brand-800 shadow-card'
+              ? 'bg-card text-brand-800 shadow-card'
               : 'text-brand-400 hover:text-brand-600',
           )}
         >

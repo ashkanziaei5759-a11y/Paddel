@@ -130,7 +130,7 @@ export function JalaliCalendar({ value, onChange, maxAdvanceDays = 30, todayKey 
                 isSelected
                   ? 'bg-brand-gradient text-white shadow-card'
                   : disabled
-                    ? 'cursor-not-allowed text-brand-200'
+                    ? 'cursor-not-allowed text-brand-300'
                     : isFriday
                       ? 'text-danger/70 hover:bg-brand-50'
                       : 'text-brand-700 hover:bg-brand-50',

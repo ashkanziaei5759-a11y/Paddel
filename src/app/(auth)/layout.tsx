@@ -10,5 +10,5 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   const user = await getCurrentUser();
   if (user) redirect('/home');
 
-  return <div className="min-h-dvh bg-white">{children}</div>;
+  return <div className="min-h-dvh bg-card">{children}</div>;
 }

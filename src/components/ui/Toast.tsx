@@ -26,9 +26,9 @@ export function useToast(): ToastApi {
 }
 
 const VARIANT_STYLE: Record<ToastVariant, string> = {
-  success: 'bg-brand-700 text-white',
+  success: 'bg-primary text-on-primary',
   error: 'bg-danger text-white',
-  info: 'bg-brand-800 text-white',
+  info: 'bg-primary text-on-primary',
 };
 
 const VARIANT_ICON: Record<ToastVariant, string> = {
