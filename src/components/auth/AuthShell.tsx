@@ -20,12 +20,14 @@ export function AuthShell({
 
       <div className="relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col px-5 py-8 safe-top safe-bottom">
         <Link href="/" className="mb-8 flex items-center justify-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-gradient shadow-glow">
-            <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" fill="#003049" />
-              <path d="M5 6.5c3 2 3 9 0 11M19 6.5c-3 2-3 9 0 11" stroke="#FFF" strokeWidth="1.8" fill="none" strokeLinecap="round" />
-            </svg>
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/icons/logo-256.png"
+            alt=""
+            width={48}
+            height={48}
+            className="h-12 w-12 rounded-2xl shadow-lift-electric"
+          />
           <span className="text-right">
             <span className="block text-lg font-black tracking-tight text-white">PERSIAN PADEL</span>
             <span className="block text-[11px] font-bold tracking-widest text-sky-light/70">

@@ -65,6 +65,9 @@ export const WALLET_TX_LABEL: Record<WalletTxType, string> = {
   TOURNAMENT_REFUND: 'بازگشت هزینه تورنومنت',
   STORE_PURCHASE: 'خرید از فروشگاه',
   STORE_REFUND: 'بازگشت وجه فروشگاه',
+  MATCH_JOIN: 'سهم بازی باز',
+  MATCH_LEAVE_REFUND: 'بازگشت سهم بازی',
+  MATCH_PAYOUT: 'دریافت سهم بازیکنان',
   ADMIN_CREDIT: 'افزایش توسط مدیریت',
   ADMIN_DEBIT: 'کاهش توسط مدیریت',
 };
@@ -143,6 +146,9 @@ export const NOTIFICATION_ICON: Record<NotificationType, string> = {
   POINTS_AWARDED: 'points',
   LEVEL_CHANGED: 'revenue',
   DRAFT_YOUR_TURN: 'admin',
+  MATCH_PLAYER_JOINED: 'users',
+  MATCH_PLAYER_LEFT: 'users',
+  MATCH_CANCELLED: 'booking',
   GENERAL: 'notification',
 };
 

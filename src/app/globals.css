@@ -185,6 +185,28 @@
     @apply pointer-events-none absolute inset-0 bg-court-lines opacity-60;
   }
 
+  /* کارت شبانه — همان حال‌وهوای پوستر و لوگوی باشگاه.
+     برای عناصر شاخص: کارت وضعیت بازیکن، بازی باز و بنرها. */
+  .card-night {
+    @apply relative overflow-hidden rounded-3xl bg-night-gradient text-white shadow-premium;
+  }
+
+  .card-night::before {
+    content: '';
+    @apply pointer-events-none absolute inset-0 bg-court-lines opacity-70;
+  }
+
+  /* رگه‌ی نور آبی که از گوشه‌ی بالا می‌تابد */
+  .card-night::after {
+    content: '';
+    @apply pointer-events-none absolute -right-16 -top-24 h-56 w-56 rounded-full opacity-45;
+    background: radial-gradient(circle, rgba(0, 127, 255, 0.55) 0%, transparent 70%);
+  }
+
+  .card-night > * {
+    @apply relative;
+  }
+
   .glass {
     @apply border border-white/15 bg-white/10 backdrop-blur-xl;
   }

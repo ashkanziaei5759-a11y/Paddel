@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#003049',
+  themeColor: '#000E2A',
   width: 'device-width',
   initialScale: 1,
   /* زوم عمدا آزاد است — قفل کردن آن مانع دسترس‌پذیری می‌شود */

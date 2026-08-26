@@ -75,6 +75,9 @@ enum WalletTxType {
   TOURNAMENT_REFUND // بازگشت هزینه تورنومنت
   STORE_PURCHASE // خرید از فروشگاه باشگاه
   STORE_REFUND // بازگشت وجه سفارش فروشگاه
+  MATCH_JOIN // سهم پیوستن به بازی باز — تا تسویه نزد بازی می‌ماند
+  MATCH_LEAVE_REFUND // بازگشت سهم هنگام خروج از بازی
+  MATCH_PAYOUT // پرداخت سهم‌های جمع‌شده به میزبان بازی
   ADMIN_CREDIT // افزایش دستی توسط ادمین
   ADMIN_DEBIT // کاهش دستی توسط ادمین
 }
@@ -182,6 +185,9 @@ enum NotificationType {
   POINTS_AWARDED
   LEVEL_CHANGED
   DRAFT_YOUR_TURN
+  MATCH_PLAYER_JOINED
+  MATCH_PLAYER_LEFT
+  MATCH_CANCELLED
   GENERAL
 }
 
@@ -257,6 +263,8 @@ model User {
   draftPicks         DraftPick[]         @relation("DraftPickedPlayer")
   auditLogs          AuditLog[]
   storeOrders        StoreOrder[]
+  hostedMatches      OpenMatch[]         @relation("OpenMatchHost")
+  matchSeats         OpenMatchPlayer[]   @relation("OpenMatchPlayer")
 
   @@index([role])
   @@index([status])
@@ -394,6 +402,9 @@ model WalletTransaction {
 
   storeOrderId String?
   storeOrder   StoreOrder? @relation(fields: [storeOrderId], references: [id])
+
+  openMatchId String?
+  openMatch   OpenMatch? @relation(fields: [openMatchId], references: [id])
 
   performedBy String?
   metadata    Json?
@@ -605,6 +616,7 @@ model Booking {
   cancellation BookingCancellation?
   walletTxs    WalletTransaction[]
   slots        BookingSlot[]
+  openMatch    OpenMatch?
 
   @@index([userId, startsAt])
   @@index([courtId, startsAt])
@@ -1220,4 +1232,81 @@ model StoreOrderItem {
 
   @@index([orderId])
   @@map("store_order_items")
+}
+
+
+// ===========================================================================
+// بازی باز — میزبان زمین را رزرو می‌کند و جای خالی را برای بقیه باز می‌گذارد
+// ===========================================================================
+
+enum OpenMatchStatus {
+  OPEN // هنوز جای خالی دارد
+  FULL // ظرفیت پر شده، منتظر شروع
+  COMPLETED // برگزار و تسویه شد
+  CANCELLED // لغو شد و سهم‌ها بازگردانده شد
+}
+
+/// محدودیت سطح بازیکنانی که می‌توانند بپیوندند
+enum MatchLevelPolicy {
+  ANY // همه می‌توانند بپیوندند
+  RANGE // فقط سطح‌های داخل بازه‌ی تعیین‌شده
+}
+
+model OpenMatch {
+  id   String @id @default(cuid())
+  code String @unique
+
+  /// رزروی که این بازی روی آن سوار است — میزبان از قبل هزینه‌اش را پرداخته
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  hostId String
+  host   User   @relation("OpenMatchHost", fields: [hostId], references: [id])
+
+  /// تعداد کل بازیکنان بازی، شامل میزبان (پدل دوبل = ۴)
+  capacity Int @default(4)
+
+  /// سهم هر بازیکن (ریال) — هنگام ساخت از روی مبلغ رزرو محاسبه و ثابت می‌ماند
+  sharePerPlayer BigInt
+
+  /// مجموع سهم‌هایی که از بازیکنان گرفته شده و هنوز به میزبان نرسیده است
+  escrowBalance BigInt @default(0)
+
+  levelPolicy MatchLevelPolicy @default(ANY)
+  /// وقتی levelPolicy = RANGE است، سطح‌های مجاز
+  allowedLevels PlayerLevel[]
+
+  status OpenMatchStatus @default(OPEN)
+  notes  String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  settledAt   DateTime?
+  cancelledAt DateTime?
+
+  players   OpenMatchPlayer[]
+  walletTxs WalletTransaction[]
+
+  @@index([status])
+  @@map("open_matches")
+}
+
+model OpenMatchPlayer {
+  id      String    @id @default(cuid())
+  matchId String
+  match   OpenMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation("OpenMatchPlayer", fields: [userId], references: [id], onDelete: Cascade)
+
+  /// میزبان هم یک ردیف دارد، ولی سهمش را جداگانه پرداخت نکرده است
+  isHost Boolean @default(false)
+  /// مبلغی که این بازیکن پرداخته و در صورت خروج بازگردانده می‌شود (ریال)
+  paidAmount BigInt @default(0)
+
+  joinedAt DateTime @default(now())
+
+  @@unique([matchId, userId])
+  @@index([userId])
+  @@map("open_match_players")
 }

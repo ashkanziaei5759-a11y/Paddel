@@ -52,18 +52,14 @@ export default function LoginPage() {
         <div className="relative w-full max-w-sm">
           {/* نشان برند */}
           <Link href="/" className="mb-8 flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-gradient shadow-glow">
-              <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" fill="#003049" />
-                <path
-                  d="M5 6.5c3 2 3 9 0 11M19 6.5c-3 2-3 9 0 11"
-                  stroke="#FFF"
-                  strokeWidth="1.8"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/icons/logo-256.png"
+              alt=""
+              width={44}
+              height={44}
+              className="h-11 w-11 rounded-2xl shadow-lift-electric"
+            />
             <span>
               <span className="block text-base font-black tracking-tight text-white lg:text-brand-800">
                 PERSIAN PADEL

@@ -23,6 +23,18 @@ const config: Config = {
         sky: {
           light: '#CAF0F8',
         },
+        /* آبی الکتریک — نمونه‌برداری‌شده از لوگو و پوستر باشگاه.
+           رنگ «انرژی» است: حالت فعال، درخشش و تأکیدهای پرشتاب. */
+        electric: {
+          DEFAULT: '#007FFF',
+          300: '#66B2FF',
+          400: '#3399FF',
+          500: '#007FFF',
+          600: '#0064CC',
+          700: '#0047A3',
+          900: '#000E2A',
+          950: '#00071A',
+        },
         accent: {
           DEFAULT: '#FCA311',
           50: '#FFF7E8',
@@ -58,12 +70,17 @@ const config: Config = {
         'card-hover': '0 2px 6px rgba(0,48,73,.06), 0 18px 40px -16px rgba(0,48,73,.28)',
         premium: '0 24px 60px -28px rgba(0,48,73,.55)',
         glow: '0 0 0 4px rgba(252,163,17,.18)',
+        'glow-electric': '0 0 0 4px rgba(0,127,255,.20)',
+        'lift-electric': '0 18px 40px -20px rgba(0,127,255,.65)',
         inset: 'inset 0 1px 0 rgba(255,255,255,.08)',
       },
       backgroundImage: {
         'brand-gradient': 'linear-gradient(135deg,#003049 0%,#00456A 48%,#0B5F87 100%)',
         'brand-gradient-soft': 'linear-gradient(135deg,#002438 0%,#003049 55%,#014A6E 100%)',
         'accent-gradient': 'linear-gradient(135deg,#FCA311 0%,#E08C05 100%)',
+        'electric-gradient': 'linear-gradient(135deg,#0047A3 0%,#007FFF 55%,#3399FF 100%)',
+        /* زمینه‌ی تیره‌ی کارت‌های شاخص — هم‌رنگ پوستر باشگاه */
+        'night-gradient': 'linear-gradient(150deg,#00071A 0%,#000E2A 45%,#002A55 100%)',
         'sky-gradient': 'linear-gradient(160deg,#FFFFFF 0%,#EDF7FB 60%,#CAF0F8 100%)',
         'court-lines':
           'repeating-linear-gradient(90deg, rgba(202,240,248,.08) 0 1px, transparent 1px 64px), repeating-linear-gradient(0deg, rgba(202,240,248,.08) 0 1px, transparent 1px 64px)',

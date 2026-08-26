@@ -30,13 +30,13 @@ export function formatNumber(value: number | bigint): string {
 }
 
 /** تولید کد یکتای رزرو مثل PP-7K3M9Q */
-export function generateBookingCode(): string {
+export function generateBookingCode(prefix = 'PP'): string {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let out = '';
   for (let i = 0; i < 6; i += 1) {
     out += alphabet[Math.floor(Math.random() * alphabet.length)];
   }
-  return `PP-${out}`;
+  return `${prefix}-${out}`;
 }
 
 export function slugify(input: string): string {

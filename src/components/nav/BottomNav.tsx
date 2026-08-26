@@ -2,21 +2,21 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarDays, Home, ShoppingBag, Trophy, User } from 'lucide-react';
+import { CalendarDays, Home, Trophy, User, Users } from 'lucide-react';
 import { Dock, DockIcon, DockItem, DockLabel } from '@/components/ui/dock';
 import { cn } from '@/lib/utils';
 import { toFaDigits } from '@/lib/datetime';
 
 /**
- * پنج مقصد اصلی. راهنمای ناوبری موبایل بیش از پنج آیتم را توصیه نمی‌کند،
- * بنابراین کیف پول از نوار پایین به کارت صفحه‌ی اصلی و منوی پروفایل منتقل شد
- * تا جای فروشگاه باز شود.
+ * پنج مقصد اصلی. راهنمای ناوبری موبایل بیش از پنج آیتم را توصیه نمی‌کند، پس
+ * فقط کارهای پرتکرار اینجا می‌مانند: کیف پول و فروشگاه از نوار پایین به کارت
+ * صفحه‌ی اصلی و منوی پروفایل منتقل شده‌اند تا جای «بازی‌ها» باز شود.
  */
 const ITEMS = [
   { href: '/home', label: 'خانه', Icon: Home },
   { href: '/booking', label: 'رزرو زمین', Icon: CalendarDays },
+  { href: '/matches', label: 'بازی‌ها', Icon: Users },
   { href: '/tournaments', label: 'تورنومنت‌ها', Icon: Trophy },
-  { href: '/market', label: 'فروشگاه', Icon: ShoppingBag },
   { href: '/profile', label: 'پروفایل', Icon: User },
 ];
 

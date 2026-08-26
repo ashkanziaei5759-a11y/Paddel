@@ -3,6 +3,7 @@ import type { Role } from '@prisma/client';
 import { prisma } from './db';
 import { AppError } from './api';
 import { mutateWallet } from './wallet';
+import { cancelOpenMatch } from './matches';
 import { DEFAULT_CANCELLATION_POLICIES } from './constants';
 import { notify } from './notifications';
 import { formatToman } from './utils';
@@ -82,7 +83,7 @@ export async function cancelBooking(input: CancelBookingInput) {
     async (tx) => {
       const booking = await tx.booking.findUnique({
         where: { id: input.bookingId },
-        include: { court: true, cancellation: true },
+        include: { court: true, cancellation: true, openMatch: { select: { id: true } } },
       });
 
       if (!booking) throw new AppError('رزرو موردنظر یافت نشد.', 404);
@@ -148,7 +149,13 @@ export async function cancelBooking(input: CancelBookingInput) {
         });
       }
 
-      return { booking, refundAmount, penaltyAmount, penaltyPercent, quote };
+      /* اگر روی این رزرو بازی بازی ساخته شده، سهم بازیکنان درون همین تراکنش
+         بازمی‌گردد تا لغو رزرو و بازگشت سهم‌ها یکجا اتفاق بیفتد یا هیچ‌کدام. */
+      const match = booking.openMatch
+        ? await cancelOpenMatch(tx, booking.openMatch.id, input.reason ?? 'لغو رزرو')
+        : null;
+
+      return { booking, refundAmount, penaltyAmount, penaltyPercent, quote, match };
     },
     { isolationLevel: 'ReadCommitted', timeout: 20_000 },
   ).then(async (result) => {
@@ -163,6 +170,17 @@ export async function cancelBooking(input: CancelBookingInput) {
       actionUrl: '/wallet',
       data: { bookingId: result.booking.id },
     });
+
+    for (const userId of result.match?.guests ?? []) {
+      await notify({
+        userId,
+        type: 'MATCH_CANCELLED',
+        title: 'بازی لغو شد',
+        body: `بازی ${result.booking.court.name} — ${formatDateTime(result.booking.startsAt)} لغو شد و سهم شما به کیف پول بازگشت.`,
+        actionUrl: '/wallet',
+      });
+    }
+
     return result;
   });
 }

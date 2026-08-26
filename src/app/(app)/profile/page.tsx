@@ -202,7 +202,8 @@ export default async function ProfilePage() {
         {/* ---- منو ---- */}
         <section className="card divide-y divide-brand-50 overflow-hidden">
           <MenuItem href="/wallet" icon="wallet" label="کیف پول" />
-          <MenuItem href="/market/orders" icon="ticket" label="سفارش‌های فروشگاه" />
+          <MenuItem href="/market" icon="ticket" label="فروشگاه باشگاه" />
+          <MenuItem href="/market/orders" icon="receipt" label="سفارش‌های فروشگاه" />
           <MenuItem href="/bookings" icon="history" label="تاریخچه رزرو" />
           <MenuItem href="/wallet/transactions" icon="receipt" label="تراکنش‌های کیف پول" />
           <MenuItem href="/partner-requests" icon="partner" label="درخواست‌های پارتنری" />

@@ -49,6 +49,22 @@ export default async function HomePage() {
       }),
     ]);
 
+  /* بازی‌هایی که هنوز جای خالی دارند و کاربر در آن‌ها نیست */
+  const openMatches = await prisma.openMatch.findMany({
+    where: {
+      status: 'OPEN',
+      booking: { status: 'CONFIRMED', startsAt: { gt: now } },
+      players: { none: { userId: user.id } },
+      OR: [{ levelPolicy: 'ANY' }, { allowedLevels: { has: user.level } }],
+    },
+    include: {
+      booking: { include: { court: { select: { name: true } } } },
+      players: { select: { id: true } },
+    },
+    orderBy: { booking: { startsAt: 'asc' } },
+    take: 3,
+  });
+
   const balance = wallet?.balance ?? 0n;
 
   return (
@@ -70,7 +86,7 @@ export default async function HomePage() {
         )}
 
         {/* ---- کارت وضعیت بازیکن ---- */}
-        <section className="card-dark p-5">
+        <section className="card-night p-5">
           <div className="relative flex items-start justify-between gap-4">
             <div>
               <p className="text-[11px] font-bold tracking-widest text-sky-light/60">وضعیت شما</p>
@@ -181,6 +197,50 @@ export default async function HomePage() {
           )}
         </section>
 
+        {/* ---- بازی‌های باز ---- */}
+        {openMatches.length > 0 && (
+          <section>
+            <div className="section-title mb-3">
+              <h2>بازی‌های باز</h2>
+              <Link href="/matches" className="text-[11px] font-bold text-brand-400 hover:text-brand-600">
+                همه
+              </Link>
+            </div>
+
+            <div className="space-y-3">
+              {openMatches.map((m) => {
+                const empty = m.capacity - m.players.length;
+                return (
+                  <Link key={m.id} href={`/matches/${m.id}`} className="card-interactive block p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl bg-electric-gradient text-white">
+                        <span className="num text-base font-black leading-none">
+                          {formatTime(m.booking.startsAt)}
+                        </span>
+                        <span className="mt-1 text-[9px] font-bold text-white/70">
+                          {formatJalaliDate(m.booking.startsAt, { short: true })}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-extrabold text-brand-800">
+                          {m.booking.court.name}
+                        </p>
+                        <p className="mt-1 text-[11px] font-semibold text-brand-400">
+                          {formatJalaliDate(m.booking.startsAt, { withWeekday: true })}
+                        </p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="badge-accent">{toFaDigits(empty)} جای خالی</span>
+                          <span className="badge-muted num">{formatToman(m.sharePerPlayer)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* ---- تورنومنت‌های پیش‌رو ---- */}
         <section>
           <div className="section-title mb-3">
@@ -242,10 +302,11 @@ export default async function HomePage() {
         <section>
           <h2 className="mb-3 text-base font-extrabold text-brand-800">دسترسی سریع</h2>
           <div className="grid grid-cols-2 gap-3">
+            <QuickAction href="/matches" icon="users" title="بازی‌های باز" subtitle="هم‌بازی پیدا کنید" />
             <QuickAction href="/booking" icon="booking" title="رزرو زمین" subtitle="انتخاب تاریخ و ساعت" />
-            <QuickAction href="/tournaments" icon="tournament" title="تورنومنت‌ها" subtitle="ثبت‌نام و نتایج" />
-            <QuickAction href="/wallet" icon="wallet" title="کیف پول" subtitle="شارژ و تراکنش‌ها" />
             <QuickAction href="/market" icon="ticket" title="فروشگاه" subtitle="خرید با امتیاز" />
+            <QuickAction href="/wallet" icon="wallet" title="کیف پول" subtitle="شارژ و تراکنش‌ها" />
+            <QuickAction href="/tournaments" icon="tournament" title="تورنومنت‌ها" subtitle="ثبت‌نام و نتایج" />
             <QuickAction href="/bookings" icon="history" title="تاریخچه" subtitle="رزروهای گذشته" />
             {user.role === 'ADMIN' && (
               <QuickAction

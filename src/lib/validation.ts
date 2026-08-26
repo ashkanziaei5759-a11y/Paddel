@@ -307,3 +307,23 @@ export const bannerSchema = z.object({
   startsAt: z.string().datetime({ offset: true }).optional().nullable(),
   endsAt: z.string().datetime({ offset: true }).optional().nullable(),
 });
+
+// --- بازی باز ---------------------------------------------------------------
+
+export const openMatchCreateSchema = z
+  .object({
+    bookingId: z.string().min(1, 'رزرو مشخص نشده است.'),
+    capacity: z.coerce
+      .number()
+      .int()
+      .min(2, 'ظرفیت باید حداقل ۲ نفر باشد.')
+      .max(8, 'ظرفیت حداکثر ۸ نفر است.')
+      .default(4),
+    levelPolicy: z.enum(['ANY', 'RANGE']).default('ANY'),
+    allowedLevels: z.array(zLevel).default([]),
+    notes: z.string().trim().max(200, 'توضیح حداکثر ۲۰۰ کاراکتر است.').optional(),
+  })
+  .refine((v) => v.levelPolicy === 'ANY' || v.allowedLevels.length > 0, {
+    message: 'حداقل یک سطح مجاز انتخاب کنید.',
+    path: ['allowedLevels'],
+  });
