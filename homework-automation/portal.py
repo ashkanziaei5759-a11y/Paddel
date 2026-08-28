@@ -200,6 +200,49 @@ def _pick_cell(cells: list[str], index: int) -> str:
     return cells[index] if 0 <= index < len(cells) else ""
 
 
+_PERSIAN_DIGITS = str.maketrans("۰۱۲۳۴۵۶۷۸۹", "0123456789")
+
+
+def _to_int(text: str) -> int | None:
+    try:
+        return int(text.translate(_PERSIAN_DIGITS).strip())
+    except (ValueError, AttributeError):
+        return None
+
+
+def try_advance_page(page) -> bool:
+    """The pending list is paginated ("کل صفحات: N" + a page-number box).
+    When the current page has nothing left to process but more pages
+    exist, this writes the next page number into that box and presses
+    Enter, then confirms the row content actually changed - rather than
+    guessing which of the pager's two arrow icons means "next" (their
+    direction isn't reliable to assume in a right-to-left layout).
+    Returns False harmlessly if no such pager is found."""
+    label = page.get_by_text("کل صفحات", exact=False).first
+    if not label.count():
+        return False
+    container = label.locator("xpath=ancestor::*[self::div or self::tr or self::section][1]")
+    if not container.count():
+        return False
+    box = container.locator("input").first
+    if not box.count() or not _visible(box):
+        return False
+
+    current = _to_int(box.input_value() or "") or 1
+    before = "|".join(i["submission_id"] for i in find_pending_reviews(page))
+    try:
+        box.fill(str(current + 1))
+        box.press("Enter")
+        page.wait_for_load_state("networkidle", timeout=15000)
+    except Exception:
+        try:
+            page.wait_for_timeout(1200)
+        except Exception:
+            return False
+    after = "|".join(i["submission_id"] for i in find_pending_reviews(page))
+    return after != before
+
+
 def open_next_pending(page, already_done: set[str]) -> tuple[dict | None, str]:
     """Re-read the pending list fresh and click into the first row not
     already handled this run. Re-reading each time (rather than working off

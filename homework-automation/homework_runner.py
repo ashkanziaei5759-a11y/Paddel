@@ -293,6 +293,12 @@ def main() -> None:
                     print(f"X {error}")
                     break
                 if item is None:
+                    # Nothing left on this page - if the list is paginated
+                    # and there's another page, move to it and keep going
+                    # rather than stopping early.
+                    if portal.try_advance_page(page):
+                        print("  (moved to the next page of the pending list)")
+                        continue
                     break
 
                 record = process_one(page, context, item, config, root)
