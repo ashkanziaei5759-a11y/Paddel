@@ -284,7 +284,18 @@ def main() -> None:
                 browser.close()
                 sys.exit(1)
             homework_url = page.url
-            print(f"OK - homework list: {homework_url}\n")
+            print(f"OK - homework list: {homework_url}")
+            if not portal.looks_like_pending_list(page):
+                print(
+                    "  ! This page doesn't look like the pending-review list "
+                    "(no 'در انتظار بررسی'/'تائید نشده' text found on it)."
+                )
+                print(
+                    "  ! If nothing gets processed below, set homework_url in "
+                    "config.json to the exact pending-review list URL - it's "
+                    f"probably not {homework_url}"
+                )
+            print()
 
             for _ in range(MAX_SUBMISSIONS_PER_RUN):
                 item, error = portal.open_next_pending(page, already_done)

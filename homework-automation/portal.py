@@ -22,6 +22,9 @@ FILE_EXTS = (
     ".zip", ".rar",
 )
 
+PENDING_LIST_WORDS = (
+    "در انتظار بررسی", "تائید نشده", "تایید نشده", "pending", "not reviewed", "not approved",
+)
 HOMEWORK_WORDS = (
     "تکلیف", "تکالیف", "تمرین", "تمرینات", "آپلود", "ارسالی",
     "homework", "assignment", "exercise", "submission", "task",
@@ -144,16 +147,34 @@ def go_to_homework(page, explicit_url: str) -> tuple[bool, str]:
         page.wait_for_timeout(1500)
         return True, explicit_url
 
-    for link in page.locator("a").all():
-        text = _text(link)
-        if text and any(word in text.lower() for word in HOMEWORK_WORDS):
-            try:
-                link.click()
-                page.wait_for_load_state("networkidle", timeout=20000)
-                return True, page.url
-            except Exception:
-                continue
+    # Try the specific "pending review" link first - a generic "تکالیف"
+    # word also matches menu items like "تکالیف اخیر" (recent homework, all
+    # statuses), which has no "مشاهده تکالیف" buttons to act on. Only fall
+    # back to the generic homework-word match if no pending-specific link
+    # exists on this portal.
+    for words in (PENDING_LIST_WORDS, HOMEWORK_WORDS):
+        for link in page.locator("a").all():
+            text = _text(link)
+            if text and any(word in text.lower() for word in words):
+                try:
+                    link.click()
+                    page.wait_for_load_state("networkidle", timeout=20000)
+                    return True, page.url
+                except Exception:
+                    continue
     return False, "could not find a homework/assignments link in the menu"
+
+
+def looks_like_pending_list(page) -> bool:
+    """Whether the current page appears to actually be the pending-review
+    list, as opposed to some other homework-related page (e.g. a general
+    "recent homework, all statuses" list) that a keyword match can land on
+    by mistake."""
+    try:
+        body = (page.inner_text("body") or "").lower()
+    except Exception:
+        return False
+    return any(word.lower() in body for word in PENDING_LIST_WORDS)
 
 
 # --- the pending-review list --------------------------------------------
