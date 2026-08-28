@@ -187,13 +187,16 @@ def process_one(page, context, item: dict, config: dict, root: Path) -> dict:
     record["files"] = saved
     print(f"  OK {label}  ->  {len(saved)} file(s)")
 
-    texts, extract_notes = [], []
+    texts, extract_notes, has_audio = [], [], False
     for file_str in saved:
-        text, note = extract.extract(Path(file_str), config)
+        path = Path(file_str)
+        text, note = extract.extract(path, config)
         if text:
             texts.append(text)
+            if extract.kind_of(path) == "audio":
+                has_audio = True
         if note:
-            extract_notes.append(f"{Path(file_str).name}: {note}")
+            extract_notes.append(f"{path.name}: {note}")
 
     if not texts:
         record["note"] = "; ".join(extract_notes) or "could not read any of the downloaded files"
@@ -203,7 +206,9 @@ def process_one(page, context, item: dict, config: dict, root: Path) -> dict:
         print(f"    (note: {'; '.join(extract_notes)})")
 
     combined_text = "\n\n".join(texts)
-    record["feedback"] = feedback.draft(combined_text, item["student"], item["assignment"], config)
+    record["feedback"] = feedback.draft(
+        combined_text, item["student"], item["assignment"], config, has_audio=has_audio
+    )
 
     box = portal.feedback_box(page)
     if box is None:
