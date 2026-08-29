@@ -7,6 +7,7 @@ import { Sheet } from '@/components/ui/Sheet';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { BannerCarousel } from '@/components/home/BannerCarousel';
+import { ImagePicker } from '@/components/media/ImagePicker';
 import { toFaDigits } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
 
@@ -34,17 +35,20 @@ export function BannerManager({ initial }: { initial: BannerRow[] }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<BannerRow | null>(null);
   const [active, setActive] = useState(true);
+  const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   function openNew() {
     setEditing(null);
     setActive(true);
+    setImage(null);
     setOpen(true);
   }
 
   function openEdit(b: BannerRow) {
     setEditing(b);
     setActive(b.isActive);
+    setImage(b.imageUrl ?? null);
     setOpen(true);
   }
 
@@ -207,15 +211,16 @@ export function BannerManager({ initial }: { initial: BannerRow[] }) {
             <input id="b-sub" name="subtitle" defaultValue={editing?.subtitle ?? ''} className="field" />
           </div>
           <div>
-            <label className="label" htmlFor="b-img">نشانی تصویر</label>
-            <input
-              id="b-img" name="imageUrl" defaultValue={editing?.imageUrl ?? ''} dir="ltr"
-              className="field text-left" placeholder="/images/banners/summer.jpg" required
+            <span className="label">تصویر بنر</span>
+            <input type="hidden" name="imageUrl" value={image ?? ''} readOnly />
+            <ImagePicker
+              kind="BANNER"
+              aspect="wide"
+              value={image}
+              onChange={setImage}
+              label="انتخاب از گالری"
+              hint="تصویر افقی و روشن بهتر دیده می‌شود؛ متن بنر روی سمت راست آن می‌نشیند."
             />
-            <p className="helper">
-              فایل را در <code>public/images/banners/</code> بگذارید و مسیر آن را وارد کنید،
-              یا نشانی کامل یک تصویر اینترنتی را بدهید.
-            </p>
           </div>
           <div>
             <label className="label" htmlFor="b-link">لینک مقصد (اختیاری)</label>

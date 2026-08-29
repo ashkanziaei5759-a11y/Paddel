@@ -67,9 +67,8 @@ export function InstallPrompt() {
   return (
     <div className="fixed inset-x-3 bottom-[calc(var(--nav-height)+var(--safe-bottom)+0.75rem)] z-[80] mx-auto max-w-[480px] animate-fade-up">
       <div className="card-dark flex items-center gap-3 p-4">
-        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent-gradient text-xl">
-          🎾
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icons/logo-256.png" alt="" width={44} height={44} className="relative h-11 w-11 shrink-0 rounded-2xl" />
         <div className="relative flex-1">
           <p className="text-xs font-extrabold text-white">پرشین پدل را نصب کنید</p>
           <p className="mt-1 text-[11px] leading-5 text-sky-light/80">

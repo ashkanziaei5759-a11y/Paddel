@@ -196,6 +196,14 @@ enum Gender {
   FEMALE
 }
 
+enum MediaKind {
+  AVATAR
+  BANNER
+  ARTICLE_COVER
+  COURT
+  PRODUCT
+}
+
 enum ArticleStatus {
   DRAFT
   PUBLISHED
@@ -275,6 +283,7 @@ model User {
   storeOrders        StoreOrder[]
   hostedMatches      OpenMatch[]         @relation("OpenMatchHost")
   articles           Article[]           @relation("ArticleAuthor")
+  media              MediaAsset[]        @relation("MediaUploader")
   matchSeats         OpenMatchPlayer[]   @relation("OpenMatchPlayer")
 
   @@index([role])
@@ -1358,4 +1367,35 @@ model Article {
   @@index([status, publishedAt])
   @@index([isPinned])
   @@map("articles")
+}
+
+
+// ===========================================================================
+// تصاویر آپلودشده
+// ===========================================================================
+
+/// تصویرها داخل پایگاه داده نگهداری می‌شوند، نه روی دیسک.
+///
+/// دیسک میزبان‌های بدون‌سرور (Vercel و مانند آن) فقط‌خواندنی است و بین اجراها
+/// پاک می‌شود، پس فایل‌ها آنجا نمی‌مانند. سرویس ذخیره‌ی جداگانه هم یعنی یک
+/// حساب و کلید تازه برای راه‌اندازی. تصویرها پیش از آپلود در مرورگر کوچک و
+/// فشرده می‌شوند (حداکثر ۱۶۰۰ پیکسل)، بنابراین هر تصویر چند صد کیلوبایت است.
+model MediaAsset {
+  id       String    @id @default(cuid())
+  kind     MediaKind
+  mimeType String
+  /// داده‌ی خام تصویر
+  bytes    Bytes
+  byteSize Int
+  width    Int
+  height   Int
+
+  uploadedById String?
+  uploadedBy   User?   @relation("MediaUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([kind])
+  @@index([uploadedById])
+  @@map("media_assets")
 }

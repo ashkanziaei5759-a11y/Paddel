@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import type { Gender, PlayerLevel } from '@prisma/client';
 import { Search, TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
+import { TopPlayersRail } from '@/components/ranking/TopPlayersRail';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LEVEL_LABEL, levelTier } from '@/lib/constants';
 import { formatNumber } from '@/lib/utils';
@@ -56,8 +57,8 @@ export function RankingView({ rows, viewerId }: { rows: RankRow[]; viewerId: str
   }, [rows, tier, group, query]);
 
   const me = filtered.find((r) => r.userId === viewerId) ?? rows.find((r) => r.userId === viewerId);
-  const podium = tier === 'ALL' && !query.trim() ? filtered.slice(0, 3) : [];
-  const rest = podium.length ? filtered.slice(3) : filtered;
+  const podium = tier === 'ALL' && !query.trim() ? filtered.slice(0, 5) : [];
+  const rest = podium.length ? filtered.slice(5) : filtered;
 
   return (
     <div className="space-y-4">
@@ -144,14 +145,8 @@ export function RankingView({ rows, viewerId }: { rows: RankRow[]; viewerId: str
         />
       ) : (
         <>
-          {/* ---- سکوی سه نفر برتر ---- */}
-          {podium.length > 0 && (
-            <div className="grid grid-cols-3 items-end gap-2">
-              {[podium[1], podium[0], podium[2]].filter(Boolean).map((r) => (
-                <PodiumCard key={r.userId} row={r} isViewer={r.userId === viewerId} />
-              ))}
-            </div>
-          )}
+          {/* ---- نفرات برتر ---- */}
+          {podium.length > 0 && <TopPlayersRail players={podium} />}
 
           {/* ---- بقیه‌ی جدول ---- */}
           {rest.length > 0 && (
@@ -173,49 +168,6 @@ export function RankingView({ rows, viewerId }: { rows: RankRow[]; viewerId: str
         فلش‌ها تغییر رتبه نسبت به ۳۰ روز گذشته را نشان می‌دهند. امتیاز از تورنومنت‌ها و
         اعطای مدیریت به دست می‌آید.
       </p>
-    </div>
-  );
-}
-
-function PodiumCard({ row, isViewer }: { row: RankRow; isViewer: boolean }) {
-  const gold = row.rank === 1;
-  return (
-    <div
-      className={cn(
-        'flex flex-col items-center gap-2 rounded-3xl p-3 text-center',
-        gold ? 'card-night pb-5 pt-5' : 'card',
-        isViewer && !gold && 'ring-1 ring-accent/40',
-      )}
-    >
-      <span
-        className={cn(
-          'num flex h-7 w-7 items-center justify-center rounded-xl text-xs font-black',
-          gold ? 'bg-accent-gradient text-on-accent' : 'bg-brand-50 text-brand-500',
-        )}
-      >
-        {toFaDigits(row.rank)}
-      </span>
-      <Avatar
-        firstName={row.firstName}
-        lastName={row.lastName}
-        src={row.avatarUrl}
-        size={gold ? 'lg' : 'md'}
-        className={gold ? 'ring-2 ring-accent ring-offset-2 ring-offset-scrim' : undefined}
-      />
-      <span
-        className={cn(
-          'w-full truncate text-[11px] font-extrabold',
-          gold ? 'text-white' : 'text-brand-800',
-        )}
-      >
-        {row.firstName} {row.lastName}
-      </span>
-      <span className={cn('num text-sm font-black', gold ? 'text-accent' : 'text-brand-600')}>
-        {formatNumber(row.points)}
-      </span>
-      <span dir="ltr" className={cn('badge text-[9px]', gold ? 'bg-white/15 text-white' : 'badge-muted')}>
-        {LEVEL_LABEL[row.level]}
-      </span>
     </div>
   );
 }

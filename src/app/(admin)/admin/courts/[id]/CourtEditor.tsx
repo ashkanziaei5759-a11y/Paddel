@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { ImagePicker } from '@/components/media/ImagePicker';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { rialToToman } from '@/lib/utils';
@@ -38,6 +39,7 @@ export function CourtEditor({ court }: { court: CourtDto }) {
   const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [isActive, setIsActive] = useState(court.isActive);
+  const [image, setImage] = useState<string | null>(court.imageUrl ?? null);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -106,11 +108,10 @@ export function CourtEditor({ court }: { court: CourtDto }) {
       </div>
 
       <div>
-        <label className="label" htmlFor="imageUrl">نشانی تصویر</label>
-        <input
-          id="imageUrl" name="imageUrl" defaultValue={court.imageUrl ?? ''} dir="ltr"
-          className="field text-left" placeholder="https://…"
-        />
+        <span className="label">تصویر زمین</span>
+        {/* فرم با FormData خوانده می‌شود، پس مقدار در یک ورودی پنهان می‌ماند */}
+        <input type="hidden" name="imageUrl" value={image ?? ''} readOnly />
+        <ImagePicker kind="COURT" aspect="wide" value={image} onChange={setImage} label="انتخاب از گالری" />
       </div>
 
       <div>

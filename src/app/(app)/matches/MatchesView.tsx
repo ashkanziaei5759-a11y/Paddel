@@ -43,16 +43,22 @@ export function MatchesView({
     [matches, viewerId],
   );
 
-  const available = useMemo(
+  /* بازی‌هایی که کاربر در آن‌ها نیست و هنوز جا دارند — بدون در نظر گرفتن سطح */
+  const joinable = useMemo(
     () =>
       matches.filter(
-        (m) =>
-          !m.players.some((p) => p.userId === viewerId) &&
-          m.players.length < m.capacity &&
-          (m.levelPolicy === 'ANY' || m.allowedLevels.includes(viewerLevel)),
+        (m) => !m.players.some((p) => p.userId === viewerId) && m.players.length < m.capacity,
       ),
-    [matches, viewerId, viewerLevel],
+    [matches, viewerId],
   );
+
+  const available = useMemo(
+    () => joinable.filter((m) => m.levelPolicy === 'ANY' || m.allowedLevels.includes(viewerLevel)),
+    [joinable, viewerLevel],
+  );
+
+  /* چند بازی هست ولی شرط سطحشان با سطح کاربر نمی‌خورد — دلیلِ خالی بودن مهم است */
+  const blockedByLevel = joinable.length - available.length;
 
   const list = tab === 'available' ? available : mine;
 
@@ -90,17 +96,7 @@ export function MatchesView({
       />
 
       {list.length === 0 ? (
-        <EmptyState
-          icon="users"
-          title={tab === 'available' ? 'بازی بازی نیست' : 'در بازی‌ای نیستید'}
-          description={
-            tab === 'available'
-              ? 'الان بازی بازی که با سطح شما بخورد وجود ندارد. خودتان زمین رزرو کنید و بازی را باز کنید.'
-              : 'به یکی از بازی‌های باز بپیوندید یا زمین خودتان را برای بقیه باز کنید.'
-          }
-          actionLabel={tab === 'available' ? 'رزرو زمین' : undefined}
-          actionHref={tab === 'available' ? '/booking' : undefined}
-        />
+        <EmptyState {...emptyState({ tab, mine: mine.length, blockedByLevel, onShowMine: () => setTab('mine') })} />
       ) : (
         <div className="stagger space-y-3">
           {list.map((m) => (
@@ -112,6 +108,58 @@ export function MatchesView({
       <HostSheet open={hostSheet} bookings={openBookings} onClose={() => setHostSheet(false)} />
     </div>
   );
+}
+
+/**
+ * پیام حالت خالی باید بگوید چرا خالی است.
+ * «بازی‌ای نیست» وقتی خودِ کاربر میزبان تنها بازی موجود است، حرف نادرستی است.
+ */
+function emptyState({
+  tab,
+  mine,
+  blockedByLevel,
+  onShowMine,
+}: {
+  tab: Tab;
+  mine: number;
+  blockedByLevel: number;
+  onShowMine: () => void;
+}) {
+  if (tab === 'mine') {
+    return {
+      icon: 'users' as const,
+      title: 'هنوز در بازی‌ای نیستید',
+      description: 'به یکی از بازی‌های باز بپیوندید یا زمین خودتان را برای بقیه باز کنید.',
+    };
+  }
+
+  if (blockedByLevel > 0) {
+    return {
+      icon: 'users' as const,
+      title: 'بازی بازی با سطح شما نیست',
+      description: `${toFaDigits(blockedByLevel)} بازی باز وجود دارد، ولی میزبان‌ها سطح دیگری خواسته‌اند. می‌توانید خودتان زمین رزرو کنید و بازی بسازید.`,
+      actionLabel: 'رزرو زمین',
+      actionHref: '/booking',
+    };
+  }
+
+  if (mine > 0) {
+    return {
+      icon: 'users' as const,
+      title: 'همه‌ی بازی‌های باز، بازی‌های خودتان است',
+      description: `${toFaDigits(mine)} بازی دارید که در آن‌ها هستید. تا وقتی بازیکن تازه‌ای بازی باز نکند، چیز دیگری اینجا نمی‌آید.`,
+      actionLabel: 'دیدن بازی‌های من',
+      onAction: onShowMine,
+    };
+  }
+
+  return {
+    icon: 'users' as const,
+    title: 'الان هیچ بازی‌ای باز نیست',
+    description: 'اولین نفر باشید: زمین رزرو کنید و جای خالی را برای بقیه باز بگذارید.',
+    actionLabel: 'رزرو زمین',
+    actionHref: '/booking',
+  };
 }
 
 /** فرم باز کردن بازی روی یکی از رزروهای کاربر */

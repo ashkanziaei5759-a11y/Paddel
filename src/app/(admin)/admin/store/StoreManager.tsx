@@ -6,6 +6,7 @@ import { useState } from 'react';
 import type { StoreCategory, StoreOrderStatus, StorePaymentMethod } from '@prisma/client';
 import { Package, Plus } from 'lucide-react';
 import { Sheet } from '@/components/ui/Sheet';
+import { ImagePicker } from '@/components/media/ImagePicker';
 import { Spinner } from '@/components/ui/Spinner';
 import { Segmented } from '@/components/ui/Segmented';
 import { useToast } from '@/components/ui/Toast';
@@ -85,16 +86,19 @@ function Products({ rows }: { rows: ProductRow[] }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<ProductRow | null>(null);
   const [active, setActive] = useState(true);
+  const [productImage, setProductImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   function openNew() {
     setEditing(null);
     setActive(true);
+    setProductImage(null);
     setOpen(true);
   }
   function openEdit(p: ProductRow) {
     setEditing(p);
     setActive(p.isActive);
+    setProductImage(p.imageUrl ?? null);
     setOpen(true);
   }
 
@@ -241,9 +245,9 @@ function Products({ rows }: { rows: ProductRow[] }) {
               rows={2} className="field resize-none" />
           </div>
           <div>
-            <label className="label" htmlFor="p-img">نشانی تصویر</label>
-            <input id="p-img" name="imageUrl" defaultValue={editing?.imageUrl ?? ''} dir="ltr"
-              className="field text-left" placeholder="/images/store/racket.jpg" />
+            <span className="label">تصویر کالا</span>
+            <input type="hidden" name="imageUrl" value={productImage ?? ''} readOnly />
+            <ImagePicker kind="PRODUCT" value={productImage} onChange={setProductImage} label="انتخاب از گالری" />
           </div>
 
           <div className="grid grid-cols-2 gap-2">

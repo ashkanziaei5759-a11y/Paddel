@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, Pencil, Pin, Plus, Trash2 } from 'lucide-react';
 import { Sheet } from '@/components/ui/Sheet';
+import { ImagePicker } from '@/components/media/ImagePicker';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -213,27 +214,15 @@ function Editor({ article, onClose }: { article: AdminArticleDto; onClose: () =>
           />
         </Field>
 
-        <Field label="نشانی تصویر کاور (اختیاری)">
-          <input
-            value={form.coverUrl ?? ''}
-            onChange={(e) => set('coverUrl', e.target.value)}
-            dir="ltr"
-            className="field text-left"
-            placeholder="/images/login/court-1.jpg"
+        <Field label="تصویر کاور (اختیاری)">
+          <ImagePicker
+            kind="ARTICLE_COVER"
+            aspect="wide"
+            value={form.coverUrl}
+            onChange={(url) => set('coverUrl', url)}
+            label="انتخاب از گالری"
           />
         </Field>
-
-        {form.coverUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={form.coverUrl}
-            alt=""
-            className="h-32 w-full rounded-2xl object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        )}
 
         <div className="grid grid-cols-2 gap-2">
           {(['DRAFT', 'PUBLISHED'] as const).map((st) => (

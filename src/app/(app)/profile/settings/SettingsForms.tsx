@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Spinner } from '@/components/ui/Spinner';
+import { ImagePicker } from '@/components/media/ImagePicker';
 import { useToast } from '@/components/ui/Toast';
 import { maskPhone } from '@/lib/utils';
 
@@ -25,6 +26,7 @@ export function SettingsForms({
   const toast = useToast();
   const [savingProfile, setSavingProfile] = useState(false);
   const [genderChoice, setGenderChoice] = useState<'MALE' | 'FEMALE' | null>(gender);
+  const [avatar, setAvatar] = useState<string | null>(avatarUrl || null);
   const [savingPassword, setSavingPassword] = useState(false);
 
   async function saveProfile(event: React.FormEvent<HTMLFormElement>) {
@@ -40,7 +42,7 @@ export function SettingsForms({
           firstName: String(form.get('firstName') || ''),
           lastName: String(form.get('lastName') || ''),
           bio: String(form.get('bio') || '') || null,
-          avatarUrl: String(form.get('avatarUrl') || '') || null,
+          avatarUrl: avatar,
           gender: genderChoice,
         }),
       });
@@ -98,10 +100,14 @@ export function SettingsForms({
         </div>
 
         <div>
-          <label className="label" htmlFor="avatarUrl">نشانی عکس پروفایل</label>
-          <input
-            id="avatarUrl" name="avatarUrl" defaultValue={avatarUrl} dir="ltr"
-            className="field text-left" placeholder="https://…"
+          <span className="label">عکس پروفایل</span>
+          <ImagePicker
+            kind="AVATAR"
+            value={avatar}
+            onChange={setAvatar}
+            label="انتخاب از گالری"
+            allowCutout
+            hint="عکسی که چهره و بالاتنه در آن دیده شود بهترین نتیجه را می‌دهد."
           />
         </div>
 

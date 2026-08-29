@@ -81,7 +81,7 @@ export function LoginForm() {
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute inset-y-0 left-2 my-auto flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-brand-300 transition-colors hover:text-brand-600"
+            className="absolute inset-y-0 left-2 my-auto flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-brand-300 transition-colors hover:text-brand-600 [.on-glass_&]:text-white/50 [.on-glass_&]:hover:text-white"
             aria-label={showPassword ? 'پنهان کردن رمز عبور' : 'نمایش رمز عبور'}
           >
             {showPassword ? (
@@ -96,7 +96,7 @@ export function LoginForm() {
       {error && (
         <div
           role="alert"
-          className="flex items-start gap-2 rounded-2xl bg-danger/[.06] px-4 py-3 text-xs font-bold leading-6 text-danger"
+          className="flex items-start gap-2 rounded-2xl bg-danger/[.06] px-4 py-3 text-xs font-bold leading-6 text-danger [.on-glass_&]:bg-danger/20 [.on-glass_&]:text-white"
         >
           <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>

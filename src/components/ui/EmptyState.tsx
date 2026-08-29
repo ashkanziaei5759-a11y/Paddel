@@ -8,13 +8,16 @@ export function EmptyState({
   description,
   actionLabel,
   actionHref,
+  onAction,
   className,
 }: {
   icon?: IconName;
   title: string;
   description?: string;
   actionLabel?: string;
+  /** یکی از این دو: پیوند به صفحه‌ی دیگر، یا عملی در همین صفحه (مثل تعویض تب) */
   actionHref?: string;
+  onAction?: () => void;
   className?: string;
 }) {
   return (
@@ -28,6 +31,11 @@ export function EmptyState({
         <Link href={actionHref} className="btn-accent btn-sm mt-2">
           {actionLabel}
         </Link>
+      )}
+      {actionLabel && !actionHref && onAction && (
+        <button type="button" onClick={onAction} className="btn-accent btn-sm mt-2">
+          {actionLabel}
+        </button>
       )}
     </div>
   );

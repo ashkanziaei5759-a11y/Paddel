@@ -12,6 +12,7 @@ import { TOURNAMENT_STATUS_LABEL } from '@/lib/constants';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { BannerCarousel } from '@/components/home/BannerCarousel';
 import { ArticleCard } from '@/components/news/ArticleCard';
+import { TopPlayersRail } from '@/components/ranking/TopPlayersRail';
 import { Dot } from '@/components/ui/Dot';
 
 export const metadata: Metadata = { title: 'خانه' };
@@ -66,7 +67,7 @@ export default async function HomePage() {
     take: 3,
   });
 
-  const [courts, articles] = await Promise.all([
+  const [courts, articles, topPlayers] = await Promise.all([
     prisma.court.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: 'asc' },
@@ -77,6 +78,15 @@ export default async function HomePage() {
       where: { status: 'PUBLISHED', publishedAt: { not: null } },
       orderBy: [{ isPinned: 'desc' }, { publishedAt: 'desc' }],
       take: 4,
+    }),
+    prisma.profile.findMany({
+      where: { user: { status: 'ACTIVE' }, points: { gt: 0 } },
+      orderBy: [{ points: 'desc' }, { firstName: 'asc' }],
+      take: 5,
+      select: {
+        userId: true, firstName: true, lastName: true,
+        avatarUrl: true, level: true, points: true, gender: true,
+      },
     }),
   ]);
 
@@ -211,6 +221,21 @@ export default async function HomePage() {
             />
           )}
         </section>
+
+        {/* ---- نفرات برتر ---- */}
+        {topPlayers.length > 0 && (
+          <section>
+            <div className="section-title mb-1">
+              <h2>نفرات برتر باشگاه</h2>
+              <Link href="/ranking" className="text-[11px] font-bold text-brand-400 hover:text-brand-600">
+                جدول کامل
+              </Link>
+            </div>
+            <TopPlayersRail
+              players={topPlayers.map((p, i) => ({ ...p, rank: i + 1 }))}
+            />
+          </section>
+        )}
 
         {/* ---- زمین‌های باشگاه ---- */}
         {courts.length > 0 && (

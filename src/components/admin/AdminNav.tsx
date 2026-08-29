@@ -28,12 +28,8 @@ export function AdminNav({ fullName, username }: { fullName: string; username: s
       {/* ---- کناره‌ی دسکتاپ ---- */}
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-brand-gradient p-5 lg:flex">
         <div className="relative mb-8 flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-gradient">
-            <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" fill="#003049" />
-              <path d="M5 6.5c3 2 3 9 0 11M19 6.5c-3 2-3 9 0 11" stroke="#FFF" strokeWidth="1.8" fill="none" strokeLinecap="round" />
-            </svg>
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icons/logo-256.png" alt="" width={44} height={44} className="h-11 w-11 rounded-2xl" />
           <div>
             <p className="text-sm font-black text-white">پنل مدیریت</p>
             <p className="text-[10px] font-bold tracking-widest text-sky-light/60">PERSIAN PADEL</p>
