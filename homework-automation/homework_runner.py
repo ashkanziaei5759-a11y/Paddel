@@ -66,11 +66,17 @@ def _store_credentials(username: str, password: str) -> bool:
 
 
 def load_config() -> dict:
+    defaults = json.loads((HERE / "config.example.json").read_text(encoding="utf-8"))
     if not CONFIG_PATH.exists():
-        config = json.loads((HERE / "config.example.json").read_text(encoding="utf-8"))
+        config = defaults
         CONFIG_PATH.write_text(json.dumps(config, indent=2), encoding="utf-8")
     else:
         config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+        # An existing config.json from before the pending-list URL was known
+        # would have this blank - fill it in from the shipped default rather
+        # than falling back to menu-guessing every run.
+        if not config.get("portal", {}).get("homework_url"):
+            config.setdefault("portal", {})["homework_url"] = defaults["portal"]["homework_url"]
 
     saved_user, saved_pass = _stored_credentials()
     username = config["portal"].get("username") or saved_user
@@ -239,7 +245,11 @@ def main() -> None:
     root = Path(config["download_root"]) if config.get("download_root") else desktop() / "Homework"
     root.mkdir(parents=True, exist_ok=True)
     manifest = Manifest(root)
-    already_done = {i["submission_id"] for i in manifest.items if i.get("reviewed") or i.get("note")}
+    # Only a submission the teacher actually clicked ثبت on is truly done.
+    # One flagged with a "note" (a failed download, missing OCR tool, etc.)
+    # is still pending on the real portal - it must be retried next run,
+    # not silently skipped forever because an earlier attempt failed.
+    already_done = {i["submission_id"] for i in manifest.items if i.get("reviewed")}
 
     from playwright.sync_api import sync_playwright
 

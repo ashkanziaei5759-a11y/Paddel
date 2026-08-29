@@ -1,7 +1,7 @@
 {
   "portal": {
     "login_url": "https://portal1.iran-europe.net/Login",
-    "homework_url": "",
+    "homework_url": "https://portal1.iran-europe.net/Teacher/HomeWork/Last",
     "username": "",
     "password": ""
   },
