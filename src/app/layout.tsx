@@ -4,6 +4,7 @@ import { ToastProvider } from '@/components/ui/Toast';
 import { ServiceWorkerRegistrar } from '@/components/pwa/ServiceWorkerRegistrar';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 import { ThemeScript } from '@/components/theme/ThemeScript';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <InstallPrompt />
         </ToastProvider>
         <ServiceWorkerRegistrar />
+        <SpeedInsights />
       </body>
     </html>
   );
