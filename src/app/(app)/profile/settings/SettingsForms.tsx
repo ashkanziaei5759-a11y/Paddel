@@ -12,16 +12,19 @@ export function SettingsForms({
   bio,
   avatarUrl,
   phone,
+  gender,
 }: {
   firstName: string;
   lastName: string;
   bio: string;
   avatarUrl: string;
   phone: string;
+  gender: 'MALE' | 'FEMALE' | null;
 }) {
   const router = useRouter();
   const toast = useToast();
   const [savingProfile, setSavingProfile] = useState(false);
+  const [genderChoice, setGenderChoice] = useState<'MALE' | 'FEMALE' | null>(gender);
   const [savingPassword, setSavingPassword] = useState(false);
 
   async function saveProfile(event: React.FormEvent<HTMLFormElement>) {
@@ -38,6 +41,7 @@ export function SettingsForms({
           lastName: String(form.get('lastName') || ''),
           bio: String(form.get('bio') || '') || null,
           avatarUrl: String(form.get('avatarUrl') || '') || null,
+          gender: genderChoice,
         }),
       });
       const json = await res.json();
@@ -99,6 +103,34 @@ export function SettingsForms({
             id="avatarUrl" name="avatarUrl" defaultValue={avatarUrl} dir="ltr"
             className="field text-left" placeholder="https://…"
           />
+        </div>
+
+        <div>
+          <span className="label">جنسیت</span>
+          <p className="mb-2 text-[10.5px] font-semibold text-brand-300">
+            اختیاری — فقط برای تفکیک جدول رنکینگ استفاده می‌شود.
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {([
+              { value: 'MALE' as const, label: 'مرد' },
+              { value: 'FEMALE' as const, label: 'زن' },
+              { value: null, label: 'نگفتن' },
+            ]).map((option) => (
+              <button
+                key={option.label}
+                type="button"
+                onClick={() => setGenderChoice(option.value)}
+                aria-pressed={genderChoice === option.value}
+                className={`rounded-2xl py-3 text-xs font-black transition ${
+                  genderChoice === option.value
+                    ? 'bg-primary text-on-primary'
+                    : 'bg-surface-muted text-brand-400'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div>

@@ -31,6 +31,7 @@ export default async function RankingPage() {
         avatarUrl: true,
         level: true,
         points: true,
+        gender: true,
         user: { select: { username: true } },
       },
       orderBy: [{ points: 'desc' }, { firstName: 'asc' }],
@@ -66,6 +67,7 @@ export default async function RankingPage() {
       avatarUrl: p.avatarUrl,
       level: p.level,
       points: p.points,
+      gender: p.gender,
       delta: previous - p.rank, // مثبت = صعود
       gained: gained.get(p.userId) ?? 0,
     };

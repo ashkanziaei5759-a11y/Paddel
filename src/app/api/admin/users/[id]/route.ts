@@ -69,6 +69,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
               ...(input.level
                 ? { level: input.level, levelUpdatedAt: new Date(), levelUpdatedBy: admin.id }
                 : {}),
+              ...(input.gender !== undefined ? { gender: input.gender } : {}),
             },
           },
         },

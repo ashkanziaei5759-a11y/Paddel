@@ -2,19 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  ArrowLeftRight,
-  CalendarDays,
-  LandPlot,
-  ImagePlay,
-  LayoutDashboard,
-  type LucideIcon,
-  ShoppingBag,
-  Settings,
-  TrendingUp,
-  Trophy,
-  Users,
-} from 'lucide-react';
+import { ArrowLeftRight, CalendarDays, ImagePlay, LandPlot, LayoutDashboard, Newspaper, Settings, ShoppingBag, TrendingUp, Trophy, Users, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ITEMS: { href: string; label: string; Icon: LucideIcon; exact?: boolean }[] = [
@@ -25,6 +13,7 @@ const ITEMS: { href: string; label: string; Icon: LucideIcon; exact?: boolean }[
   { href: '/admin/tournaments', label: 'تورنومنت‌ها', Icon: Trophy },
   { href: '/admin/store', label: 'فروشگاه', Icon: ShoppingBag },
   { href: '/admin/banners', label: 'بنرها', Icon: ImagePlay },
+  { href: '/admin/news', label: 'اخبار', Icon: Newspaper },
   { href: '/admin/finance', label: 'مالی', Icon: TrendingUp },
   { href: '/admin/settings', label: 'تنظیمات', Icon: Settings },
 ];

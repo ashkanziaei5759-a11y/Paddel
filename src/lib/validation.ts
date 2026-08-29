@@ -79,6 +79,7 @@ export const updateProfileSchema = z.object({
   lastName: zPersianName.optional(),
   bio: z.string().trim().max(240, 'حداکثر ۲۴۰ کاراکتر مجاز است.').optional().nullable(),
   avatarUrl: z.string().trim().max(500).optional().nullable(),
+  gender: z.enum(['MALE', 'FEMALE']).nullable().optional(),
 });
 
 export const changePasswordSchema = z.object({
@@ -165,6 +166,7 @@ export const adminUpdateUserSchema = z.object({
   firstName: zPersianName.optional(),
   lastName: zPersianName.optional(),
   level: zLevel.optional(),
+  gender: z.enum(['MALE', 'FEMALE']).nullable().optional(),
   role: z.enum(['PLAYER', 'ADMIN']).optional(),
   status: z.enum(['ACTIVE', 'SUSPENDED']).optional(),
   phone: zPhone.optional(),
@@ -327,3 +329,30 @@ export const openMatchCreateSchema = z
     message: 'حداقل یک سطح مجاز انتخاب کنید.',
     path: ['allowedLevels'],
   });
+
+// --- اخبار باشگاه ---------------------------------------------------------
+
+/** نشانی خوانا از عنوان — حروف فارسی نگه داشته می‌شوند، فاصله به خط تیره */
+export function slugify(input: string): string {
+  return input
+    .trim()
+    .replace(/[\u200c\s]+/g, '-')
+    .replace(/[^\p{L}\p{N}-]/gu, '')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 80);
+}
+
+export const articleSchema = z.object({
+  title: z.string().trim().min(3, 'عنوان حداقل ۳ کاراکتر است.').max(140, 'عنوان حداکثر ۱۴۰ کاراکتر است.'),
+  slug: z.string().trim().max(80).optional(),
+  excerpt: z.string().trim().max(300, 'خلاصه حداکثر ۳۰۰ کاراکتر است.').optional().nullable(),
+  body: z.string().trim().min(10, 'متن مطلب حداقل ۱۰ کاراکتر است.').max(20000),
+  coverUrl: z.string().trim().max(500).optional().nullable(),
+  status: z.enum(['DRAFT', 'PUBLISHED']).default('DRAFT'),
+  isPinned: z.boolean().default(false),
+});
+
+// --- جنسیت ----------------------------------------------------------------
+
+export const genderSchema = z.enum(['MALE', 'FEMALE']).nullable().optional();

@@ -36,6 +36,7 @@ const COURTS = [
     description: 'زمین اصلی — سرپوشیده با نورپردازی حرفه‌ای',
     basePrice: toman(400_000),
     peakPrice: toman(550_000),
+    imageUrl: '/images/login/court-1.jpg',
   },
   {
     name: 'زمین ۲',
@@ -43,6 +44,7 @@ const COURTS = [
     description: 'زمین شماره دو — مناسب مسابقات دوبل',
     basePrice: toman(380_000),
     peakPrice: toman(520_000),
+    imageUrl: '/images/login/court-2.jpg',
   },
   {
     name: 'زمین ۳',
@@ -50,6 +52,7 @@ const COURTS = [
     description: 'زمین شماره سه — روباز با چمن مصنوعی درجه یک',
     basePrice: toman(350_000),
     peakPrice: toman(480_000),
+    imageUrl: '/images/login/court-4.jpg',
   },
 ];
 
@@ -60,15 +63,16 @@ const SAMPLE_PLAYERS: {
   phone: string;
   level: PlayerLevel;
   points: number;
+  gender: 'MALE' | 'FEMALE';
 }[] = [
-  { username: 'ali', firstName: 'علی', lastName: 'محمدی', phone: '09121111111', level: 'A', points: 250 },
-  { username: 'sara', firstName: 'سارا', lastName: 'رضایی', phone: '09122222222', level: 'B_PLUS', points: 180 },
-  { username: 'reza', firstName: 'رضا', lastName: 'کریمی', phone: '09123333333', level: 'B', points: 120 },
-  { username: 'niloofar', firstName: 'نیلوفر', lastName: 'احمدی', phone: '09124444444', level: 'A_MINUS', points: 210 },
-  { username: 'mohammad', firstName: 'محمد', lastName: 'حسینی', phone: '09125555555', level: 'C_PLUS', points: 60 },
-  { username: 'mina', firstName: 'مینا', lastName: 'صادقی', phone: '09126666666', level: 'C', points: 40 },
-  { username: 'amir', firstName: 'امیر', lastName: 'نوری', phone: '09127777777', level: 'B_MINUS', points: 95 },
-  { username: 'zahra', firstName: 'زهرا', lastName: 'موسوی', phone: '09128888888', level: 'D_PLUS', points: 15 },
+  { username: 'ali', firstName: 'علی', lastName: 'محمدی', phone: '09121111111', level: 'A', points: 250, gender: 'MALE' },
+  { username: 'sara', firstName: 'سارا', lastName: 'رضایی', phone: '09122222222', level: 'B_PLUS', points: 180, gender: 'FEMALE' },
+  { username: 'reza', firstName: 'رضا', lastName: 'کریمی', phone: '09123333333', level: 'B', points: 120, gender: 'MALE' },
+  { username: 'niloofar', firstName: 'نیلوفر', lastName: 'احمدی', phone: '09124444444', level: 'A_MINUS', points: 210, gender: 'FEMALE' },
+  { username: 'mohammad', firstName: 'محمد', lastName: 'حسینی', phone: '09125555555', level: 'C_PLUS', points: 60, gender: 'MALE' },
+  { username: 'mina', firstName: 'مینا', lastName: 'صادقی', phone: '09126666666', level: 'C', points: 40, gender: 'FEMALE' },
+  { username: 'amir', firstName: 'امیر', lastName: 'نوری', phone: '09127777777', level: 'B_MINUS', points: 95, gender: 'MALE' },
+  { username: 'zahra', firstName: 'زهرا', lastName: 'موسوی', phone: '09128888888', level: 'D_PLUS', points: 15, gender: 'FEMALE' },
 ];
 
 export async function runSeed(prisma: PrismaClient, log: Logger = () => {}) {
@@ -109,6 +113,7 @@ export async function runSeed(prisma: PrismaClient, log: Logger = () => {}) {
         slug: court.slug,
         description: court.description,
         basePrice: court.basePrice,
+        imageUrl: court.imageUrl,
         slotDurationMinutes: 90,
         openingMinute: 10 * 60,
         closingMinute: 23 * 60,
@@ -150,7 +155,9 @@ export async function runSeed(prisma: PrismaClient, log: Logger = () => {}) {
         phone: p.phone,
         phoneVerifiedAt: new Date(),
         role: 'PLAYER',
-        profile: { create: { firstName: p.firstName, lastName: p.lastName, level: p.level } },
+        profile: {
+          create: { firstName: p.firstName, lastName: p.lastName, level: p.level, gender: p.gender },
+        },
         wallet: { create: { balance: toman(2_000_000) } },
       },
       include: { profile: true },
@@ -326,6 +333,72 @@ export async function runSeed(prisma: PrismaClient, log: Logger = () => {}) {
     });
   }
   log(`✅ ${PRODUCTS.length} کالای فروشگاه آماده شد`);
+
+  // ---- ۹. اخبار نمونه ----
+  const ARTICLES = [
+    {
+      slug: 'گزارش-فینال-جام-تابستانه',
+      title: 'گزارش فینال جام تابستانه: قهرمانی در تای‌بریک ست سوم',
+      excerpt:
+        'فینال جام تابستانه با یک تای‌بریک نفس‌گیر در ست سوم تمام شد. مرور کامل مسابقه و صحبت‌های تیم قهرمان.',
+      body: `فینال جام تابستانه پرشین پدل عصر پنج‌شنبه روی زمین شماره یک برگزار شد و تا آخرین توپ، برنده‌اش معلوم نبود.
+
+ست اول را محمدی و رضایی با اختلاف ۶ بر ۴ بردند. فشار سرویس‌های اول و پوشش خوب دیوار پشتی، کار را برای حریف سخت کرده بود.
+
+در ست دوم ورق برگشت. احمدی و کریمی با تغییر آرایش و بازی نزدیک‌تر به تور، ست را ۶ بر ۳ گرفتند و مسابقه به ست سوم کشید.
+
+ست سوم تا ۶–۶ پیش رفت و در تای‌بریک، دو امتیاز پیاپی روی اسمش، کار را تمام کرد. جام به تیم محمدی / رضایی رسید و ۱۰۰ امتیاز باشگاهی به هر بازیکن تعلق گرفت.`,
+      coverUrl: '/images/login/court-1.jpg',
+      isPinned: true,
+    },
+    {
+      slug: 'چگونه-دیوار-را-درست-بازی-کنیم',
+      title: 'آموزش: چگونه دیوار پشتی را درست بازی کنیم',
+      excerpt: 'رایج‌ترین اشتباه بازیکنان تازه‌کار پدل، عجله در ضربه‌ی برگشتی از دیوار است.',
+      body: `دیوار، چیزی است که پدل را از تنیس جدا می‌کند — و همان چیزی است که بیشتر بازیکنان تازه‌کار از آن می‌ترسند.
+
+**یک قدم عقب‌تر بایستید.** بیشتر خطاها از این می‌آید که خیلی نزدیک به دیوار می‌ایستیم و توپ در بدنمان گیر می‌کند. فاصله بگیرید و بگذارید توپ بیاید.
+
+**صبر کنید تا توپ برگردد.** توپ پس از برخورد با دیوار سرعتش کم می‌شود؛ اگر زودتر ضربه بزنید، کنترل را از دست می‌دهید.
+
+**راکت را پایین نگه دارید.** ضربه‌ی برگشتی از دیوار معمولاً پایین‌تر از کمر است. راکت آماده و پایین، نیمی از کار را انجام می‌دهد.
+
+تمرین پیشنهادی: ده دقیقه فقط توپ را به دیوار بزنید و برگردانید، بدون اینکه امتیازی در کار باشد.`,
+      coverUrl: '/images/login/court-2.jpg',
+      isPinned: false,
+    },
+    {
+      slug: 'افتتاح-زمین-شماره-سه',
+      title: 'زمین شماره ۳ افتتاح شد',
+      excerpt: 'زمین روباز با نورپردازی LED و چمن مصنوعی درجه‌یک، از این هفته قابل رزرو است.',
+      body: `زمین شماره ۳ باشگاه از این هفته آماده‌ی رزرو است.
+
+این زمین روباز است، با نورپردازی LED که بازی شبانه را هم راحت می‌کند، و چمن مصنوعی درجه‌یک که سرعت توپ را کمی بالاتر می‌برد.
+
+تا پایان ماه، رزرو این زمین با ۲۰٪ تخفیف انجام می‌شود.`,
+      coverUrl: '/images/login/court-4.jpg',
+      isPinned: false,
+    },
+  ];
+
+  for (const [index, a] of ARTICLES.entries()) {
+    await prisma.article.upsert({
+      where: { slug: a.slug },
+      update: {},
+      create: {
+        slug: a.slug,
+        title: a.title,
+        excerpt: a.excerpt,
+        body: a.body,
+        coverUrl: a.coverUrl,
+        status: 'PUBLISHED',
+        isPinned: a.isPinned,
+        publishedAt: new Date(Date.now() - (index + 1) * 3 * 86_400_000),
+        authorId: admin.id,
+      },
+    });
+  }
+  log(`✅ ${ARTICLES.length} مطلب نمونه منتشر شد`);
 
   return { adminUsername, players: players.length, courts: COURTS.length };
 }

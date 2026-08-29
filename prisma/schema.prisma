@@ -191,6 +191,16 @@ enum NotificationType {
   GENERAL
 }
 
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+}
+
 enum NotificationChannel {
   IN_APP
   PUSH
@@ -264,6 +274,7 @@ model User {
   auditLogs          AuditLog[]
   storeOrders        StoreOrder[]
   hostedMatches      OpenMatch[]         @relation("OpenMatchHost")
+  articles           Article[]           @relation("ArticleAuthor")
   matchSeats         OpenMatchPlayer[]   @relation("OpenMatchPlayer")
 
   @@index([role])
@@ -282,6 +293,9 @@ model Profile {
   bio       String?
   birthDate DateTime?
 
+  /// اختیاری — فقط برای تفکیک جدول رنکینگ استفاده می‌شود
+  gender Gender?
+
   /// سطح بازیکن — فقط ادمین تغییر می‌دهد
   level         PlayerLevel @default(D)
   levelUpdatedAt DateTime?
@@ -294,6 +308,7 @@ model Profile {
   updatedAt DateTime @updatedAt
 
   @@index([level])
+  @@index([gender])
   @@map("profiles")
 }
 
@@ -1309,4 +1324,38 @@ model OpenMatchPlayer {
   @@unique([matchId, userId])
   @@index([userId])
   @@map("open_match_players")
+}
+
+
+// ===========================================================================
+// اخبار و مطالب باشگاه
+// ===========================================================================
+
+model Article {
+  id    String @id @default(cuid())
+  /// نشانی خوانا — در URL می‌آید و پس از انتشار نباید عوض شود
+  slug  String @unique
+  title String
+
+  /// خلاصه‌ی یکی‌دو خطی برای کارت‌ها؛ اگر خالی باشد از ابتدای متن ساخته می‌شود
+  excerpt  String?
+  body     String
+  coverUrl String?
+
+  status      ArticleStatus @default(DRAFT)
+  /// زمان انتشار — تا وقتی خالی است، مطلب منتشر نشده حساب می‌شود
+  publishedAt DateTime?
+  /// مطلب سنجاق‌شده در بالای فهرست می‌ماند
+  isPinned    Boolean       @default(false)
+  viewCount   Int           @default(0)
+
+  authorId String?
+  author   User?   @relation("ArticleAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([isPinned])
+  @@map("articles")
 }

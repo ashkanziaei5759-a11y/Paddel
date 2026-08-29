@@ -19,6 +19,7 @@ export async function PATCH(req: NextRequest) {
         ...(input.lastName !== undefined ? { lastName: input.lastName } : {}),
         ...(input.bio !== undefined ? { bio: input.bio } : {}),
         ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
+        ...(input.gender !== undefined ? { gender: input.gender } : {}),
       },
     });
 

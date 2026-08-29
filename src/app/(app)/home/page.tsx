@@ -11,6 +11,7 @@ import { formatNumber, formatToman } from '@/lib/utils';
 import { TOURNAMENT_STATUS_LABEL } from '@/lib/constants';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { BannerCarousel } from '@/components/home/BannerCarousel';
+import { ArticleCard } from '@/components/news/ArticleCard';
 import { Dot } from '@/components/ui/Dot';
 
 export const metadata: Metadata = { title: 'خانه' };
@@ -64,6 +65,20 @@ export default async function HomePage() {
     orderBy: { booking: { startsAt: 'asc' } },
     take: 3,
   });
+
+  const [courts, articles] = await Promise.all([
+    prisma.court.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: 'asc' },
+      select: { id: true, name: true, description: true, imageUrl: true, basePrice: true },
+      take: 8,
+    }),
+    prisma.article.findMany({
+      where: { status: 'PUBLISHED', publishedAt: { not: null } },
+      orderBy: [{ isPinned: 'desc' }, { publishedAt: 'desc' }],
+      take: 4,
+    }),
+  ]);
 
   const balance = wallet?.balance ?? 0n;
 
@@ -197,6 +212,45 @@ export default async function HomePage() {
           )}
         </section>
 
+        {/* ---- زمین‌های باشگاه ---- */}
+        {courts.length > 0 && (
+          <section>
+            <div className="section-title mb-3">
+              <h2>زمین‌های باشگاه</h2>
+              <Link href="/booking" className="text-[11px] font-bold text-brand-400 hover:text-brand-600">
+                رزرو
+              </Link>
+            </div>
+
+            {/* نوار افقی — روی موبایل جای عمودی کمتری می‌گیرد و کشیدن انگشت طبیعی است */}
+            <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+              {courts.map((court) => (
+                <Link
+                  key={court.id}
+                  href="/booking"
+                  className="group relative flex h-32 w-44 shrink-0 flex-col justify-end overflow-hidden rounded-3xl bg-night-gradient p-3.5 text-white shadow-card"
+                >
+                  {court.imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={court.imageUrl}
+                      alt=""
+                      className="absolute inset-0 h-full w-full object-cover opacity-70 transition group-hover:opacity-85"
+                    />
+                  )}
+                  <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-scrim/90 via-scrim/35 to-transparent" />
+                  <span className="relative">
+                    <span className="block truncate text-xs font-extrabold">{court.name}</span>
+                    <span className="num mt-1 block text-[10.5px] font-bold text-sky-light/75">
+                      از {formatToman(court.basePrice)}
+                    </span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* ---- بازی‌های باز ---- */}
         {openMatches.length > 0 && (
           <section>
@@ -298,6 +352,59 @@ export default async function HomePage() {
           )}
         </section>
 
+        {/* ---- اخبار باشگاه ---- */}
+        {articles.length > 0 && (
+          <section>
+            <div className="section-title mb-3">
+              <h2>اخبار باشگاه</h2>
+              <Link href="/news" className="text-[11px] font-bold text-brand-400 hover:text-brand-600">
+                مشاهده همه
+              </Link>
+            </div>
+
+            <div className="space-y-3">
+              <ArticleCard
+                featured
+                article={{
+                  id: articles[0].id,
+                  slug: articles[0].slug,
+                  title: articles[0].title,
+                  excerpt: articles[0].excerpt,
+                  body: articles[0].body,
+                  coverUrl: articles[0].coverUrl,
+                  publishedAt: (articles[0].publishedAt ?? now).toISOString(),
+                  isPinned: articles[0].isPinned,
+                }}
+              />
+
+              {articles.length > 1 && (
+                <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+                  {articles.slice(1).map((a) => (
+                    <Link
+                      key={a.id}
+                      href={`/news/${encodeURIComponent(a.slug)}`}
+                      className="card-interactive w-52 shrink-0 overflow-hidden p-0"
+                    >
+                      {a.coverUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={a.coverUrl} alt="" className="h-24 w-full object-cover" />
+                      )}
+                      <span className="block p-3">
+                        <span className="line-clamp-2 text-[11.5px] font-extrabold leading-6 text-brand-800">
+                          {a.title}
+                        </span>
+                        <span className="mt-1.5 block text-[10px] font-bold text-brand-300">
+                          {formatJalaliDate(a.publishedAt ?? now)}
+                        </span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* ---- دسترسی سریع ---- */}
         <section>
           <h2 className="mb-3 text-base font-extrabold text-brand-800">دسترسی سریع</h2>
@@ -307,7 +414,8 @@ export default async function HomePage() {
             <QuickAction href="/market" icon="ticket" title="فروشگاه" subtitle="خرید با امتیاز" />
             <QuickAction href="/wallet" icon="wallet" title="کیف پول" subtitle="شارژ و تراکنش‌ها" />
             <QuickAction href="/tournaments" icon="tournament" title="تورنومنت‌ها" subtitle="ثبت‌نام و نتایج" />
-            <QuickAction href="/bookings" icon="history" title="تاریخچه" subtitle="رزروهای گذشته" />
+            <QuickAction href="/news" icon="notification" title="اخبار باشگاه" subtitle="گزارش و آموزش" />
+            <QuickAction href="/ranking" icon="rank" title="رنکینگ" subtitle="جدول امتیازها" />
             {user.role === 'ADMIN' && (
               <QuickAction
                 href="/admin"

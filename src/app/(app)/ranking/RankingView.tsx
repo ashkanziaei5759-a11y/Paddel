@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import type { PlayerLevel } from '@prisma/client';
+import type { Gender, PlayerLevel } from '@prisma/client';
 import { Search, TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -19,6 +19,7 @@ export interface RankRow {
   avatarUrl: string | null;
   level: PlayerLevel;
   points: number;
+  gender: Gender | null;
   /** اختلاف رتبه نسبت به ۳۰ روز پیش — مثبت یعنی صعود */
   delta: number;
   gained: number;
@@ -27,25 +28,62 @@ export interface RankRow {
 const TIERS = ['ALL', 'A', 'B', 'C', 'D'] as const;
 type Tier = (typeof TIERS)[number];
 
+const GROUPS = [
+  { value: 'ALL' as const, label: 'همه' },
+  { value: 'MALE' as const, label: 'مردان' },
+  { value: 'FEMALE' as const, label: 'زنان' },
+];
+type Group = (typeof GROUPS)[number]['value'];
+
 export function RankingView({ rows, viewerId }: { rows: RankRow[]; viewerId: string }) {
   const [tier, setTier] = useState<Tier>('ALL');
+  const [group, setGroup] = useState<Group>('ALL');
   const [query, setQuery] = useState('');
+
+  /* تب مردان/زنان فقط وقتی معنا دارد که جنسیت دست‌کم برای یک بازیکن ثبت شده باشد */
+  const hasGenders = useMemo(() => rows.some((r) => r.gender), [rows]);
 
   const filtered = useMemo(() => {
     const q = query.trim();
-    return rows.filter((r) => {
+    const list = rows.filter((r) => {
+      if (group !== 'ALL' && r.gender !== group) return false;
       if (tier !== 'ALL' && levelTier(r.level) !== tier) return false;
       if (!q) return true;
       return `${r.firstName} ${r.lastName} ${r.username}`.includes(q);
     });
-  }, [rows, tier, query]);
+    /* با فیلتر شدن فهرست، رتبه‌ها باید پشت‌سرهم شماره بخورند تا «۱، ۴، ۹» نبینیم */
+    return group === 'ALL' ? list : list.map((r, i) => ({ ...r, rank: i + 1 }));
+  }, [rows, tier, group, query]);
 
-  const me = rows.find((r) => r.userId === viewerId);
+  const me = filtered.find((r) => r.userId === viewerId) ?? rows.find((r) => r.userId === viewerId);
   const podium = tier === 'ALL' && !query.trim() ? filtered.slice(0, 3) : [];
   const rest = podium.length ? filtered.slice(3) : filtered;
 
   return (
     <div className="space-y-4">
+      {/* ---- مردان / زنان ---- */}
+      {hasGenders && (
+        <div className="flex items-center gap-5 border-b border-brand-100 px-1">
+          {GROUPS.map((g) => (
+            <button
+              key={g.value}
+              type="button"
+              onClick={() => setGroup(g.value)}
+              aria-pressed={group === g.value}
+              className={cn(
+                'relative pb-2.5 text-[13px] font-extrabold transition-colors',
+                group === g.value ? 'text-brand-800' : 'text-brand-300 hover:text-brand-500',
+              )}
+            >
+              {g.label}
+              {group === g.value && (
+                <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-electric-gradient" />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* ---- جست‌وجو ---- */}
       <div className="relative">
         <Search className="pointer-events-none absolute right-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-brand-300" />
