@@ -7,6 +7,7 @@ import { AppError, clientIp, handleApiError, ok } from '@/lib/api';
 import {
   MAX_UPLOAD_BYTES,
   MEDIA_KINDS,
+  hasAlphaChannel,
   mediaUrl,
   readDimensions,
   sniffImageMime,
@@ -69,9 +70,10 @@ export async function POST(req: NextRequest) {
         byteSize: bytes.length,
         width: size.width,
         height: size.height,
+        hasAlpha: hasAlphaChannel(bytes, mimeType),
         uploadedById: user.id,
       },
-      select: { id: true, width: true, height: true, byteSize: true },
+      select: { id: true, width: true, height: true, byteSize: true, hasAlpha: true },
     });
 
     return ok({ ...asset, url: mediaUrl(asset.id) }, { status: 201 });

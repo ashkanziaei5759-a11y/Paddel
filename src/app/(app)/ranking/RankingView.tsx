@@ -21,6 +21,7 @@ export interface RankRow {
   level: PlayerLevel;
   points: number;
   gender: Gender | null;
+  avatarHasAlpha: boolean;
   /** اختلاف رتبه نسبت به ۳۰ روز پیش — مثبت یعنی صعود */
   delta: number;
   gained: number;
@@ -177,7 +178,10 @@ function RankRowItem({ row, isViewer }: { row: RankRow; isViewer: boolean }) {
     <div
       className={cn(
         'flex items-center gap-3 border-b border-brand-50 px-4 py-3 last:border-0',
-        isViewer && 'bg-accent-50/60',
+        /* accent-50 یک هگز ثابت کرم است و در تم تیره برنمی‌گردد، در حالی که
+           متن ردیف سفید می‌شود؛ پس تهِ رنگ را از خود accent با شفافیت
+           می‌سازیم تا روی هر دو تم زیر متن بنشیند. */
+        isViewer && 'bg-accent/10',
       )}
     >
       <span className="num w-8 shrink-0 text-center text-sm font-black text-brand-400">

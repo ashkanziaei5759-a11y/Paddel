@@ -1389,6 +1389,8 @@ model MediaAsset {
   byteSize Int
   width    Int
   height   Int
+  /// تصویرِ پس‌زمینه‌حذف‌شده — روی کارت‌ها شناور نشان داده می‌شود، نه در قاب
+  hasAlpha Boolean @default(false)
 
   uploadedById String?
   uploadedBy   User?   @relation("MediaUploader", fields: [uploadedById], references: [id], onDelete: SetNull)

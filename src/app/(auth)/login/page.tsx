@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { DesignerCredit } from '@/components/ui/DesignerCredit';
 import { ImageSlider } from '@/components/ui/image-slider';
 import {
   GlassCard,
@@ -80,13 +81,14 @@ export default function LoginPage() {
               <LoginForm />
             </GlassCardContent>
 
-            <GlassCardFooter className="justify-center">
+            <GlassCardFooter className="flex-col justify-center gap-1">
               <p className="text-[12.5px] font-semibold text-white/60">
                 هنوز حساب نساخته‌اید؟{' '}
                 <Link href="/signup" className="font-black text-accent hover:text-accent-300">
                   ثبت‌نام کنید
                 </Link>
               </p>
+              <DesignerCredit tone="glass" />
             </GlassCardFooter>
           </GlassCard>
         </div>

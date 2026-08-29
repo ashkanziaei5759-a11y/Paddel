@@ -13,6 +13,7 @@ import { Icon, type IconName } from '@/components/ui/Icon';
 import { BannerCarousel } from '@/components/home/BannerCarousel';
 import { ArticleCard } from '@/components/news/ArticleCard';
 import { TopPlayersRail } from '@/components/ranking/TopPlayersRail';
+import { withAlphaFlags } from '@/lib/top-players';
 import { Dot } from '@/components/ui/Dot';
 
 export const metadata: Metadata = { title: 'خانه' };
@@ -89,6 +90,8 @@ export default async function HomePage() {
       },
     }),
   ]);
+
+  const topPlayersWithAlpha = await withAlphaFlags(topPlayers);
 
   const balance = wallet?.balance ?? 0n;
 
@@ -231,9 +234,7 @@ export default async function HomePage() {
                 جدول کامل
               </Link>
             </div>
-            <TopPlayersRail
-              players={topPlayers.map((p, i) => ({ ...p, rank: i + 1 }))}
-            />
+            <TopPlayersRail players={topPlayersWithAlpha.map((p, i) => ({ ...p, rank: i + 1 }))} />
           </section>
         )}
 

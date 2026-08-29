@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { TopBar } from '@/components/nav/TopBar';
 import { unreadCount } from '@/lib/notifications';
 import { RankingView, type RankRow } from './RankingView';
+import { withAlphaFlags } from '@/lib/top-players';
 
 export const metadata: Metadata = { title: 'رنکینگ' };
 export const dynamic = 'force-dynamic';
@@ -56,7 +57,9 @@ export default async function RankingPage() {
     .sort((a, b) => b.past - a.past);
   const pastRank = new Map(before.map((p, i) => [p.userId, i + 1]));
 
-  const rows: RankRow[] = today.map((p) => {
+  const withAlpha = await withAlphaFlags(today);
+
+  const rows: RankRow[] = withAlpha.map((p) => {
     const previous = pastRank.get(p.userId) ?? p.rank;
     return {
       userId: p.userId,
@@ -68,6 +71,7 @@ export default async function RankingPage() {
       level: p.level,
       points: p.points,
       gender: p.gender,
+      avatarHasAlpha: p.avatarHasAlpha,
       delta: previous - p.rank, // مثبت = صعود
       gained: gained.get(p.userId) ?? 0,
     };

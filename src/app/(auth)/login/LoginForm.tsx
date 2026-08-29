@@ -103,13 +103,25 @@ export function LoginForm() {
         </div>
       )}
 
-      <Button type="submit" variant="accent" size="lg" disabled={loading} className="w-full">
+      {/* دکمه‌ی اصلی صفحه — بلندتر و پررنگ‌تر از بقیه، با درخششی که روی پوستر
+          تیره جدایش می‌کند. فلش هنگام لمس کمی جلو می‌رود. */}
+      <Button
+        type="submit"
+        variant="accent"
+        disabled={loading}
+        className="group mt-1 h-[60px] w-full rounded-[20px] text-[15px] font-black tracking-tight
+                   shadow-[0_14px_34px_-12px_rgba(252,163,17,.75)]
+                   transition-transform active:scale-[.985] disabled:opacity-70"
+      >
         {loading ? (
           <Spinner />
         ) : (
           <>
-            <LogIn className="h-4 w-4" aria-hidden="true" />
             ورود به حساب
+            <LogIn
+              className="h-[18px] w-[18px] transition-transform duration-200 group-active:-translate-x-1"
+              aria-hidden="true"
+            />
           </>
         )}
       </Button>

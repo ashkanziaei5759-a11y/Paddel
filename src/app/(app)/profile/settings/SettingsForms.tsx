@@ -29,6 +29,24 @@ export function SettingsForms({
   const [avatar, setAvatar] = useState<string | null>(avatarUrl || null);
   const [savingPassword, setSavingPassword] = useState(false);
 
+  /**
+   * عکس پروفایل بلافاصله ذخیره می‌شود، نه با دکمه‌ی «ذخیره تغییرات» پایین فرم.
+   * پیش از این، کاربر عکس را آپلود می‌کرد، پیام «تصویر ذخیره شد» را می‌دید و
+   * صفحه را ترک می‌کرد — و عکس هرگز به پروفایلش نمی‌رسید.
+   */
+  async function saveAvatar(url: string | null) {
+    const res = await fetch('/api/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avatarUrl: url }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json.ok) throw new Error(json.error || 'ذخیره‌ی عکس ناموفق بود.');
+
+    setAvatar(url);
+    router.refresh();
+  }
+
   async function saveProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSavingProfile(true);
@@ -104,7 +122,7 @@ export function SettingsForms({
           <ImagePicker
             kind="AVATAR"
             value={avatar}
-            onChange={setAvatar}
+            onChange={saveAvatar}
             label="انتخاب از گالری"
             allowCutout
             hint="عکسی که چهره و بالاتنه در آن دیده شود بهترین نتیجه را می‌دهد."

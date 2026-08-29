@@ -27,7 +27,12 @@ export function ImagePicker({
   className,
 }: {
   value: string | null;
-  onChange: (url: string | null) => void;
+  /**
+   * پس از آپلود صدا زده می‌شود. اگر Promise برگرداند، تا پایانش منتظر می‌مانیم
+   * و پیام موفقیت را تا آن موقع نشان نمی‌دهیم — یعنی وقتی کاربر «ذخیره شد» را
+   * می‌بیند، تصویر واقعاً جایی نشسته که باید.
+   */
+  onChange: (url: string | null) => void | Promise<void>;
   kind: Kind;
   label?: string;
   hint?: string;
@@ -105,10 +110,10 @@ export function ImagePicker({
     setWorking('UPLOAD');
     try {
       const url = await uploadImage(draft.blob, kind);
+      await onChange(url);
       releaseDrafts();
       setDraft(null);
       setOriginal(null);
-      onChange(url);
       toast.success('تصویر ذخیره شد.');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'آپلود ناموفق بود.');
@@ -122,11 +127,15 @@ export function ImagePicker({
     if (original && original !== draft) URL.revokeObjectURL(original.previewUrl);
   }
 
-  function clear() {
+  async function clear() {
     releaseDrafts();
     setDraft(null);
     setOriginal(null);
-    onChange(null);
+    try {
+      await onChange(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'حذف تصویر ناموفق بود.');
+    }
   }
 
   return (

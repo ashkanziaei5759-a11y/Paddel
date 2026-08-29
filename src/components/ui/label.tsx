@@ -12,6 +12,8 @@ const Label = React.forwardRef<
     ref={ref}
     className={cn(
       'mb-2 block text-xs font-bold leading-none text-brand-600 peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
+      /* روی کارت شیشه‌ای (صفحه‌ی ورود) پس‌زمینه تیره است و سرمه‌ای خوانا نیست */
+      '[.on-glass_&]:text-white/75',
       className,
     )}
     {...props}

@@ -83,3 +83,33 @@ export const MEDIA_KINDS: MediaKind[] = ['AVATAR', 'BANNER', 'ARTICLE_COVER', 'C
 export function mediaUrl(id: string) {
   return `/api/media/${id}`;
 }
+
+/**
+ * آیا تصویر کانال شفافیت دارد؟
+ *
+ * از سرصفحه‌ی خود فایل خوانده می‌شود. تنها راهِ قابل‌اعتماد است — کلاینت
+ * می‌تواند هر چیزی ادعا کند، و رابط کاربری بر اساس همین تصمیم می‌گیرد که
+ * تصویر را شناور نشان دهد یا داخل قاب.
+ */
+export function hasAlphaChannel(bytes: Buffer, mime: string): boolean {
+  try {
+    if (mime === 'image/png') {
+      /* بایت ۲۵ در IHDR نوع رنگ است: ۴ = خاکستری+آلفا، ۶ = RGBA */
+      const colorType = bytes[25];
+      return colorType === 4 || colorType === 6;
+    }
+
+    if (mime === 'image/webp') {
+      const format = bytes.subarray(12, 16).toString('latin1');
+      /* در VP8X بیت آلفا در پرچم‌هاست؛ VP8L همیشه می‌تواند آلفا داشته باشد */
+      if (format === 'VP8X') return (bytes[20] & 0b0001_0000) !== 0;
+      if (format === 'VP8L') return true;
+      return false;
+    }
+
+    /* JPEG اصلاً شفافیت ندارد */
+    return false;
+  } catch {
+    return false;
+  }
+}

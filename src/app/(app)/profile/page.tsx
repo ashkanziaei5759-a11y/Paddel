@@ -9,6 +9,7 @@ import { unreadCount } from '@/lib/notifications';
 import { formatNumber, formatToman, maskPhone } from '@/lib/utils';
 import { formatDateTime, formatJalaliDate, toFaDigits } from '@/lib/datetime';
 import { POINTS_TX_LABEL, TOURNAMENT_STATUS_LABEL } from '@/lib/constants';
+import { DesignerCredit } from '@/components/ui/DesignerCredit';
 import { LogoutButton } from './LogoutButton';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { ChevronLeft, Smartphone } from 'lucide-react';
@@ -213,6 +214,8 @@ export default async function ProfilePage() {
         </section>
 
         <LogoutButton />
+
+        <DesignerCredit className="pt-1" />
       </div>
     </>
   );

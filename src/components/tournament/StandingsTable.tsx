@@ -44,7 +44,9 @@ export function StandingsTable({ title, rows }: { title?: string; rows: Standing
                 key={row.teamId}
                 className={cn(
                   'text-xs font-bold text-brand-700',
-                  row.highlight && 'bg-accent-50/60',
+                  /* تهِ رنگ از خود accent با شفافیت — accent-50 هگز ثابت است و
+                     در تم تیره زیر متنِ روشن، کرم می‌ماند */
+                  row.highlight && 'bg-accent/10',
                   index < 2 && 'font-black',
                 )}
               >

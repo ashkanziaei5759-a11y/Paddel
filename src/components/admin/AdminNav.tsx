@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowLeftRight, CalendarDays, ImagePlay, LandPlot, LayoutDashboard, Newspaper, Settings, ShoppingBag, TrendingUp, Trophy, Users, type LucideIcon } from 'lucide-react';
+import { ArrowLeftRight, CalendarDays, ImagePlay, Images, LandPlot, LayoutDashboard, Newspaper, Settings, ShoppingBag, TrendingUp, Trophy, Users, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DesignerCredit } from '@/components/ui/DesignerCredit';
 
 const ITEMS: { href: string; label: string; Icon: LucideIcon; exact?: boolean }[] = [
   { href: '/admin', label: 'داشبورد', Icon: LayoutDashboard, exact: true },
@@ -14,6 +15,7 @@ const ITEMS: { href: string; label: string; Icon: LucideIcon; exact?: boolean }[
   { href: '/admin/store', label: 'فروشگاه', Icon: ShoppingBag },
   { href: '/admin/banners', label: 'بنرها', Icon: ImagePlay },
   { href: '/admin/news', label: 'اخبار', Icon: Newspaper },
+  { href: '/admin/media', label: 'تصاویر', Icon: Images },
   { href: '/admin/finance', label: 'مالی', Icon: TrendingUp },
   { href: '/admin/settings', label: 'تنظیمات', Icon: Settings },
 ];
@@ -68,6 +70,7 @@ export function AdminNav({ fullName, username }: { fullName: string; username: s
             <ArrowLeftRight className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
             بازگشت به اپلیکیشن
           </Link>
+          <DesignerCredit tone="glass" className="pt-1" />
         </div>
       </aside>
 
@@ -83,7 +86,7 @@ export function AdminNav({ fullName, username }: { fullName: string; username: s
               href={item.href}
               className={cn(
                 'flex min-w-[68px] flex-1 flex-col items-center gap-1 py-2.5 transition-colors',
-                isActive(item) ? 'text-brand-700' : 'text-brand-300',
+                isActive(item) ? 'text-brand-700' : 'text-brand-400',
               )}
             >
               <item.Icon className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
@@ -92,7 +95,7 @@ export function AdminNav({ fullName, username }: { fullName: string; username: s
           ))}
           <Link
             href="/home"
-            className="flex min-w-[68px] flex-1 flex-col items-center gap-1 py-2.5 text-brand-300"
+            className="flex min-w-[68px] flex-1 flex-col items-center gap-1 py-2.5 text-brand-400"
           >
             <ArrowLeftRight className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
             <span className="whitespace-nowrap text-[9px] font-bold">اپلیکیشن</span>
