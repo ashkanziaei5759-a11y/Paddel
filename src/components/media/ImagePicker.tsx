@@ -7,7 +7,7 @@ import { useToast } from '@/components/ui/Toast';
 import { prepareImage, uploadImage, type PreparedImage } from '@/lib/image-client';
 import { cn } from '@/lib/utils';
 
-type Kind = 'AVATAR' | 'BANNER' | 'ARTICLE_COVER' | 'COURT' | 'PRODUCT';
+type Kind = 'AVATAR' | 'BANNER' | 'ARTICLE_COVER' | 'COURT' | 'PRODUCT' | 'BRANDING';
 
 /**
  * انتخاب تصویر از گالری گوشی.
@@ -36,7 +36,7 @@ export function ImagePicker({
   kind: Kind;
   label?: string;
   hint?: string;
-  aspect?: 'square' | 'wide' | 'portrait';
+  aspect?: 'square' | 'wide' | 'portrait' | 'tall';
   allowCutout?: boolean;
   className?: string;
 }) {
@@ -53,7 +53,8 @@ export function ImagePicker({
   const frame =
     aspect === 'square' ? 'aspect-square w-32'
       : aspect === 'portrait' ? 'aspect-[3/4] w-32'
-        : 'aspect-[16/7] w-full';
+        : aspect === 'tall' ? 'aspect-[9/16] w-32'
+          : 'aspect-[16/7] w-full';
 
   async function pick(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -63,7 +64,10 @@ export function ImagePicker({
 
     setWorking('PREPARE');
     try {
-      const prepared = await prepareImage(file, { maxEdge: kind === 'AVATAR' ? 900 : 1600 });
+      /* پوستر ورود تمام‌صفحه نشان داده می‌شود، پس لبه‌ی بلندتری لازم دارد؛
+         عکس پروفایل کوچک است و بزرگ نگه داشتنش فقط حجم می‌گیرد. */
+      const maxEdge = kind === 'AVATAR' ? 900 : kind === 'BRANDING' ? 1920 : 1600;
+      const prepared = await prepareImage(file, { maxEdge });
       releaseDrafts();
       setDraft(prepared);
       setOriginal(prepared);
@@ -150,7 +154,8 @@ export function ImagePicker({
         tabIndex={-1}
       />
 
-      <div className="flex items-start gap-3">
+      {/* قاب عریض تمام پهنا را می‌گیرد، پس دکمه‌ها باید زیرش بروند نه کنارش */}
+      <div className={cn('flex items-start gap-3', aspect === 'wide' && 'flex-col')}>
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
@@ -176,7 +181,7 @@ export function ImagePicker({
           )}
         </button>
 
-        <div className="min-w-0 flex-1 space-y-2">
+        <div className={cn("min-w-0 space-y-2", aspect === "wide" ? "w-full" : "flex-1")}>
           <button
             type="button"
             onClick={() => inputRef.current?.click()}

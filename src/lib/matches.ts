@@ -129,8 +129,16 @@ export async function joinMatch(input: JoinLeaveInput) {
         metadata: { openMatchId: full.id },
       });
 
+      /* جای بازیکن از همین لحظه رزرو و سهمش گرفته می‌شود، حتی وقتی منتظر
+         تأیید میزبان است — وگرنه دو نفر می‌توانستند روی یک جای خالی منتظر
+         بمانند و ظرفیت بیش از اندازه فروخته شود. رد شدن، سهم را برمی‌گرداند. */
       await tx.openMatchPlayer.create({
-        data: { matchId: full.id, userId: input.userId, paidAmount: full.sharePerPlayer },
+        data: {
+          matchId: full.id,
+          userId: input.userId,
+          paidAmount: full.sharePerPlayer,
+          status: full.requiresApproval ? 'PENDING' : 'APPROVED',
+        },
       });
 
       const seatsTaken = full.players.length + 1;
@@ -166,18 +174,157 @@ export async function joinMatch(input: JoinLeaveInput) {
     const name = player ? `${player.firstName} ${player.lastName}` : 'یک بازیکن';
     const remaining = result.match.capacity - result.seatsTaken;
 
-    await notify({
-      userId: result.match.hostId,
-      type: 'MATCH_PLAYER_JOINED',
-      title: result.nowFull ? 'بازی شما تکمیل شد 🎉' : 'یک بازیکن به بازی شما پیوست',
-      body: result.nowFull
-        ? `${name} آخرین جای خالی را گرفت. بازی ${result.match.booking.court.name} آماده است.`
-        : `${name} به بازی شما پیوست. ${toFaDigits(remaining)} جای خالی مانده است.`,
-      actionUrl: `/matches/${result.match.id}`,
+    if (result.match.requiresApproval) {
+      await notify({
+        userId: result.match.hostId,
+        type: 'MATCH_JOIN_REQUEST',
+        title: 'درخواست پیوستن به بازی شما',
+        body: `${name} می‌خواهد به بازی ${result.match.booking.court.name} بپیوندد. تأیید یا رد کنید.`,
+        actionUrl: `/matches/${result.match.id}`,
+      });
+    } else {
+      await notify({
+        userId: result.match.hostId,
+        type: 'MATCH_PLAYER_JOINED',
+        title: result.nowFull ? 'بازی شما تکمیل شد 🎉' : 'یک بازیکن به بازی شما پیوست',
+        body: result.nowFull
+          ? `${name} آخرین جای خالی را گرفت. بازی ${result.match.booking.court.name} آماده است.`
+          : `${name} به بازی شما پیوست. ${toFaDigits(remaining)} جای خالی مانده است.`,
+        actionUrl: `/matches/${result.match.id}`,
+      });
+    }
+
+    return {
+      seatsTaken: result.seatsTaken,
+      nowFull: result.nowFull,
+      share: result.share,
+      pending: result.match.requiresApproval,
+    };
+  });
+}
+
+export interface HostDecisionInput {
+  matchId: string;
+  /** میزبان — تنها کسی که اجازه‌ی تصمیم دارد */
+  hostId: string;
+  /** بازیکنی که درخواستش بررسی می‌شود */
+  playerUserId: string;
+}
+
+/**
+ * تأیید بازیکنِ در انتظار توسط میزبان.
+ *
+ * پول از قبل هنگام پیوستن گرفته شده است، پس اینجا فقط وضعیت عوض می‌شود.
+ * عملیات idempotent است: تأیید دوباره خطا نمی‌دهد و پول را جابه‌جا نمی‌کند.
+ */
+export async function approveMatchPlayer(input: HostDecisionInput) {
+  const result = await prisma.$transaction(async (tx) => {
+    await lockMatch(tx, input.matchId);
+
+    const match = await tx.openMatch.findUniqueOrThrow({
+      where: { id: input.matchId },
+      include: {
+        booking: { include: { court: { select: { name: true } } } },
+        players: true,
+      },
     });
 
-    return { seatsTaken: result.seatsTaken, nowFull: result.nowFull, share: result.share };
+    if (match.hostId !== input.hostId) {
+      throw new AppError('فقط میزبان بازی می‌تواند بازیکن‌ها را تأیید کند.', 403);
+    }
+    if (match.status === 'CANCELLED' || match.status === 'COMPLETED') {
+      throw new AppError('این بازی بسته شده است.', 409);
+    }
+
+    const seat = match.players.find((p) => p.userId === input.playerUserId);
+    if (!seat) throw new AppError('این بازیکن در بازی شما نیست.', 404);
+    if (seat.status === 'APPROVED') {
+      return { match, alreadyDone: true };
+    }
+
+    await tx.openMatchPlayer.update({ where: { id: seat.id }, data: { status: 'APPROVED' } });
+    return { match, alreadyDone: false };
   });
+
+  if (!result.alreadyDone) {
+    await notify({
+      userId: input.playerUserId,
+      type: 'MATCH_JOIN_APPROVED',
+      title: 'درخواست شما تأیید شد ✅',
+      body: `میزبان شما را در بازی ${result.match.booking.court.name} پذیرفت.`,
+      actionUrl: `/matches/${result.match.id}`,
+    });
+  }
+
+  return { ok: true };
+}
+
+/**
+ * رد کردن بازیکنِ در انتظار.
+ *
+ * سهمی که هنگام پیوستن گرفته شده بود کامل برمی‌گردد و جای خالی آزاد می‌شود.
+ * referenceKey همان کلید خروج است، پس اگر درخواست دو بار برسد پول دو بار
+ * برنمی‌گردد.
+ */
+export async function rejectMatchPlayer(input: HostDecisionInput) {
+  const result = await prisma.$transaction(async (tx) => {
+    await lockMatch(tx, input.matchId);
+
+    const match = await tx.openMatch.findUniqueOrThrow({
+      where: { id: input.matchId },
+      include: {
+        booking: { include: { court: { select: { name: true } } } },
+        players: true,
+      },
+    });
+
+    if (match.hostId !== input.hostId) {
+      throw new AppError('فقط میزبان بازی می‌تواند بازیکن‌ها را رد کند.', 403);
+    }
+    if (match.status === 'CANCELLED' || match.status === 'COMPLETED') {
+      throw new AppError('این بازی بسته شده است.', 409);
+    }
+
+    const seat = match.players.find((p) => p.userId === input.playerUserId);
+    if (!seat) throw new AppError('این بازیکن در بازی شما نیست.', 404);
+    if (seat.isHost) throw new AppError('میزبان را نمی‌توان رد کرد.', 409);
+    if (seat.status === 'APPROVED') {
+      throw new AppError('این بازیکن قبلاً تأیید شده است.', 409);
+    }
+
+    await mutateWallet(tx, {
+      userId: input.playerUserId,
+      amount: seat.paidAmount,
+      type: 'MATCH_LEAVE_REFUND',
+      description: `بازگشت سهم بازی ${match.booking.court.name}`,
+      referenceKey: `match:${match.id}:leave:${input.playerUserId}`,
+      bookingId: match.bookingId,
+      metadata: { openMatchId: match.id },
+    });
+
+    await tx.openMatchPlayer.delete({ where: { id: seat.id } });
+
+    await tx.openMatch.update({
+      where: { id: match.id },
+      data: {
+        escrowBalance: { decrement: seat.paidAmount },
+        /* جای خالی دوباره باز شد */
+        status: 'OPEN',
+      },
+    });
+
+    return { match, refunded: seat.paidAmount };
+  });
+
+  await notify({
+    userId: input.playerUserId,
+    type: 'MATCH_JOIN_REJECTED',
+    title: 'درخواست شما پذیرفته نشد',
+    body: `میزبان بازی ${result.match.booking.court.name} درخواست شما را رد کرد. سهم شما به کیف پول بازگشت.`,
+    actionUrl: '/matches',
+  });
+
+  return { ok: true, refunded: result.refunded };
 }
 
 export async function leaveMatch(input: JoinLeaveInput) {

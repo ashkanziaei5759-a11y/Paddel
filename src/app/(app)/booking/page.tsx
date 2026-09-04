@@ -49,6 +49,7 @@ export default async function BookingPage() {
             name: c.name,
             slug: c.slug,
             description: c.description,
+            imageUrl: c.imageUrl,
             slotDurationMinutes: c.slotDurationMinutes,
             maxConsecutiveSlots: c.maxConsecutiveSlots,
             basePrice: c.basePrice.toString(),

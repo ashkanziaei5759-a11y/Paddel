@@ -26,6 +26,8 @@ interface CourtDto {
   name: string;
   slug: string;
   description: string | null;
+  /** عکس زمین — از پنل مدیریت ثبت می‌شود */
+  imageUrl: string | null;
   slotDurationMinutes: number;
   maxConsecutiveSlots: number;
   basePrice: string;
@@ -430,7 +432,7 @@ export function BookingFlow({
                   >
                     <span
                       className={cn(
-                        'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl',
+                        'flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl',
                         active
                           ? 'bg-white/15 text-white'
                           : opt.available
@@ -438,7 +440,18 @@ export function BookingFlow({
                             : 'bg-danger/10 text-danger/70',
                       )}
                     >
-                      {opt.available ? (
+                      {/* اگر مدیر عکس زمین را ثبت کرده باشد، همان را نشان بده */}
+                      {opt.court.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={opt.court.imageUrl}
+                          alt=""
+                          className={cn(
+                            'h-full w-full object-cover',
+                            !opt.available && 'opacity-40 grayscale',
+                          )}
+                        />
+                      ) : opt.available ? (
                         <LandPlot className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
                       ) : (
                         <CircleAlert className="h-5 w-5" strokeWidth={2} aria-hidden="true" />

@@ -1,7 +1,8 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import { DesignerCredit } from '@/components/ui/DesignerCredit';
-import { ImageSlider } from '@/components/ui/image-slider';
+import type { Metadata } from "next";
+import Link from "next/link";
+import { getBranding } from "@/lib/branding";
+import { BrandLogo } from "@/components/branding/BrandLogo";
+import { ImageSlider } from "@/components/ui/image-slider";
 import {
   GlassCard,
   GlassCardContent,
@@ -9,11 +10,11 @@ import {
   GlassCardFooter,
   GlassCardHeader,
   GlassCardTitle,
-} from '@/components/ui/glass-card';
-import { LoginForm } from './LoginForm';
-import { FALLBACK_SLIDE, LOGIN_SLIDES } from '@/lib/login-slides';
+} from "@/components/ui/glass-card";
+import { LoginForm } from "./LoginForm";
+import { FALLBACK_SLIDE, LOGIN_SLIDES } from "@/lib/login-slides";
 
-export const metadata: Metadata = { title: 'ورود' };
+export const metadata: Metadata = { title: "ورود" };
 
 /**
  * صفحه‌ی ورود.
@@ -22,16 +23,22 @@ export const metadata: Metadata = { title: 'ورود' };
  * روی موبایل، کارت به پایین صفحه چسبیده است: هم انگشت راحت به فیلدها می‌رسد و
  * هم دو سوم بالای پوستر (بازیکن در حال ضربه) دیده می‌ماند.
  */
-export default function LoginPage() {
+export default async function LoginPage() {
+  const branding = await getBranding();
+
   return (
     <div className="relative min-h-dvh overflow-hidden bg-scrim">
       {/* ---- پوستر، تمام‌صفحه ---- */}
       <div className="absolute inset-0">
         <ImageSlider
-          images={LOGIN_SLIDES.map((s) => s.src)}
-          alts={LOGIN_SLIDES.map((s) => s.alt)}
+          images={[branding.loginPosterUrl]}
+          wideImages={[branding.loginPosterWideUrl]}
+          alts={[LOGIN_SLIDES[0].alt]}
           fallbackSrc={FALLBACK_SLIDE}
           overlay="none"
+          /* روی گوشی فرم پایین می‌نشیند، پس بالای کادر باید دیده بماند؛
+             روی لپ‌تاپ فرم سمت راست است و مرکزِ تصویر بهتر جواب می‌دهد. */
+          imageClassName="object-top lg:object-center"
           interval={6000}
         />
       </div>
@@ -49,14 +56,7 @@ export default function LoginPage() {
         <div className="w-full lg:max-w-[420px]">
           {/* ---- نشان برند ---- */}
           <Link href="/" className="mb-5 flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/icons/logo-256.png"
-              alt=""
-              width={52}
-              height={52}
-              className="h-[52px] w-[52px] rounded-2xl shadow-lift-electric"
-            />
+            <BrandLogo size={52} className="shadow-lift-electric" />
             <span>
               <span className="block text-[10px] font-bold tracking-[0.34em] text-electric-300">
                 PERSIAN PADEL
@@ -81,14 +81,16 @@ export default function LoginPage() {
               <LoginForm />
             </GlassCardContent>
 
-            <GlassCardFooter className="flex-col justify-center gap-1">
+            <GlassCardFooter className="justify-center">
               <p className="text-[12.5px] font-semibold text-white/60">
-                هنوز حساب نساخته‌اید؟{' '}
-                <Link href="/signup" className="font-black text-accent hover:text-accent-300">
+                هنوز حساب نساخته‌اید؟{" "}
+                <Link
+                  href="/signup"
+                  className="font-black text-accent hover:text-accent-300"
+                >
                   ثبت‌نام کنید
                 </Link>
               </p>
-              <DesignerCredit tone="glass" />
             </GlassCardFooter>
           </GlassCard>
         </div>

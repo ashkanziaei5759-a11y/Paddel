@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth/rbac';
-import { notify } from '@/lib/notifications';
+import { notify, notifyMany } from '@/lib/notifications';
 import { AppError, handleApiError, ok } from '@/lib/api';
 import { tournamentSchema } from '@/lib/validation';
 import { tomanToRial } from '@/lib/utils';
@@ -79,6 +79,24 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         });
       }
     }, { timeout: 20_000 });
+
+    /* وقتی ثبت‌نام باز می‌شود، همه‌ی بازیکنان فعال خبردار می‌شوند — نه فقط
+       تیم‌های ثبت‌نام‌کرده، چون هنوز کسی ثبت‌نام نکرده است. */
+    if (input.status === 'REGISTRATION_OPEN' && before.status !== 'REGISTRATION_OPEN') {
+      const players = await prisma.user.findMany({
+        where: { role: 'PLAYER', status: 'ACTIVE' },
+        select: { id: true },
+      });
+      await notifyMany(
+        players.map((p) => ({
+          userId: p.id,
+          type: 'TOURNAMENT_ANNOUNCED' as const,
+          title: 'تورنومنت جدید 🏆',
+          body: `ثبت‌نام تورنومنت «${input.name}» باز شد. جای خود را رزرو کنید.`,
+          actionUrl: `/tournaments/${id}`,
+        })),
+      );
+    }
 
     // اطلاع‌رسانی شروع تورنومنت به بازیکنان
     if (input.status === 'ONGOING' && before.status !== 'ONGOING') {

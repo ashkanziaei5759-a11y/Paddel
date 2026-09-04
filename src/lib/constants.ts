@@ -149,6 +149,12 @@ export const NOTIFICATION_ICON: Record<NotificationType, string> = {
   MATCH_PLAYER_JOINED: 'users',
   MATCH_PLAYER_LEFT: 'users',
   MATCH_CANCELLED: 'booking',
+  MATCH_JOIN_REQUEST: 'users',
+  MATCH_JOIN_APPROVED: 'users',
+  MATCH_JOIN_REJECTED: 'users',
+  BOOKING_REMINDER: 'booking',
+  TOURNAMENT_ANNOUNCED: 'tournament',
+  ADMIN_MESSAGE: 'admin',
   GENERAL: 'notification',
 };
 

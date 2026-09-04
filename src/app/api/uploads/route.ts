@@ -17,7 +17,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /** فقط مدیران می‌توانند تصاویر عمومی باشگاه را عوض کنند */
-const ADMIN_ONLY: MediaKind[] = ['BANNER', 'ARTICLE_COVER', 'COURT', 'PRODUCT'];
+const ADMIN_ONLY: MediaKind[] = ['BANNER', 'ARTICLE_COVER', 'COURT', 'PRODUCT', 'BRANDING'];
 
 export async function POST(req: NextRequest) {
   try {

@@ -77,7 +77,14 @@ export function readDimensions(bytes: Buffer, mime: string): { width: number; he
   }
 }
 
-export const MEDIA_KINDS: MediaKind[] = ['AVATAR', 'BANNER', 'ARTICLE_COVER', 'COURT', 'PRODUCT'];
+export const MEDIA_KINDS: MediaKind[] = [
+  'AVATAR',
+  'BANNER',
+  'ARTICLE_COVER',
+  'COURT',
+  'PRODUCT',
+  'BRANDING',
+];
 
 /** نشانی عمومی یک تصویر ذخیره‌شده */
 export function mediaUrl(id: string) {

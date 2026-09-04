@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { requirePage } from '@/lib/auth/rbac';
 import { prisma } from '@/lib/db';
 import { TopBar } from '@/components/nav/TopBar';
+import { PendingRequests } from './PendingRequests';
 import { unreadCount } from '@/lib/notifications';
 import { MatchCard, type MatchDto } from '@/components/match/MatchCard';
 import { Dot } from '@/components/ui/Dot';
@@ -44,17 +45,35 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
     allowedLevels: match.allowedLevels,
     notes: match.notes,
     status: match.status,
-    players: match.players.map((p) => ({
+    /* بازیکنِ در انتظار هنوز عضو بازی نیست، پس روی کارت نشان داده نمی‌شود */
+    players: match.players
+      .filter((p) => p.status === 'APPROVED')
+      .map((p) => ({
       userId: p.userId,
       firstName: p.user.profile?.firstName ?? '؟',
       lastName: p.user.profile?.lastName ?? '',
       avatarUrl: p.user.profile?.avatarUrl ?? null,
       level: p.user.profile?.level ?? null,
-      isHost: p.isHost,
-    })),
+        isHost: p.isHost,
+      })),
   };
 
   const isHost = match.hostId === user.id;
+
+  const pending = match.players
+    .filter((p) => p.status === 'PENDING')
+    .map((p) => ({
+      userId: p.userId,
+      firstName: p.user.profile?.firstName ?? '؟',
+      lastName: p.user.profile?.lastName ?? '',
+      avatarUrl: p.user.profile?.avatarUrl ?? null,
+      level: p.user.profile?.level ?? null,
+    }));
+
+  /* بازیکنی که خودش منتظر است باید بداند چرا هنوز روی کارت نیست */
+  const viewerPending = match.players.some(
+    (p) => p.userId === user.id && p.status === 'PENDING',
+  );
 
   return (
     <>
@@ -77,6 +96,15 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
             <Row label="هزینه‌ی کل زمین" value={formatToman(match.booking.totalPrice)} />
           </dl>
         </section>
+
+        {isHost && <PendingRequests matchId={match.id} players={pending} />}
+
+        {viewerPending && (
+          <p className="rounded-2xl bg-accent-50 px-4 py-3 text-[11px] font-bold leading-6 text-accent-700">
+            درخواست شما برای میزبان فرستاده شد و جای شما نگه داشته شده است. تا زمان تأیید،
+            سهم شما نزد باشگاه می‌ماند؛ اگر میزبان رد کند، کامل بازمی‌گردد.
+          </p>
+        )}
 
         {isHost && (
           <p className="rounded-2xl bg-accent-50 px-4 py-3 text-[11px] font-bold leading-6 text-accent-700">

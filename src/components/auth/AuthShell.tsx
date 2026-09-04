@@ -1,7 +1,8 @@
 import Link from 'next/link';
+import { BrandLogo } from '@/components/branding/BrandLogo';
 
 /** پوسته‌ی وسط‌چین برای صفحه‌های ثبت‌نام و تأیید کد */
-export function AuthShell({
+export async function AuthShell({
   title,
   subtitle,
   children,
@@ -20,14 +21,7 @@ export function AuthShell({
 
       <div className="relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col px-5 py-8 safe-top safe-bottom">
         <Link href="/" className="mb-8 flex items-center justify-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/icons/logo-256.png"
-            alt=""
-            width={48}
-            height={48}
-            className="h-12 w-12 rounded-2xl shadow-lift-electric"
-          />
+          <BrandLogo size={48} className="shadow-lift-electric" />
           <span className="text-right">
             <span className="block text-lg font-black tracking-tight text-white">PERSIAN PADEL</span>
             <span className="block text-[11px] font-bold tracking-widest text-sky-light/70">

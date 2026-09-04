@@ -3,11 +3,13 @@
  * راهبرد: Network-first برای صفحات و API، Cache-first برای دارایی‌های ثابت.
  * ------------------------------------------------------------------------ */
 
-const VERSION = 'pp-v1';
+const VERSION = 'pp-v2';
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 
-const PRECACHE = ['/offline', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png'];
+/* manifest دیگر فایل ثابت نیست — از پایگاه داده ساخته می‌شود و آیکونش از پنل
+   عوض می‌شود، پس نباید در کش نصب بیفتد وگرنه آیکون قدیمی می‌ماند */
+const PRECACHE = ['/offline'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

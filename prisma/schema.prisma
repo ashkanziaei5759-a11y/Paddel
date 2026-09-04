@@ -188,6 +188,16 @@ enum NotificationType {
   MATCH_PLAYER_JOINED
   MATCH_PLAYER_LEFT
   MATCH_CANCELLED
+  /// درخواست پیوستن، در انتظار تأیید میزبان
+  MATCH_JOIN_REQUEST
+  MATCH_JOIN_APPROVED
+  MATCH_JOIN_REJECTED
+  /// یادآوری رزرو، اندکی پیش از شروع بازی
+  BOOKING_REMINDER
+  /// تورنومنت تازه‌ای اعلام شد
+  TOURNAMENT_ANNOUNCED
+  /// پیام مستقیم مدیر به یک بازیکن
+  ADMIN_MESSAGE
   GENERAL
 }
 
@@ -202,6 +212,8 @@ enum MediaKind {
   ARTICLE_COVER
   COURT
   PRODUCT
+  /// لوگو، آیکون اپ و پوستر صفحه‌ی ورود — از پنل مدیریت تغییر می‌کند
+  BRANDING
 }
 
 enum ArticleStatus {
@@ -1303,6 +1315,9 @@ model OpenMatch {
   status OpenMatchStatus @default(OPEN)
   notes  String?
 
+  /// میزبان باید هر بازیکن تازه را تأیید کند
+  requiresApproval Boolean @default(true)
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   settledAt   DateTime?
@@ -1315,6 +1330,13 @@ model OpenMatch {
   @@map("open_matches")
 }
 
+/// وضعیت یک بازیکن در بازی باز
+enum MatchPlayerStatus {
+  /// منتظر تأیید میزبان — جایش رزرو و سهمش گرفته شده است
+  PENDING
+  APPROVED
+}
+
 model OpenMatchPlayer {
   id      String    @id @default(cuid())
   matchId String
@@ -1325,6 +1347,10 @@ model OpenMatchPlayer {
 
   /// میزبان هم یک ردیف دارد، ولی سهمش را جداگانه پرداخت نکرده است
   isHost Boolean @default(false)
+
+  /// اگر بازی «تأیید میزبان» بخواهد، بازیکن تا تأیید در حالت PENDING می‌ماند.
+  /// جایش از همان لحظه رزرو است تا ظرفیت بیش از حد فروخته نشود.
+  status MatchPlayerStatus @default(APPROVED)
   /// مبلغی که این بازیکن پرداخته و در صورت خروج بازگردانده می‌شود (ریال)
   paidAmount BigInt @default(0)
 

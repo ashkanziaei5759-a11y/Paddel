@@ -2,9 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowLeftRight, CalendarDays, ImagePlay, Images, LandPlot, LayoutDashboard, Newspaper, Settings, ShoppingBag, TrendingUp, Trophy, Users, type LucideIcon } from 'lucide-react';
+import { ArrowLeftRight, BellRing, CalendarDays, ChartColumn, ImagePlay, Images, LandPlot, LayoutDashboard, Newspaper, Palette, Settings, ShoppingBag, TrendingUp, Trophy, Users, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DesignerCredit } from '@/components/ui/DesignerCredit';
 
 const ITEMS: { href: string; label: string; Icon: LucideIcon; exact?: boolean }[] = [
   { href: '/admin', label: 'داشبورد', Icon: LayoutDashboard, exact: true },
@@ -16,11 +15,22 @@ const ITEMS: { href: string; label: string; Icon: LucideIcon; exact?: boolean }[
   { href: '/admin/banners', label: 'بنرها', Icon: ImagePlay },
   { href: '/admin/news', label: 'اخبار', Icon: Newspaper },
   { href: '/admin/media', label: 'تصاویر', Icon: Images },
+  { href: '/admin/branding', label: 'ظاهر اپ', Icon: Palette },
+  { href: '/admin/analytics', label: 'نمودارها', Icon: ChartColumn },
+  { href: '/admin/notifications', label: 'اعلان‌ها', Icon: BellRing },
   { href: '/admin/finance', label: 'مالی', Icon: TrendingUp },
   { href: '/admin/settings', label: 'تنظیمات', Icon: Settings },
 ];
 
-export function AdminNav({ fullName, username }: { fullName: string; username: string }) {
+export function AdminNav({
+  fullName,
+  username,
+  logoUrl,
+}: {
+  fullName: string;
+  username: string;
+  logoUrl: string;
+}) {
   const pathname = usePathname();
   const isActive = (item: (typeof ITEMS)[number]) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
@@ -31,7 +41,7 @@ export function AdminNav({ fullName, username }: { fullName: string; username: s
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-brand-gradient p-5 lg:flex">
         <div className="relative mb-8 flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icons/logo-256.png" alt="" width={44} height={44} className="h-11 w-11 rounded-2xl" />
+          <img src={logoUrl} alt="" width={44} height={44} className="h-11 w-11 rounded-2xl object-cover" />
           <div>
             <p className="text-sm font-black text-white">پنل مدیریت</p>
             <p className="text-[10px] font-bold tracking-widest text-sky-light/60">PERSIAN PADEL</p>
@@ -70,7 +80,6 @@ export function AdminNav({ fullName, username }: { fullName: string; username: s
             <ArrowLeftRight className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
             بازگشت به اپلیکیشن
           </Link>
-          <DesignerCredit tone="glass" className="pt-1" />
         </div>
       </aside>
 

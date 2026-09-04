@@ -111,7 +111,7 @@ export function BannerManager({ initial }: { initial: BannerRow[] }) {
   const preview = initial.filter((b) => b.isActive);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <section className="card p-5">
         <div className="flex items-center justify-between">
           <div>
@@ -176,10 +176,12 @@ export function BannerManager({ initial }: { initial: BannerRow[] }) {
         </div>
       </section>
 
-      <section className="card p-5">
+      {/* آیتم grid به‌طور پیش‌فرض min-width:auto دارد و کوچک‌تر از محتوایش
+          نمی‌شود؛ بدون min-w-0 این کارت روی گوشی صفحه را به پهنا می‌کشد */}
+      <section className="card min-w-0 p-5">
         <h2 className="text-sm font-extrabold text-brand-800">پیش‌نمایش زنده</h2>
         <p className="mt-1 text-[11px] text-brand-400">دقیقاً همان چیزی که بازیکن می‌بیند.</p>
-        <div className="mx-auto mt-4 max-w-[380px]">
+        <div className="mx-auto mt-4 w-full max-w-[380px]">
           {preview.length > 0 ? (
             <BannerCarousel
               banners={preview.map((b) => ({

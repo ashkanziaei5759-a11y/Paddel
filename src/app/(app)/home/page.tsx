@@ -12,6 +12,7 @@ import { TOURNAMENT_STATUS_LABEL } from '@/lib/constants';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { BannerCarousel } from '@/components/home/BannerCarousel';
 import { ArticleCard } from '@/components/news/ArticleCard';
+import { DesignerCredit } from '@/components/ui/DesignerCredit';
 import { TopPlayersRail } from '@/components/ranking/TopPlayersRail';
 import { withAlphaFlags } from '@/lib/top-players';
 import { Dot } from '@/components/ui/Dot';
@@ -453,6 +454,8 @@ export default async function HomePage() {
             )}
           </div>
         </section>
+
+        <DesignerCredit className="pb-2 pt-1" />
       </div>
     </>
   );
