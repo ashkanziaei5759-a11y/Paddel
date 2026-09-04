@@ -3,8 +3,15 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  /* خروجی مستقل — برای اجرا در Docker و پلتفرم‌هایی مانند لیارا و آروان */
-  output: 'standalone',
+  /**
+   * خروجی مستقل — برای Docker، Vercel و پلتفرم‌هایی مانند لیارا و آروان.
+   *
+   * روی cPanel این حالت به درد نمی‌خورد: آنجا Passenger اپ را اجرا می‌کند و
+   * ما با app.js سرور را خودمان بالا می‌آوریم، که با خروجی standalone سازگار
+   * نیست. پس هنگام ساخت برای cPanel، CPANEL=1 بگذارید تا خروجی معمولی
+   * ساخته شود.
+   */
+  ...(process.env.CPANEL === '1' ? {} : { output: 'standalone' as const }),
   /**
    * ردیاب وابستگی‌های Next موتور کوئری Prisma را به‌صورت خودکار پیدا نمی‌کند،
    * چون در زمان اجرا و بر اساس نام فایل بارگذاری می‌شود. بدون این تنظیم،

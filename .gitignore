@@ -21,3 +21,6 @@ prisma/dev.db-journal
 # تصاویر خام آپلودی — نسخه‌ی بهینه‌شده در public/images نگهداری می‌شود
 /Poster.png
 /icon.PNG
+
+# بسته‌ی آپلود cPanel — ساختنی است، نه نگه‌داشتنی
+cpanel-upload.zip
