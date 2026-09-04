@@ -3,7 +3,14 @@ import { prisma } from '@/lib/db';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { StatCard } from '@/components/ui/StatCard';
 import { addDays, formatDateTime, startOfLocalDay, toFaDigits } from '@/lib/datetime';
-import { formatNumber, formatToman } from '@/lib/utils';
+import { formatNumber, formatToman, rialToToman } from '@/lib/utils';
+import { getClubMetrics, percentChange } from '@/lib/metrics';
+import {
+  BarSeries,
+  DistributionBars,
+  GroupedBars,
+  KpiTile,
+} from '@/components/admin/charts/Charts';
 import { PAYMENT_STATUS_LABEL, WALLET_TX_LABEL } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
@@ -11,6 +18,9 @@ import { Dot } from '@/components/ui/Dot';
 
 export const metadata: Metadata = { title: 'گزارش مالی' };
 export const dynamic = 'force-dynamic';
+
+const DAYS = 14;
+const WEEKDAY = ['ی', 'د', 'س', 'چ', 'پ', 'ج', 'ش'];
 
 export default async function AdminFinancePage() {
   const now = new Date();
@@ -60,11 +70,92 @@ export default async function AdminFinancePage() {
     }),
   ]);
 
+  /* روند روزانه و دوره‌ی مقایسه — از همان لایه‌ای که صفحه‌ی نمودارها می‌خواند،
+     تا یک عدد در دو صفحه دو جور محاسبه نشود */
+  const [metrics, paymentsByStatus, txByType] = await Promise.all([
+    getClubMetrics(DAYS),
+    prisma.payment.groupBy({ by: ['status'], _count: { _all: true }, _sum: { amount: true } }),
+    prisma.walletTransaction.groupBy({ by: ['type'], _count: { _all: true } }),
+  ]);
+
+  const labels = metrics.days.map((d) => WEEKDAY[d.day.getDay()] ?? '');
+  const revenueToman = metrics.days.map((d) => Number(rialToToman(d.revenue)));
+  const refundToman = metrics.days.map((d) => Number(rialToToman(d.refunds)));
+  const bookingCounts = metrics.days.map((d) => d.bookings);
+
+  /* سود ناخالص = درآمد رزرو منهای بازگشت وجه */
+  const netCurrent = metrics.current.revenue - metrics.current.refunds;
+  const netPrevious = metrics.previous.revenue - metrics.previous.refunds;
+
   return (
     <>
       <AdminHeader title="گزارش مالی" subtitle="درآمد، پرداخت‌ها و کیف پول کاربران" />
 
       <div className="stagger space-y-6 px-4 py-5 sm:px-6 lg:px-8">
+        {/* ---- روند دوره: عدد، درصد تغییر و شکل روند کنار هم ---- */}
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <KpiTile
+            label={`درآمد ${toFaDigits(DAYS)} روز`}
+            value={formatToman(metrics.current.revenue)}
+            delta={percentChange(metrics.current.revenue, metrics.previous.revenue)}
+            spark={revenueToman}
+            tone="accent"
+          />
+          <KpiTile
+            label={`بازگشت وجه ${toFaDigits(DAYS)} روز`}
+            value={formatToman(metrics.current.refunds)}
+            delta={percentChange(metrics.current.refunds, metrics.previous.refunds)}
+            spark={refundToman}
+          />
+          <KpiTile
+            label="درآمد خالص دوره"
+            value={formatToman(netCurrent)}
+            delta={percentChange(netCurrent, netPrevious)}
+            tone="success"
+          />
+          <KpiTile
+            label="تعداد رزرو دوره"
+            value={formatNumber(metrics.current.bookings)}
+            delta={percentChange(metrics.current.bookings, metrics.previous.bookings)}
+            spark={bookingCounts}
+          />
+        </section>
+
+        <GroupedBars
+          title="درآمد در برابر بازگشت وجه"
+          subtitle={`${toFaDigits(DAYS)} روز گذشته، به تومان`}
+          labels={labels}
+          seriesA={{ name: 'درآمد', values: revenueToman }}
+          seriesB={{ name: 'بازگشت', values: refundToman }}
+          format={(v) => formatToman(BigInt(Math.round(v)) * 10n)}
+        />
+
+        <BarSeries
+          title="تعداد رزرو روزانه"
+          subtitle="رزروهای ثبت‌شده در هر روز"
+          points={metrics.days.map((d, i) => ({ label: labels[i], value: bookingCounts[i] }))}
+          format={(v) => formatNumber(v)}
+        />
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <DistributionBars
+            title="وضعیت پرداخت‌های درگاه"
+            subtitle="چند تراکنش در هر وضعیت"
+            rows={paymentsByStatus.map((p) => ({
+              label: PAYMENT_STATUS_LABEL[p.status] ?? p.status,
+              value: p._count._all,
+            }))}
+            emptyText="هنوز پرداختی از درگاه ثبت نشده است."
+          />
+          <DistributionBars
+            title="تراکنش‌های کیف پول به تفکیک نوع"
+            subtitle="چند تراکنش از هر نوع"
+            rows={txByType
+              .map((t) => ({ label: WALLET_TX_LABEL[t.type] ?? t.type, value: t._count._all }))
+              .sort((a, b) => b.value - a.value)}
+          />
+        </div>
+
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard
             label="درآمد امروز"

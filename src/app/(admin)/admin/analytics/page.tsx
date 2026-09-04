@@ -1,10 +1,17 @@
 import type { Metadata } from 'next';
 import { requireAdminPage } from '@/lib/auth/rbac';
 import { prisma } from '@/lib/db';
-import { BarSeries, DistributionBars, RankBars } from '@/components/admin/charts/Charts';
+import {
+  BarSeries,
+  DistributionBars,
+  GroupedBars,
+  KpiTile,
+  RankBars,
+} from '@/components/admin/charts/Charts';
 import { LEVEL_LABEL } from '@/lib/constants';
-import { addDays, startOfLocalDay, toFaDigits } from '@/lib/datetime';
-import { formatToman, rialToToman } from '@/lib/utils';
+import { getClubMetrics, percentChange } from '@/lib/metrics';
+import { toFaDigits } from '@/lib/datetime';
+import { formatNumber, formatToman, rialToToman } from '@/lib/utils';
 import type { PlayerLevel } from '@prisma/client';
 
 export const metadata: Metadata = { title: 'نمودارها' };
@@ -14,33 +21,23 @@ const DAYS = 14;
 const WEEKDAY = ['ی', 'د', 'س', 'چ', 'پ', 'ج', 'ش'];
 
 /**
- * نمودارهای باشگاه.
+ * داشبورد نموداری باشگاه.
  *
- * همه‌ی محاسبه‌ها روی سرور انجام می‌شود و خروجی، عددهای آماده است؛ هیچ ردیف
- * خامی به مرورگر نمی‌رود. بازه‌ی زمانی دو هفته است تا هم روند دیده شود و هم
- * پرس‌وجو سبک بماند.
+ * هر عدد هم به شکل کاشی (متن) و هم روی نمودار دیده می‌شود، چون خواندن یک عدد
+ * دقیق از روی ستون ممکن نیست و دیدن روند از روی عدد هم ممکن نیست.
  */
 export default async function AdminAnalyticsPage() {
   await requireAdminPage();
 
-  const today = startOfLocalDay(new Date());
-  const since = addDays(today, -(DAYS - 1));
-
-  const [bookings, topPlayers, courts, levels, topSpenders] = await Promise.all([
-    prisma.booking.findMany({
-      where: { createdAt: { gte: since }, status: { not: 'CANCELLED' } },
-      select: { createdAt: true, totalPrice: true, courtId: true },
-    }),
+  const [metrics, topPlayers, courts, levels, topSpenders, courtBookings] = await Promise.all([
+    getClubMetrics(DAYS),
     prisma.profile.findMany({
       where: { user: { role: 'PLAYER', status: 'ACTIVE' } },
       orderBy: { points: 'desc' },
       take: 8,
       select: { userId: true, firstName: true, lastName: true, points: true, level: true },
     }),
-    prisma.court.findMany({
-      where: { isActive: true },
-      select: { id: true, name: true },
-    }),
+    prisma.court.findMany({ where: { isActive: true }, select: { id: true, name: true } }),
     prisma.profile.groupBy({ by: ['level'], _count: { _all: true } }),
     prisma.booking.groupBy({
       by: ['userId'],
@@ -50,9 +47,14 @@ export default async function AdminAnalyticsPage() {
       orderBy: { _sum: { totalPrice: 'desc' } },
       take: 8,
     }),
+    prisma.booking.groupBy({
+      by: ['courtId'],
+      where: { status: { not: 'CANCELLED' } },
+      _sum: { totalPrice: true },
+      _count: { _all: true },
+    }),
   ]);
 
-  /* پروفایلِ پرخرج‌ترین‌ها را جدا می‌گیریم؛ groupBy نمی‌تواند join بزند */
   const spenderProfiles = await prisma.profile.findMany({
     where: { userId: { in: topSpenders.map((s) => s.userId) } },
     select: { userId: true, firstName: true, lastName: true },
@@ -61,55 +63,95 @@ export default async function AdminAnalyticsPage() {
     spenderProfiles.map((p) => [p.userId, `${p.firstName} ${p.lastName}`] as const),
   );
 
-  /* ---- سری‌های روزانه ---- */
-  const dayKeys: Date[] = Array.from({ length: DAYS }, (_, i) => addDays(since, i));
-  const revenueByDay = new Map<number, bigint>();
-  const countByDay = new Map<number, number>();
-  const revenueByCourt = new Map<string, bigint>();
-
-  for (const b of bookings) {
-    const key = startOfLocalDay(b.createdAt).getTime();
-    revenueByDay.set(key, (revenueByDay.get(key) ?? 0n) + b.totalPrice);
-    countByDay.set(key, (countByDay.get(key) ?? 0) + 1);
-    revenueByCourt.set(b.courtId, (revenueByCourt.get(b.courtId) ?? 0n) + b.totalPrice);
-  }
-
-  const label = (d: Date) => WEEKDAY[d.getDay()] ?? '';
-
-  const revenuePoints = dayKeys.map((d) => ({
-    label: label(d),
-    value: Number(rialToToman(revenueByDay.get(d.getTime()) ?? 0n)),
-  }));
-  const bookingPoints = dayKeys.map((d) => ({
-    label: label(d),
-    value: countByDay.get(d.getTime()) ?? 0,
-  }));
+  const labels = metrics.days.map((d) => WEEKDAY[d.day.getDay()] ?? '');
+  const revenueToman = metrics.days.map((d) => Number(rialToToman(d.revenue)));
+  const refundToman = metrics.days.map((d) => Number(rialToToman(d.refunds)));
+  const bookingCounts = metrics.days.map((d) => d.bookings);
+  const newUsers = metrics.days.map((d) => d.newUsers);
 
   const levelOrder = Object.keys(LEVEL_LABEL) as PlayerLevel[];
   const levelCounts = new Map(levels.map((l) => [l.level, l._count._all] as const));
+
+  const bookingsByCourt = new Map(courtBookings.map((c) => [c.courtId, c] as const));
 
   return (
     <div className="space-y-4">
       <header>
         <h1 className="text-lg font-black text-brand-800">نمودارها</h1>
         <p className="mt-1 text-[11.5px] font-semibold leading-6 text-brand-400">
-          روند {toFaDigits(DAYS)} روز گذشته و رتبه‌بندی بازیکنان و زمین‌ها.
+          روند {toFaDigits(DAYS)} روز گذشته در کنار دوره‌ی پیش از آن، و رتبه‌بندی بازیکنان و زمین‌ها.
         </p>
       </header>
 
+      {/* ---- کاشی‌های عددی ---- */}
+      <div className="grid grid-cols-2 gap-3">
+        <KpiTile
+          label={`درآمد ${toFaDigits(DAYS)} روز`}
+          value={formatToman(metrics.current.revenue)}
+          delta={percentChange(metrics.current.revenue, metrics.previous.revenue)}
+          spark={revenueToman}
+          tone="accent"
+        />
+        <KpiTile
+          label="تعداد رزرو"
+          value={formatNumber(metrics.current.bookings)}
+          delta={percentChange(metrics.current.bookings, metrics.previous.bookings)}
+          spark={bookingCounts}
+        />
+        <KpiTile
+          label="کاربران تازه"
+          value={formatNumber(metrics.current.newUsers)}
+          delta={percentChange(metrics.current.newUsers, metrics.previous.newUsers)}
+          spark={newUsers}
+          tone="success"
+        />
+        <KpiTile
+          label="کل کاربران"
+          value={formatNumber(metrics.totals.users)}
+          hint={`${formatNumber(metrics.totals.activeUsers)} فعال`}
+        />
+        <KpiTile
+          label="بازی‌های باز"
+          value={formatNumber(metrics.totals.openMatches)}
+          hint="در انتظار بازیکن یا تکمیل"
+        />
+        <KpiTile
+          label="تورنومنت‌های جاری"
+          value={formatNumber(metrics.totals.activeTournaments)}
+          hint={`${formatNumber(metrics.totals.courts)} زمین فعال`}
+        />
+      </div>
+
       <BarSeries
         title="درآمد روزانه"
-        subtitle={`مجموع ${toFaDigits(DAYS)} روز گذشته (تومان)`}
-        points={revenuePoints}
-        format={(v) => `${toFaDigits(v.toLocaleString('en-US'))}`}
+        subtitle={`مجموع ${toFaDigits(DAYS)} روز گذشته`}
+        points={metrics.days.map((d, i) => ({ label: labels[i], value: revenueToman[i] }))}
+        format={(v) => formatToman(BigInt(Math.round(v)) * 10n)}
         accent="accent"
       />
 
       <BarSeries
         title="تعداد رزرو روزانه"
         subtitle="رزروهای ثبت‌شده در هر روز"
-        points={bookingPoints}
-        format={(v) => toFaDigits(v)}
+        points={metrics.days.map((d, i) => ({ label: labels[i], value: bookingCounts[i] }))}
+        format={(v) => formatNumber(v)}
+      />
+
+      <BarSeries
+        title="کاربران تازه در هر روز"
+        subtitle="ثبت‌نام‌های جدید"
+        points={metrics.days.map((d, i) => ({ label: labels[i], value: newUsers[i] }))}
+        format={(v) => formatNumber(v)}
+        accent="success"
+      />
+
+      <GroupedBars
+        title="درآمد در برابر بازگشت وجه"
+        subtitle="روزبه‌روز، به تومان"
+        labels={labels}
+        seriesA={{ name: 'درآمد', values: revenueToman }}
+        seriesB={{ name: 'بازگشت', values: refundToman }}
+        format={(v) => formatToman(BigInt(Math.round(v)) * 10n)}
       />
 
       <RankBars
@@ -121,34 +163,38 @@ export default async function AdminAnalyticsPage() {
           meta: LEVEL_LABEL[p.level],
           value: p.points,
         }))}
-        format={(v) => `${toFaDigits(v)} امتیاز`}
+        format={(v) => `${formatNumber(v)} امتیاز`}
         emptyText="هنوز بازیکنی امتیاز نگرفته است."
       />
 
       <RankBars
         title="بیشترین هزینه‌ی رزرو"
-        subtitle="بازیکنانی که بیشترین مبلغ را رزرو کرده‌اند"
+        subtitle="در تمام دوره‌ها"
         rows={topSpenders.map((s) => ({
           id: s.userId,
           name: nameOf.get(s.userId) ?? '—',
-          meta: `${toFaDigits(s._count._all)} رزرو`,
+          meta: `${formatNumber(s._count._all)} رزرو`,
           value: Number(rialToToman(s._sum.totalPrice ?? 0n)),
         }))}
-        format={(v) => formatToman(BigInt(v) * 10n)}
+        format={(v) => formatToman(BigInt(Math.round(v)) * 10n)}
         emptyText="هنوز رزروی ثبت نشده است."
       />
 
       <RankBars
         title="پردرآمدترین زمین‌ها"
-        subtitle={`درآمد ${toFaDigits(DAYS)} روز گذشته`}
+        subtitle="در تمام دوره‌ها"
         rows={courts
-          .map((c) => ({
-            id: c.id,
-            name: c.name,
-            value: Number(rialToToman(revenueByCourt.get(c.id) ?? 0n)),
-          }))
+          .map((c) => {
+            const row = bookingsByCourt.get(c.id);
+            return {
+              id: c.id,
+              name: c.name,
+              meta: `${formatNumber(row?._count._all ?? 0)} رزرو`,
+              value: Number(rialToToman(row?._sum.totalPrice ?? 0n)),
+            };
+          })
           .sort((a, b) => b.value - a.value)}
-        format={(v) => formatToman(BigInt(v) * 10n)}
+        format={(v) => formatToman(BigInt(Math.round(v)) * 10n)}
         emptyText="زمین فعالی وجود ندارد."
       />
 

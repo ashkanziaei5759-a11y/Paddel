@@ -4,13 +4,18 @@ import { prisma } from '@/lib/db';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { StatCard } from '@/components/ui/StatCard';
 import { startOfLocalDay, addDays, formatDateTime, formatTime, toFaDigits } from '@/lib/datetime';
-import { formatNumber, formatToman } from '@/lib/utils';
+import { formatNumber, formatToman, rialToToman } from '@/lib/utils';
+import { getClubMetrics, percentChange } from '@/lib/metrics';
+import { BarSeries, KpiTile } from '@/components/admin/charts/Charts';
 import { TOURNAMENT_STATUS_LABEL, BOOKING_STATUS_LABEL } from '@/lib/constants';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { Dot } from '@/components/ui/Dot';
 
 export const metadata: Metadata = { title: 'داشبورد مدیریت' };
 export const dynamic = 'force-dynamic';
+
+const DAYS = 14;
+const WEEKDAY = ['ی', 'د', 'س', 'چ', 'پ', 'ج', 'ش'];
 
 export default async function AdminDashboard() {
   const now = new Date();
@@ -29,6 +34,7 @@ export default async function AdminDashboard() {
     walletTotal,
     recentBookings,
     pendingRequests,
+    metrics,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { status: 'ACTIVE' } }),
@@ -56,13 +62,64 @@ export default async function AdminDashboard() {
       },
     }),
     prisma.partnerRequest.count({ where: { status: 'PENDING' } }),
+    getClubMetrics(DAYS),
   ]);
+
+  const labels = metrics.days.map((d) => WEEKDAY[d.day.getDay()] ?? '');
+  const revenueToman = metrics.days.map((d) => Number(rialToToman(d.revenue)));
+  const bookingCounts = metrics.days.map((d) => d.bookings);
+  const newUsers = metrics.days.map((d) => d.newUsers);
 
   return (
     <>
       <AdminHeader title="داشبورد مدیریت" subtitle="نمای کلی باشگاه پرشین پدل" />
 
       <div className="stagger space-y-6 px-4 py-5 sm:px-6 lg:px-8">
+        {/* ---- روند دو هفته: عدد و شکلِ تغییر کنار هم ---- */}
+        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <KpiTile
+            label={`درآمد ${toFaDigits(DAYS)} روز`}
+            value={formatToman(metrics.current.revenue)}
+            delta={percentChange(metrics.current.revenue, metrics.previous.revenue)}
+            spark={revenueToman}
+            tone="accent"
+          />
+          <KpiTile
+            label={`رزرو ${toFaDigits(DAYS)} روز`}
+            value={formatNumber(metrics.current.bookings)}
+            delta={percentChange(metrics.current.bookings, metrics.previous.bookings)}
+            spark={bookingCounts}
+          />
+          <KpiTile
+            label="کاربران تازه"
+            value={formatNumber(metrics.current.newUsers)}
+            delta={percentChange(metrics.current.newUsers, metrics.previous.newUsers)}
+            spark={newUsers}
+            tone="success"
+          />
+          <KpiTile
+            label="موجودی کیف پول‌ها"
+            value={formatToman(metrics.totals.walletBalance)}
+            hint="تعهد باشگاه به کاربران"
+          />
+        </section>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <BarSeries
+            title="درآمد روزانه"
+            subtitle={`${toFaDigits(DAYS)} روز گذشته`}
+            points={metrics.days.map((d, i) => ({ label: labels[i], value: revenueToman[i] }))}
+            format={(v) => formatToman(BigInt(Math.round(v)) * 10n)}
+            accent="accent"
+          />
+          <BarSeries
+            title="تعداد رزرو روزانه"
+            subtitle="رزروهای ثبت‌شده در هر روز"
+            points={metrics.days.map((d, i) => ({ label: labels[i], value: bookingCounts[i] }))}
+            format={(v) => formatNumber(v)}
+          />
+        </div>
+
         {/* ---- آمار کلیدی ---- */}
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard
