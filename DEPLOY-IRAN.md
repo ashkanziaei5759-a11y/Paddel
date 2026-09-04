@@ -165,7 +165,8 @@ sudo certbot --nginx -d example.ir -d www.example.ir
 
 ## ۶. یادآوری رزرو (کران)
 
-روی Vercel این کار خودکار است؛ روی سرور خودتان با `crontab` انجام می‌شود:
+روی سرور خودتان با `crontab` انجام می‌شود (روی Vercel رایگان ممکن نیست —
+جزئیات در `docs/REMINDERS.md`):
 
 ```bash
 crontab -e
