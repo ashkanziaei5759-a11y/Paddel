@@ -183,7 +183,7 @@ export default async function AdminDashboard() {
         <section>
           <div className="section-title mb-3">
             <h2>آخرین رزروها</h2>
-            <Link href="/admin/bookings" className="text-[11px] font-bold text-brand-400 hover:text-brand-600">
+            <Link href="/admin/bookings" className="link-more">
               مشاهده همه
             </Link>
           </div>

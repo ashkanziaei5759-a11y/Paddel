@@ -73,7 +73,9 @@ export function RankingView({ rows, viewerId }: { rows: RankRow[]; viewerId: str
               onClick={() => setGroup(g.value)}
               aria-pressed={group === g.value}
               className={cn(
-                'relative pb-2.5 text-[13px] font-extrabold transition-colors',
+                /* برچسب‌های کوتاه مثل «همه» عرضشان زیر ۲۴ پیکسل می‌شد؛
+                   min-w ناحیه‌ی لمس را به حداقلِ استاندارد می‌رساند */
+                'relative min-w-[44px] px-1 pb-2.5 pt-1 text-center text-[13px] font-extrabold transition-colors',
                 group === g.value ? 'text-brand-800' : 'text-brand-300 hover:text-brand-500',
               )}
             >

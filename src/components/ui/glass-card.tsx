@@ -12,8 +12,10 @@ function GlassCard({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="glass-card"
       className={cn(
-        'relative flex flex-col gap-6 rounded-[28px] border border-white/15 bg-white/[.07] py-6 text-white',
-        'shadow-[0_24px_60px_-24px_rgba(0,0,0,.85)] backdrop-blur-2xl',
+        'relative flex flex-col gap-6 rounded-[28px] border border-white/15 py-6 text-white',
+        /* پس‌زمینه و تاری از glass-surface می‌آید: شیشه‌ی شفاف هرجا مرورگر
+           backdrop-filter دارد، و سرمه‌ای مات هرجا ندارد */
+        'glass-surface shadow-[0_24px_60px_-24px_rgba(0,0,0,.85)]',
         /* بازتاب نور روی لبه‌ی بالایی */
         'before:pointer-events-none before:absolute before:inset-x-8 before:top-0 before:h-px',
         'before:bg-gradient-to-l before:from-transparent before:via-white/50 before:to-transparent',

@@ -185,7 +185,7 @@ export default async function HomePage() {
         <section>
           <div className="section-title mb-3">
             <h2>رزرو بعدی شما</h2>
-            <Link href="/bookings" className="text-[11px] font-bold text-brand-400 hover:text-brand-600">
+            <Link href="/bookings" className="link-more">
               همه رزروها
             </Link>
           </div>
@@ -231,7 +231,7 @@ export default async function HomePage() {
           <section>
             <div className="section-title mb-1">
               <h2>نفرات برتر باشگاه</h2>
-              <Link href="/ranking" className="text-[11px] font-bold text-brand-400 hover:text-brand-600">
+              <Link href="/ranking" className="link-more">
                 جدول کامل
               </Link>
             </div>
@@ -244,7 +244,7 @@ export default async function HomePage() {
           <section>
             <div className="section-title mb-3">
               <h2>زمین‌های باشگاه</h2>
-              <Link href="/booking" className="text-[11px] font-bold text-brand-400 hover:text-brand-600">
+              <Link href="/booking" className="link-more">
                 رزرو
               </Link>
             </div>
@@ -283,7 +283,7 @@ export default async function HomePage() {
           <section>
             <div className="section-title mb-3">
               <h2>بازی‌های باز</h2>
-              <Link href="/matches" className="text-[11px] font-bold text-brand-400 hover:text-brand-600">
+              <Link href="/matches" className="link-more">
                 همه
               </Link>
             </div>
@@ -326,7 +326,7 @@ export default async function HomePage() {
         <section>
           <div className="section-title mb-3">
             <h2>تورنومنت‌های پیش‌رو</h2>
-            <Link href="/tournaments" className="text-[11px] font-bold text-brand-400 hover:text-brand-600">
+            <Link href="/tournaments" className="link-more">
               همه
             </Link>
           </div>
@@ -384,7 +384,7 @@ export default async function HomePage() {
           <section>
             <div className="section-title mb-3">
               <h2>اخبار باشگاه</h2>
-              <Link href="/news" className="text-[11px] font-bold text-brand-400 hover:text-brand-600">
+              <Link href="/news" className="link-more">
                 مشاهده همه
               </Link>
             </div>

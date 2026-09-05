@@ -56,7 +56,7 @@ export default async function WalletPage() {
             <h2>تراکنش‌های اخیر</h2>
             <Link
               href="/wallet/transactions"
-              className="text-[11px] font-bold text-brand-400 hover:text-brand-600"
+              className="link-more"
             >
               مشاهده همه
             </Link>

@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarDays, Home, Medal, Trophy, User, Users } from 'lucide-react';
+import { CalendarDays, Home, Medal, Store, User, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toFaDigits } from '@/lib/datetime';
 
 /**
- * پنج مقصد اصلی. راهنمای ناوبری موبایل بیش از پنج آیتم را توصیه نمی‌کند، پس
- * فقط کارهای پرتکرار اینجا می‌مانند: کیف پول و فروشگاه به کارت صفحه‌ی اصلی و
- * منوی پروفایل منتقل شده‌اند.
+ * شش مقصد اصلی. راهنمای ناوبری موبایل بیش از پنج آیتم را توصیه نمی‌کند، پس
+ * جا محدود است: کیف پول و تورنومنت به منوی پروفایل رفته‌اند تا فروشگاه —
+ * که کار پرتکراری است — یک لمس فاصله داشته باشد.
  *
  * فقط مقصد فعال برچسب دارد. روی عرض ۳۲۰ پیکسل، پنج برچسب فارسی کنار هم یا
  * بریده می‌شوند یا آن‌قدر ریز می‌شوند که خوانا نباشند؛ این‌طور مقصد فعلی در یک
@@ -20,7 +20,7 @@ const ITEMS = [
   { href: '/booking', label: 'رزرو', Icon: CalendarDays },
   { href: '/matches', label: 'بازی‌ها', Icon: Users },
   { href: '/ranking', label: 'رنکینگ', Icon: Medal },
-  { href: '/tournaments', label: 'تورنومنت', Icon: Trophy },
+  { href: '/market', label: 'فروشگاه', Icon: Store },
   { href: '/profile', label: 'پروفایل', Icon: User },
 ];
 

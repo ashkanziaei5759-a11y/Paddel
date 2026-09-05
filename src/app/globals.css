@@ -68,6 +68,11 @@
     --c-inset: 245 249 252;
     --c-sunken: 237 244 248;
 
+    /* پرده‌ی تیره روی عکس — در هر دو تم تیره است، چون کارش خوانا کردن متنِ
+       سفید روی تصویر است نه پیروی از تم. بدون تعریف اینجا، در تم روشن
+       مقدارش تعریف‌نشده می‌ماند و هر rgb(var(--c-scrim)/…) بی‌اثر می‌شود. */
+    --c-scrim: 0 8 14;
+
     --c-success: 18 143 99;
     --c-danger: 211 63 63;
     --c-warning: 224 140 5;
@@ -247,8 +252,17 @@
     @apply ring-brand-200/60;
   }
 
+  /* hover روی موبایل وجود ندارد، پس بازخورد لمس باید از active بیاید:
+     کارت هنگام فشردن کمی جمع می‌شود تا کاربر بفهمد لمسش گرفته شده. */
   .card-interactive {
-    @apply card transition-all duration-300 hover:-translate-y-0.5 hover:shadow-card-hover active:translate-y-0;
+    @apply card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover
+           active:translate-y-0 active:scale-[.985] active:shadow-card;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card-interactive {
+      @apply transition-none active:scale-100;
+    }
   }
 
   .card-dark {
@@ -296,6 +310,40 @@
   }
   .on-glass .label {
     @apply text-white/70;
+  }
+
+  /* ---------- سطح شیشه‌ای ----------
+   *
+   * کارت شیشه‌ای روی پوستر می‌نشیند و خوانا بودنش نباید به backdrop-filter
+   * گره بخورد: فایرفاکس اندروید، وب‌ویوهای قدیمی و حالت کم‌مصرف آن را
+   * اجرا نمی‌کنند و آن‌وقت کارتی با پس‌زمینه‌ی ۷٪ عملاً نامرئی است و متن
+   * روی عکسِ شلوغ می‌افتد.
+   *
+   * پس پایه، یک سرمه‌ای تقریباً مات است که همه‌جا کار می‌کند، و فقط جایی
+   * که مرورگر واقعاً تاری پس‌زمینه را پشتیبانی می‌کند به شیشه‌ی شفاف
+   * تبدیل می‌شود.
+   */
+  .glass-surface {
+    background-color: rgb(var(--c-scrim) / 0.9);
+  }
+
+  @supports ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    .glass-surface {
+      background-color: rgb(255 255 255 / 0.09);
+      -webkit-backdrop-filter: blur(28px) saturate(140%);
+      backdrop-filter: blur(28px) saturate(140%);
+    }
+  }
+
+  /* پیوند «مشاهده همه» کنار عنوان بخش‌ها.
+   *
+   * متنش ریز است و ارتفاع خطش حدود ۱۷ پیکسل می‌شود — کمتر از حداقلِ
+   * ۲۴×۲۴ که WCAG برای هدف لمس می‌خواهد. با padding ناحیه‌ی لمس بزرگ
+   * می‌شود و با margin منفی، چیدمان سر جایش می‌ماند.
+   */
+  .link-more {
+    @apply -my-1.5 -mx-2 inline-flex min-h-[24px] min-w-[24px] items-center rounded-lg px-2 py-1.5
+           text-[11px] font-bold text-brand-400 transition-colors hover:text-brand-600;
   }
 
   /* ---------- Buttons ---------- */

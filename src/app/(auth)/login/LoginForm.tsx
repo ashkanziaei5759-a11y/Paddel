@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { Eye, EyeOff, LogIn, TriangleAlert } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/Spinner';
-import { useToast } from '@/components/ui/Toast';
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Eye, EyeOff, LogIn, TriangleAlert } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/Spinner";
+import { useToast } from "@/components/ui/Toast";
 
 export function LoginForm() {
   const router = useRouter();
@@ -24,107 +24,119 @@ export function LoginForm() {
     const form = new FormData(event.currentTarget);
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: String(form.get('username') || ''),
-          password: String(form.get('password') || ''),
+          username: String(form.get("username") || ""),
+          password: String(form.get("password") || ""),
         }),
       });
       const json = await res.json();
 
       if (!res.ok || !json.ok) {
-        setError(json.error || 'ورود ناموفق بود.');
+        setError(json.error || "ورود ناموفق بود.");
         return;
       }
 
-      toast.success('خوش آمدید!');
-      router.replace(json.data?.role === 'ADMIN' ? '/admin' : '/home');
+      toast.success("خوش آمدید!");
+      router.replace(json.data?.role === "ADMIN" ? "/admin" : "/home");
       router.refresh();
     } catch {
-      setError('ارتباط با سرور برقرار نشد. اتصال اینترنت خود را بررسی کنید.');
+      setError("ارتباط با سرور برقرار نشد. اتصال اینترنت خود را بررسی کنید.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
+    /* fieldset کل فرم را هنگام ارسال قفل می‌کند: بدون آن کاربر می‌تواند
+       متن را عوض کند یا دوباره Enter بزند و دو درخواست ورود بفرستد. */
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
-      <div>
-        <Label htmlFor="username">نام کاربری</Label>
-        <Input
-          id="username"
-          name="username"
-          type="text"
-          autoComplete="username"
-          dir="ltr"
-          className="text-left"
-          placeholder="username"
-          required
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="password">رمز عبور</Label>
-        <div className="relative">
+      <fieldset
+        disabled={loading}
+        className="space-y-5 border-0 p-0 disabled:opacity-100"
+      >
+        <div>
+          <Label htmlFor="username">نام کاربری</Label>
           <Input
-            id="password"
-            name="password"
-            type={showPassword ? 'text' : 'password'}
-            autoComplete="current-password"
+            id="username"
+            name="username"
+            type="text"
+            autoComplete="username"
             dir="ltr"
-            className="pl-12 text-left"
-            placeholder="••••••••"
+            className="text-left"
+            placeholder="username"
             required
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            className="absolute inset-y-0 left-2 my-auto flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-brand-300 transition-colors hover:text-brand-600 [.on-glass_&]:text-white/50 [.on-glass_&]:hover:text-white"
-            aria-label={showPassword ? 'پنهان کردن رمز عبور' : 'نمایش رمز عبور'}
+        </div>
+
+        <div>
+          <Label htmlFor="password">رمز عبور</Label>
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              dir="ltr"
+              className="pl-12 text-left"
+              placeholder="••••••••"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute inset-y-0 left-2 my-auto flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-brand-300 transition-colors hover:text-brand-600 [.on-glass_&]:text-white/50 [.on-glass_&]:hover:text-white"
+              aria-label={
+                showPassword ? "پنهان کردن رمز عبور" : "نمایش رمز عبور"
+              }
+            >
+              {showPassword ? (
+                <EyeOff className="h-4.5 w-4.5" aria-hidden="true" />
+              ) : (
+                <Eye className="h-4.5 w-4.5" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-2xl bg-danger/[.06] px-4 py-3 text-xs font-bold leading-6 text-danger [.on-glass_&]:bg-danger/20 [.on-glass_&]:text-white"
           >
-            {showPassword ? (
-              <EyeOff className="h-4.5 w-4.5" aria-hidden="true" />
-            ) : (
-              <Eye className="h-4.5 w-4.5" aria-hidden="true" />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {error && (
-        <div
-          role="alert"
-          className="flex items-start gap-2 rounded-2xl bg-danger/[.06] px-4 py-3 text-xs font-bold leading-6 text-danger [.on-glass_&]:bg-danger/20 [.on-glass_&]:text-white"
-        >
-          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      {/* دکمه‌ی اصلی صفحه — بلندتر و پررنگ‌تر از بقیه، با درخششی که روی پوستر
-          تیره جدایش می‌کند. فلش هنگام لمس کمی جلو می‌رود. */}
-      <Button
-        type="submit"
-        variant="accent"
-        disabled={loading}
-        className="group mt-1 h-[60px] w-full rounded-[20px] text-[15px] font-black tracking-tight
-                   shadow-[0_14px_34px_-12px_rgba(252,163,17,.75)]
-                   transition-transform active:scale-[.985] disabled:opacity-70"
-      >
-        {loading ? (
-          <Spinner />
-        ) : (
-          <>
-            ورود به حساب
-            <LogIn
-              className="h-[18px] w-[18px] transition-transform duration-200 group-active:-translate-x-1"
+            <TriangleAlert
+              className="mt-0.5 h-4 w-4 shrink-0"
               aria-hidden="true"
             />
-          </>
+            <span>{error}</span>
+          </div>
         )}
-      </Button>
+
+        {/* دکمه‌ی اصلی صفحه — بلندتر و پررنگ‌تر از بقیه، با درخششی که روی پوستر
+          تیره جدایش می‌کند. فلش هنگام لمس کمی جلو می‌رود. */}
+        <Button
+          type="submit"
+          variant="accent"
+          disabled={loading}
+          className="group mt-1 h-[60px] w-full rounded-[20px] text-[15px] font-black tracking-tight
+                   shadow-[0_14px_34px_-12px_rgba(252,163,17,.75)]
+                   transition-transform active:scale-[.985] disabled:opacity-70"
+        >
+          {loading ? (
+            <Spinner />
+          ) : (
+            <>
+              ورود به حساب
+              <LogIn
+                className="h-[18px] w-[18px] transition-transform duration-200 group-active:-translate-x-1"
+                aria-hidden="true"
+              />
+            </>
+          )}
+        </Button>
+      </fieldset>
     </form>
   );
 }

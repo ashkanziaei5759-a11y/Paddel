@@ -85,8 +85,10 @@ export function BannerCarousel({
         )}
       </div>
 
+      {/* ناحیه‌ی لمس نقطه‌ها ۲۴ پیکسل است، ولی خودِ نقطه ریز می‌ماند:
+          انگشت به کلِ دکمه می‌خورد، چشم فقط نقطه را می‌بیند. */}
       {banners.length > 1 && (
-        <div className="absolute bottom-3 left-4 flex gap-1.5">
+        <div className="absolute bottom-0 left-2.5 flex items-center">
           {banners.map((b, i) => (
             <button
               key={b.id}
@@ -98,11 +100,16 @@ export function BannerCarousel({
               }}
               aria-label={`نمایش بنر ${i + 1}`}
               aria-current={i === index}
-              className={cn(
-                'h-1.5 cursor-pointer rounded-full transition-all duration-300',
-                i === index ? 'w-5 bg-accent' : 'w-1.5 bg-white/55',
-              )}
-            />
+              className="group flex h-6 w-6 cursor-pointer items-center justify-center"
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'block h-1.5 rounded-full transition-all duration-300',
+                  i === index ? 'w-5 bg-accent' : 'w-1.5 bg-white/55',
+                )}
+              />
+            </button>
           ))}
         </div>
       )}
