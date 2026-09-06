@@ -56,6 +56,29 @@ export function ImagePicker({
         : aspect === 'tall' ? 'aspect-[9/16] w-32'
           : 'aspect-[16/7] w-full';
 
+  /**
+   * آپلود و اطلاع به فرمِ والد.
+   *
+   * هر تغییر تصویر بلافاصله آپلود می‌شود. پیش از این، تصویر تا وقتی کاربر
+   * دکمه‌ی جداگانه‌ی «ذخیره تصویر» را نمی‌زد فقط در مرورگر می‌ماند؛ اگر مدیر
+   * عکس را انتخاب می‌کرد و مستقیم دکمه‌ی ذخیره‌ی خودِ فرم را می‌زد، کالا
+   * بدون تصویر ذخیره می‌شد. حالا چنین حالتی وجود ندارد.
+   */
+  async function commit(prepared: PreparedImage, message: string) {
+    setWorking('UPLOAD');
+    try {
+      const url = await uploadImage(prepared.blob, kind);
+      await onChange(url);
+      toast.success(message);
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'آپلود ناموفق بود.');
+      return false;
+    } finally {
+      setWorking(null);
+    }
+  }
+
   async function pick(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     /* ورودی پاک می‌شود تا انتخاب دوباره‌ی همان فایل هم رویداد بدهد */
@@ -71,6 +94,9 @@ export function ImagePicker({
       releaseDrafts();
       setDraft(prepared);
       setOriginal(prepared);
+      setWorking(null);
+      await commit(prepared, 'تصویر ذخیره شد.');
+      return;
     } catch {
       toast.error('خواندن این تصویر ممکن نبود. تصویر دیگری انتخاب کنید.');
     } finally {
@@ -90,7 +116,8 @@ export function ImagePicker({
       const prepared = await prepareImage(cut, { keepAlpha: true, maxEdge: 900 });
       if (draft !== original) URL.revokeObjectURL(draft.previewUrl);
       setDraft(prepared);
-      toast.success('پس‌زمینه حذف شد.');
+      setWorking(null);
+      await commit(prepared, 'پس‌زمینه حذف شد و تصویر ذخیره شد.');
     } catch (error) {
       const reason = error instanceof Error ? error.message : '';
       toast.error(
@@ -103,27 +130,11 @@ export function ImagePicker({
     }
   }
 
-  function restore() {
+  async function restore() {
     if (!original || !draft) return;
     if (draft !== original) URL.revokeObjectURL(draft.previewUrl);
     setDraft(original);
-  }
-
-  async function save() {
-    if (!draft) return;
-    setWorking('UPLOAD');
-    try {
-      const url = await uploadImage(draft.blob, kind);
-      await onChange(url);
-      releaseDrafts();
-      setDraft(null);
-      setOriginal(null);
-      toast.success('تصویر ذخیره شد.');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'آپلود ناموفق بود.');
-    } finally {
-      setWorking(null);
-    }
+    await commit(original, 'تصویر اصلی بازگشت.');
   }
 
   function releaseDrafts() {
@@ -219,7 +230,9 @@ export function ImagePicker({
                 </button>
               )}
 
-              {!draft && value && (
+              {/* تصویر همیشه آپلودشده است، پس دکمه‌ی حذف به وجودِ draft ربطی
+                  ندارد؛ فقط باید نشانی‌ای برای حذف وجود داشته باشد */}
+              {value && (
                 <button
                   type="button"
                   onClick={clear}
@@ -234,17 +247,6 @@ export function ImagePicker({
           )}
         </div>
       </div>
-
-      {draft && (
-        <div className="flex gap-2">
-          <button type="button" onClick={clear} disabled={busy} className="btn-outline btn-sm flex-1">
-            انصراف
-          </button>
-          <button type="button" onClick={save} disabled={busy} className="btn-accent btn-sm flex-1">
-            {working === 'UPLOAD' ? <Spinner /> : 'ذخیره تصویر'}
-          </button>
-        </div>
-      )}
 
       {allowCutout && draft && (
         <p className="text-[10px] font-semibold leading-5 text-brand-300">
