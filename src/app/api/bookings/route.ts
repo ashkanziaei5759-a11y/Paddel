@@ -58,6 +58,8 @@ export async function POST(req: NextRequest) {
       slotStarts: input.slots.map((s) => new Date(s)),
       notes: input.notes,
       source: 'PLAYER',
+      voucherCode: input.voucherCode,
+      payWithPoints: input.payWithPoints,
     });
 
     return ok({ id: booking.id, code: booking.code, totalPrice: booking.totalPrice }, { status: 201 });

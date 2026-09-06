@@ -42,6 +42,12 @@ export async function POST(req: NextRequest) {
         stock: input.stock,
         isActive: input.isActive,
         sortOrder: input.sortOrder,
+        section: input.section,
+        voucherKind: input.voucherKind ?? null,
+        voucherPercent:
+          input.voucherKind === 'FREE_SESSION' ? 100 : (input.voucherPercent ?? null),
+        voucherMaxRial: input.voucherMaxToman ? tomanToRial(input.voucherMaxToman) : null,
+        voucherDays: input.voucherKind ? (input.voucherDays ?? 30) : null,
       },
     });
 

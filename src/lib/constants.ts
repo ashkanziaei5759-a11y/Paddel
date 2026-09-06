@@ -79,6 +79,32 @@ export const POINTS_TX_LABEL: Record<PointsTxType, string> = {
   ADJUSTMENT: 'اصلاح امتیاز',
   STORE_PURCHASE: 'خرید از فروشگاه',
   STORE_REFUND: 'بازگشت خرید فروشگاه',
+  VOUCHER_PURCHASE: 'خرید بن رزرو',
+  VOUCHER_REFUND: 'بازگشت بن رزرو',
+  BOOKING_PAYMENT: 'پرداخت رزرو با امتیاز',
+  BOOKING_REFUND: 'بازگشت امتیاز رزرو',
+  CONVERTED_TO_WALLET: 'تبدیل به موجودی کیف پول',
+};
+
+/** بخش‌های فروشگاه */
+export const STORE_SECTION_LABEL: Record<'MARKET' | 'POINT_SHOP', string> = {
+  MARKET: 'فروشگاه باشگاه',
+  POINT_SHOP: 'فروشگاه امتیازی',
+};
+
+export const VOUCHER_KIND_LABEL: Record<'FREE_SESSION' | 'PERCENT_DISCOUNT', string> = {
+  FREE_SESSION: 'یک سانس رایگان',
+  PERCENT_DISCOUNT: 'تخفیف درصدی رزرو',
+};
+
+export const VOUCHER_STATUS_LABEL: Record<
+  'ACTIVE' | 'USED' | 'EXPIRED' | 'CANCELLED',
+  string
+> = {
+  ACTIVE: 'قابل استفاده',
+  USED: 'استفاده‌شده',
+  EXPIRED: 'منقضی',
+  CANCELLED: 'لغوشده',
 };
 
 export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {

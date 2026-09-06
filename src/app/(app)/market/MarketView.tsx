@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { StoreCategory } from '@prisma/client';
-import { Minus, Package, Plus, Star, Wallet } from 'lucide-react';
+import { Minus, Package, Plus, ShoppingBag, Sparkles, Star, Wallet } from 'lucide-react';
 import { Sheet } from '@/components/ui/Sheet';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
@@ -22,6 +22,10 @@ export interface ProductDto {
   pricePoints: number | null;
   priceRial: string | null;
   stock: number;
+  section: 'MARKET' | 'POINT_SHOP';
+  voucherKind: 'FREE_SESSION' | 'PERCENT_DISCOUNT' | null;
+  voucherPercent: number | null;
+  voucherDays: number | null;
 }
 
 type Filter = 'ALL' | StoreCategory;
@@ -47,6 +51,9 @@ export function MarketView({
 
   const categories = [...new Set(products.map((p) => p.category))];
   const shown = filter === 'ALL' ? products : products.filter((p) => p.category === filter);
+  /* بالای صفحه کالاهایی که با پول فروخته می‌شوند، پایین‌تر بخش امتیازی */
+  const marketItems = shown.filter((p) => p.section !== 'POINT_SHOP');
+  const pointItems = shown.filter((p) => p.section === 'POINT_SHOP');
 
   function open(p: ProductDto) {
     setActive(p);
@@ -145,58 +152,42 @@ export function MarketView({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
-        {shown.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => open(p)}
-            disabled={p.stock === 0}
-            className={cn(
-              'card-interactive overflow-hidden p-0 text-right',
-              p.stock === 0 && 'opacity-60',
-            )}
-          >
-            <div className="relative aspect-square w-full bg-brand-50">
-              {p.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={p.imageUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center text-brand-200">
-                  <Package className="h-9 w-9" strokeWidth={1.4} aria-hidden="true" />
-                </span>
-              )}
-              {p.stock === 0 && (
-                <span className="absolute inset-0 grid place-items-center bg-scrim/65 text-[11px] font-black text-white">
-                  ناموجود
-                </span>
-              )}
-              {p.stock > 0 && p.stock <= 3 && (
-                <span className="num absolute right-2 top-2 rounded-lg bg-danger/90 px-2 py-1 text-[9px] font-black text-white">
-                  {toFaDigits(p.stock)} عدد مانده
-                </span>
-              )}
-            </div>
+      {marketItems.length > 0 && (
+        <section>
+          <div className="mb-2.5 flex items-center gap-2">
+            <ShoppingBag className="h-4 w-4 text-brand-600" strokeWidth={2.2} aria-hidden="true" />
+            <h2 className="text-sm font-black text-brand-800">فروشگاه باشگاه</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {marketItems.map((p) => (
+              <ProductCard key={p.id} product={p} onOpen={open} />
+            ))}
+          </div>
+        </section>
+      )}
 
-            <div className="p-3">
-              <p className="truncate text-xs font-extrabold text-brand-800">{p.name}</p>
-              <p className="mt-0.5 text-[10px] font-bold text-brand-300">
-                {STORE_CATEGORY_LABEL[p.category]}
-              </p>
-              <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                {p.pricePoints != null && (
-                  <span className="badge-accent num">{toFaDigits(p.pricePoints)} امتیاز</span>
-                )}
-                {p.priceRial && (
-                  <span className="badge-brand num">
-                    {formatToman(BigInt(p.priceRial), { withUnit: false })}
-                  </span>
-                )}
-              </div>
+      {/* بخش امتیازی — هرچه با امتیاز خریده می‌شود، از جمله بن رزرو */}
+      {pointItems.length > 0 && (
+        <section>
+          <div className="mb-2.5 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-accent-600" strokeWidth={2.2} aria-hidden="true" />
+              <h2 className="text-sm font-black text-brand-800">فروشگاه امتیازی</h2>
             </div>
-          </button>
-        ))}
-      </div>
+            <span className="num rounded-xl bg-accent/15 px-2.5 py-1 text-[10.5px] font-black text-accent-700">
+              {toFaDigits(points)} امتیاز
+            </span>
+          </div>
+          <p className="mb-3 text-[11px] font-semibold leading-6 text-brand-400">
+            امتیازهایی که از تورنومنت‌ها و باشگاه می‌گیرید را اینجا خرج کنید.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {pointItems.map((p) => (
+              <ProductCard key={p.id} product={p} onOpen={open} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <Sheet open={active !== null} onClose={() => setActive(null)} title={active?.name}>
         {active && (
@@ -281,5 +272,65 @@ export function MarketView({
         )}
       </Sheet>
     </div>
+  );
+}
+
+
+/** کارت یک کالا در هر دو بخش فروشگاه */
+function ProductCard({
+  product: p,
+  onOpen,
+}: {
+  product: ProductDto;
+  onOpen: (p: ProductDto) => void;
+}) {
+  return (
+<button
+                        type="button"
+            onClick={() => onOpen(p)}
+            disabled={p.stock === 0}
+            className={cn(
+              'card-interactive overflow-hidden p-0 text-right',
+              p.stock === 0 && 'opacity-60',
+            )}
+          >
+            <div className="relative aspect-square w-full bg-brand-50">
+              {p.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.imageUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center text-brand-200">
+                  <Package className="h-9 w-9" strokeWidth={1.4} aria-hidden="true" />
+                </span>
+              )}
+              {p.stock === 0 && (
+                <span className="absolute inset-0 grid place-items-center bg-scrim/65 text-[11px] font-black text-white">
+                  ناموجود
+                </span>
+              )}
+              {p.stock > 0 && p.stock <= 3 && (
+                <span className="num absolute right-2 top-2 rounded-lg bg-danger/90 px-2 py-1 text-[9px] font-black text-white">
+                  {toFaDigits(p.stock)} عدد مانده
+                </span>
+              )}
+            </div>
+
+            <div className="p-3">
+              <p className="truncate text-xs font-extrabold text-brand-800">{p.name}</p>
+              <p className="mt-0.5 text-[10px] font-bold text-brand-300">
+                {STORE_CATEGORY_LABEL[p.category]}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {p.pricePoints != null && (
+                  <span className="badge-accent num">{toFaDigits(p.pricePoints)} امتیاز</span>
+                )}
+                {p.priceRial && (
+                  <span className="badge-brand num">
+                    {formatToman(BigInt(p.priceRial), { withUnit: false })}
+                  </span>
+                )}
+              </div>
+            </div>
+          </button>
   );
 }

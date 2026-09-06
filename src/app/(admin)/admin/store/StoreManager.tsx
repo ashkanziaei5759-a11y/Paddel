@@ -26,6 +26,11 @@ export interface ProductRow {
   imageUrl: string | null;
   category: StoreCategory;
   pricePoints: number | null;
+  section: 'MARKET' | 'POINT_SHOP';
+  voucherKind: 'FREE_SESSION' | 'PERCENT_DISCOUNT' | null;
+  voucherPercent: number | null;
+  voucherMaxToman: number | null;
+  voucherDays: number | null;
   priceToman: number | null;
   stock: number;
   isActive: boolean;
@@ -116,6 +121,11 @@ function Products({ rows }: { rows: ProductRow[] }) {
       stock: Number(f.get('stock') || 0),
       isActive: active,
       sortOrder: Number(f.get('sortOrder') || 0),
+      section: String(f.get('section') || 'MARKET'),
+      voucherKind: String(f.get('voucherKind') || '') || null,
+      voucherPercent: Number(f.get('voucherPercent') || 0) || null,
+      voucherMaxToman: Number(f.get('voucherMaxToman') || 0) || null,
+      voucherDays: Number(f.get('voucherDays') || 0) || null,
     };
 
     try {
@@ -239,6 +249,45 @@ function Products({ rows }: { rows: ProductRow[] }) {
               ))}
             </select>
           </div>
+          <div>
+            <label className="label" htmlFor="p-section">بخش فروشگاه</label>
+            <select id="p-section" name="section" defaultValue={editing?.section ?? 'MARKET'} className="field">
+              <option value="MARKET">فروشگاه باشگاه — فروش با پول</option>
+              <option value="POINT_SHOP">فروشگاه امتیازی — خرید با امتیاز</option>
+            </select>
+          </div>
+
+          {/* بن رزرو: کالایی که جنس نیست و خریدش یک تخفیف رزرو صادر می‌کند */}
+          <div>
+            <label className="label" htmlFor="p-voucher">نوع بن رزرو</label>
+            <select id="p-voucher" name="voucherKind" defaultValue={editing?.voucherKind ?? ''} className="field">
+              <option value="">بن نیست — کالای معمولی</option>
+              <option value="FREE_SESSION">یک سانس رایگان</option>
+              <option value="PERCENT_DISCOUNT">تخفیف درصدی رزرو</option>
+            </select>
+            <p className="mt-1 text-[10.5px] font-semibold leading-5 text-brand-300">
+              اگر بن باشد، خریدش به‌جای کالا یک کد تخفیف رزرو برای بازیکن صادر می‌کند.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="label" htmlFor="p-vpercent">درصد تخفیف</label>
+              <input id="p-vpercent" name="voucherPercent" type="number" dir="ltr" min={1} max={100}
+                className="field num text-left" defaultValue={editing?.voucherPercent ?? ''} placeholder="۱۰۰" />
+            </div>
+            <div>
+              <label className="label" htmlFor="p-vmax">سقف تخفیف</label>
+              <input id="p-vmax" name="voucherMaxToman" type="number" dir="ltr" min={0}
+                className="field num text-left" defaultValue={editing?.voucherMaxToman ?? ''} placeholder="تومان" />
+            </div>
+            <div>
+              <label className="label" htmlFor="p-vdays">اعتبار (روز)</label>
+              <input id="p-vdays" name="voucherDays" type="number" dir="ltr" min={1} max={365}
+                className="field num text-left" defaultValue={editing?.voucherDays ?? ''} placeholder="۳۰" />
+            </div>
+          </div>
+
           <div>
             <label className="label" htmlFor="p-desc">توضیح</label>
             <textarea id="p-desc" name="description" defaultValue={editing?.description ?? ''}

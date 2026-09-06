@@ -3,6 +3,13 @@ import type { Court, CourtPricingRule, Prisma } from '@prisma/client';
 import { prisma } from './db';
 import { AppError } from './api';
 import { mutateWallet } from './wallet';
+import { mutatePoints } from './points';
+import {
+  getPointEconomy,
+  lockVoucherForUse,
+  rialToPoints,
+  voucherDiscount,
+} from './point-economy';
 import { priceForSlot, type SlotPrice } from './pricing';
 import { addDays, dayKey, parseDayKey, startOfLocalDay, toFaDigits, zonedToUtc } from './datetime';
 import { generateBookingCode } from './utils';
@@ -133,6 +140,10 @@ export interface CreateBookingInput {
   performedBy?: string;
   /** رزرو ادمین بدون کسر از کیف پول */
   skipPayment?: boolean;
+  /** کد بن رزروی که با امتیاز خریده شده و روی این رزرو خرج می‌شود */
+  voucherCode?: string;
+  /** باقی‌مانده‌ی هزینه به‌جای کیف پول، با امتیاز پرداخت شود */
+  payWithPoints?: boolean;
 }
 
 /**
@@ -266,19 +277,61 @@ export async function createBooking(input: CreateBookingInput) {
         throw error;
       }
 
-      if (!input.skipPayment && totalPrice > 0n) {
-        await mutateWallet(tx, {
+      /* ---- تسویه ----
+         ترتیب مهم است: اول بن تخفیف را کم می‌کنیم، بعد باقی‌مانده را از
+         امتیاز یا کیف پول برمی‌داریم. هر سه در همین تراکنش‌اند، پس حالتی
+         که بن سوخته ولی پول کم نشده (یا برعکس) پیش نمی‌آید. */
+      let payable = input.skipPayment ? 0n : totalPrice;
+
+      if (!input.skipPayment && input.voucherCode && payable > 0n) {
+        const voucher = await lockVoucherForUse(tx, {
+          code: input.voucherCode,
           userId: input.userId,
-          amount: -totalPrice,
-          type: 'BOOKING_PAYMENT',
-          description: `پرداخت رزرو ${court.name}`,
-          referenceKey: `booking:${created.id}:payment`,
-          bookingId: created.id,
-          performedBy: input.performedBy,
+        });
+        const discount = voucherDiscount(voucher, payable);
+
+        await tx.bookingVoucher.update({
+          where: { id: voucher.id },
+          data: { status: 'USED', usedAt: new Date(), bookingId: created.id },
+        });
+
+        payable -= discount;
+
+        await tx.booking.update({
+          where: { id: created.id },
+          data: { totalPrice: payable },
         });
       }
 
-      return created;
+      if (payable > 0n) {
+        if (input.payWithPoints) {
+          const economy = await getPointEconomy();
+          const cost = rialToPoints(payable, economy.rialPerPoint);
+          await mutatePoints(tx, {
+            userId: input.userId,
+            amount: -cost,
+            type: 'BOOKING_PAYMENT',
+            description: `پرداخت رزرو ${court.name} با امتیاز`,
+            referenceKey: `booking:${created.id}:points`,
+            performedById: input.performedBy,
+            metadata: { bookingId: created.id, rial: payable.toString() },
+          });
+          /* هزینه از امتیاز رفت، پس مبلغ ریالیِ رزرو صفر است */
+          await tx.booking.update({ where: { id: created.id }, data: { totalPrice: 0n } });
+        } else {
+          await mutateWallet(tx, {
+            userId: input.userId,
+            amount: -payable,
+            type: 'BOOKING_PAYMENT',
+            description: `پرداخت رزرو ${court.name}`,
+            referenceKey: `booking:${created.id}:payment`,
+            bookingId: created.id,
+            performedBy: input.performedBy,
+          });
+        }
+      }
+
+      return tx.booking.findUniqueOrThrow({ where: { id: created.id } });
     },
     { isolationLevel: 'ReadCommitted', timeout: 20_000 },
   );

@@ -104,8 +104,38 @@ enum PointsTxType {
   ADMIN_CREDIT
   ADMIN_DEBIT
   ADJUSTMENT
-  STORE_PURCHASE // رزرو شده برای فروشگاه آینده
-  STORE_REFUND // رزرو شده برای فروشگاه آینده
+  STORE_PURCHASE
+  STORE_REFUND
+  /// خرید بن رزرو از فروشگاه امتیازی
+  VOUCHER_PURCHASE
+  VOUCHER_REFUND
+  /// پرداخت مستقیم هزینه‌ی رزرو با امتیاز
+  BOOKING_PAYMENT
+  BOOKING_REFUND
+  /// تبدیل امتیاز به موجودی کیف پول توسط مدیر
+  CONVERTED_TO_WALLET
+}
+
+/// در کدام بخش فروشگاه نشان داده شود
+enum StoreSection {
+  /// فروش با پول — راکت، توپ، پوشاک
+  MARKET
+  /// فروشگاه امتیازی — با امتیاز خریده می‌شود
+  POINT_SHOP
+}
+
+enum VoucherKind {
+  /// یک سانس رایگان
+  FREE_SESSION
+  /// تخفیف درصدی روی هزینه‌ی رزرو
+  PERCENT_DISCOUNT
+}
+
+enum VoucherStatus {
+  ACTIVE
+  USED
+  EXPIRED
+  CANCELLED
 }
 
 enum TournamentType {
@@ -297,6 +327,7 @@ model User {
   articles           Article[]           @relation("ArticleAuthor")
   media              MediaAsset[]        @relation("MediaUploader")
   matchSeats         OpenMatchPlayer[]   @relation("OpenMatchPlayer")
+  vouchers           BookingVoucher[]    @relation("VoucherOwner")
 
   @@index([role])
   @@index([status])
@@ -624,6 +655,9 @@ model Booking {
   code   String @unique
   userId String
   user   User   @relation("BookingUser", fields: [userId], references: [id])
+
+  /// بنی که روی این رزرو خرج شد
+  voucher BookingVoucher? @relation("BookingVoucherUse")
 
   courtId String
   court   Court  @relation(fields: [courtId], references: [id])
@@ -1200,6 +1234,45 @@ model Banner {
 // STORE — فروشگاه باشگاه: خرید با امتیاز یا از کیف پول
 // ===========================================================================
 
+/// بنِ رزرو که با امتیاز خریده می‌شود و هنگام رزرو خرج می‌شود.
+///
+/// وضعیت روی خود ردیف نگه داشته می‌شود و `bookingId` یکتاست، پس یک بن
+/// نمی‌تواند به دو رزرو بچسبد — این تضمین را خود پایگاه داده می‌دهد، نه کد.
+model BookingVoucher {
+  id     String @id @default(cuid())
+  code   String @unique
+  userId String
+  user   User   @relation("VoucherOwner", fields: [userId], references: [id], onDelete: Cascade)
+
+  kind VoucherKind
+
+  /// درصد تخفیف؛ برای FREE_SESSION برابر ۱۰۰ است
+  percentOff Int @default(100)
+  /// سقف تخفیف به ریال — اختیاری
+  maxDiscountRial BigInt?
+
+  /// چند امتیاز بابتش کم شد
+  pointsSpent Int
+
+  status    VoucherStatus @default(ACTIVE)
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  /// رزروی که بن رویش خرج شد
+  bookingId String?  @unique
+  booking   Booking? @relation("BookingVoucherUse", fields: [bookingId], references: [id], onDelete: SetNull)
+
+  /// کالای فروشگاه امتیازی که این بن از آن صادر شد
+  productId String?
+  product   StoreProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, status])
+  @@index([status, expiresAt])
+  @@map("booking_vouchers")
+}
+
 model StoreProduct {
   id          String        @id @default(cuid())
   name        String
@@ -1213,6 +1286,18 @@ model StoreProduct {
   /// قیمت به ریال — اگر null باشد با کیف پول قابل خرید نیست
   priceRial BigInt?
 
+  /// بالای صفحه‌ی فروشگاه یا پایین، در بخش امتیازی
+  section StoreSection @default(MARKET)
+
+  /// اگر پر باشد، خرید این کالا به‌جای جنس، یک بن رزرو صادر می‌کند
+  voucherKind    VoucherKind?
+  /// درصد تخفیف بن (۱ تا ۱۰۰). برای FREE_SESSION مقدارش ۱۰۰ است.
+  voucherPercent Int?
+  /// سقف تخفیف به ریال — بدون آن، یک بن ۱۰۰٪ روی گران‌ترین زمین هم کار می‌کند
+  voucherMaxRial BigInt?
+  /// بن چند روز پس از خرید معتبر است
+  voucherDays    Int?
+
   stock     Int     @default(0)
   isActive  Boolean @default(true)
   sortOrder Int     @default(0)
@@ -1221,8 +1306,10 @@ model StoreProduct {
   updatedAt DateTime @updatedAt
 
   orderItems StoreOrderItem[]
+  vouchers   BookingVoucher[]
 
   @@index([isActive, category, sortOrder])
+  @@index([isActive, section, sortOrder])
   @@map("store_products")
 }
 

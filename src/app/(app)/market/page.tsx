@@ -32,6 +32,10 @@ export default async function MarketPage() {
     pricePoints: p.pricePoints,
     priceRial: p.priceRial ? p.priceRial.toString() : null,
     stock: p.stock,
+    section: p.section,
+    voucherKind: p.voucherKind,
+    voucherPercent: p.voucherPercent,
+    voucherDays: p.voucherDays,
   }));
 
   return (

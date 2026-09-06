@@ -101,6 +101,10 @@ export const createBookingSchema = z.object({
     .min(1, 'حداقل یک سانس انتخاب کنید.')
     .max(12, 'تعداد سانس‌های انتخابی بیش از حد مجاز است.'),
   notes: z.string().trim().max(240).optional(),
+  /** بن رزروی که با امتیاز خریده شده */
+  voucherCode: z.string().trim().min(3).max(40).optional(),
+  /** باقی‌مانده‌ی هزینه با امتیاز پرداخت شود، نه کیف پول */
+  payWithPoints: z.boolean().optional(),
 });
 
 export const cancelBookingSchema = z.object({
@@ -291,10 +295,24 @@ export const storeProductSchema = z
     stock: z.coerce.number().int().min(0).max(100000),
     isActive: z.boolean().default(true),
     sortOrder: z.coerce.number().int().min(0).max(999).default(0),
+    section: z.enum(['MARKET', 'POINT_SHOP']).default('MARKET'),
+    /* کالای بن‌دار جنس فیزیکی ندارد؛ خریدش یک بن رزرو صادر می‌کند */
+    voucherKind: z.enum(['FREE_SESSION', 'PERCENT_DISCOUNT']).optional().nullable(),
+    voucherPercent: z.coerce.number().int().min(1).max(100).optional().nullable(),
+    voucherMaxToman: z.coerce.number().int().min(0).max(1000000000).optional().nullable(),
+    voucherDays: z.coerce.number().int().min(1).max(365).optional().nullable(),
   })
   .refine((v) => (v.pricePoints ?? 0) > 0 || (v.priceToman ?? 0) > 0, {
     message: 'حداقل یکی از قیمت امتیازی یا ریالی باید تعیین شود.',
     path: ['pricePoints'],
+  })
+  .refine((v) => v.section !== 'POINT_SHOP' || (v.pricePoints ?? 0) > 0, {
+    message: 'کالای فروشگاه امتیازی باید قیمت امتیازی داشته باشد.',
+    path: ['pricePoints'],
+  })
+  .refine((v) => v.voucherKind !== 'PERCENT_DISCOUNT' || (v.voucherPercent ?? 0) > 0, {
+    message: 'درصد تخفیف بن را تعیین کنید.',
+    path: ['voucherPercent'],
   });
 
 // --- Banners ---------------------------------------------------------------

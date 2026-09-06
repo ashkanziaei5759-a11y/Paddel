@@ -4,6 +4,7 @@ import { prisma } from './db';
 import { AppError } from './api';
 import { mutateWallet } from './wallet';
 import { mutatePoints } from './points';
+import { issueVoucher } from './point-economy';
 import { notify } from './notifications';
 import { formatToman, generateBookingCode } from './utils';
 import { toFaDigits } from './datetime';
@@ -105,7 +106,23 @@ export async function purchase(input: PurchaseInput) {
         });
       }
 
-      return { order, product, totalPoints, totalRial };
+      /* کالای «بن رزرو» جنس فیزیکی ندارد؛ به‌جای تحویل، همان‌جا یک بن
+         صادر می‌شود. چون داخل همین تراکنش است، امتیاز کم‌شده و بنِ
+         صادرنشده هرگز کنار هم نمی‌مانند. */
+      let voucher = null;
+      if (product.voucherKind) {
+        voucher = await issueVoucher(tx, {
+          userId: input.userId,
+          kind: product.voucherKind,
+          percentOff: product.voucherPercent ?? 100,
+          maxDiscountRial: product.voucherMaxRial,
+          pointsSpent: totalPoints,
+          days: product.voucherDays ?? 30,
+          productId: product.id,
+        });
+      }
+
+      return { order, product, totalPoints, totalRial, voucher };
     },
     { isolationLevel: 'ReadCommitted', timeout: 20_000 },
   );
