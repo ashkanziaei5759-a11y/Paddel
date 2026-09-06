@@ -33,6 +33,7 @@ export function UserAdminPanel({
   const [savingUser, setSavingUser] = useState(false);
   const [savingWallet, setSavingWallet] = useState(false);
   const [savingPoints, setSavingPoints] = useState(false);
+  const [converting, setConverting] = useState(false);
 
   async function post(url: string, body: unknown, method = 'POST') {
     const res = await fetch(url, {
@@ -113,6 +114,30 @@ export function UserAdminPanel({
       toast.error(error instanceof Error ? error.message : 'خطا در تغییر امتیاز.');
     } finally {
       setSavingPoints(false);
+    }
+  }
+
+  /** تبدیل امتیاز بازیکن به موجودی کیف پولش */
+  async function convertPoints(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setConverting(true);
+    const formEl = event.currentTarget;
+    const form = new FormData(formEl);
+    try {
+      const data = await post('/api/admin/points', {
+        userId,
+        points: Number(form.get('convertPoints')),
+        reason: String(form.get('convertReason') || '') || undefined,
+      });
+      toast.success(
+        `${toFaDigits(data.points)} امتیاز به موجودی تبدیل شد (${formatToman(BigInt(data.rial))}).`,
+      );
+      formEl.reset();
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'تبدیل امتیاز انجام نشد.');
+    } finally {
+      setConverting(false);
     }
   }
 
@@ -237,6 +262,50 @@ export function UserAdminPanel({
 
         <button type="submit" disabled={savingPoints} className="btn-outline w-full">
           {savingPoints ? <Spinner /> : 'ثبت تغییر امتیاز'}
+        </button>
+      </form>
+
+      {/* ---- تبدیل امتیاز به موجودی ---- */}
+      <form onSubmit={convertPoints} className="card space-y-3 p-4">
+        <div>
+          <h3 className="text-sm font-extrabold text-brand-800">تبدیل امتیاز به موجودی</h3>
+          <p className="mt-1 text-[11px] font-semibold leading-6 text-brand-400">
+            امتیاز از حساب بازیکن کم و معادل ریالی‌اش به کیف پولش واریز می‌شود. نرخ تبدیل
+            در تنظیمات باشگاه تعیین می‌شود. موجودی فعلی امتیاز:{' '}
+            <span className="num font-black text-brand-700">{toFaDigits(points)}</span>
+          </p>
+        </div>
+
+        <div>
+          <label className="label" htmlFor="convert-points">
+            تعداد امتیاز
+          </label>
+          <input
+            id="convert-points"
+            name="convertPoints"
+            type="number"
+            dir="ltr"
+            min={1}
+            max={points}
+            required
+            className="field num text-left"
+            placeholder="۱۰۰"
+          />
+        </div>
+
+        <div>
+          <label className="label" htmlFor="convert-reason">
+            توضیح (اختیاری)
+          </label>
+          <input id="convert-reason" name="convertReason" className="field" maxLength={200} />
+        </div>
+
+        <button
+          type="submit"
+          disabled={converting || points <= 0}
+          className="btn-primary w-full disabled:opacity-50"
+        >
+          {converting ? <Spinner /> : 'تبدیل به موجودی کیف پول'}
         </button>
       </form>
     </div>

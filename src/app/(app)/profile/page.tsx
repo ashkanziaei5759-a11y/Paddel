@@ -205,6 +205,7 @@ export default async function ProfilePage() {
           <MenuItem href="/wallet" icon="wallet" label="کیف پول" />
           <MenuItem href="/market" icon="ticket" label="فروشگاه باشگاه" />
           <MenuItem href="/market/orders" icon="receipt" label="سفارش‌های فروشگاه" />
+          <MenuItem href="/vouchers" icon="ticket" label="بن‌های رزرو" />
           <MenuItem href="/news" icon="notification" label="اخبار باشگاه" />
           <MenuItem href="/bookings" icon="history" label="تاریخچه رزرو" />
           <MenuItem href="/wallet/transactions" icon="receipt" label="تراکنش‌های کیف پول" />

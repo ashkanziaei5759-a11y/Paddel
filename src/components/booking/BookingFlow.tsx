@@ -33,6 +33,16 @@ interface CourtDto {
   basePrice: string;
 }
 
+interface VoucherDto {
+  id: string;
+  code: string;
+  kind: 'FREE_SESSION' | 'PERCENT_DISCOUNT';
+  percentOff: number;
+  maxDiscountRial: string | null;
+  status: string;
+  expiresAt: string;
+}
+
 interface CourtAvailability {
   court: CourtDto;
   slots: SlotDto[];
@@ -71,6 +81,9 @@ export function BookingFlow({
   const [courtId, setCourtId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [vouchers, setVouchers] = useState<VoucherDto[]>([]);
+  const [voucherCode, setVoucherCode] = useState('');
+  const [payWithPoints, setPayWithPoints] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -182,6 +195,24 @@ export function BookingFlow({
   const total = chosenCourt?.total ?? 0n;
   const insufficient = total > BigInt(balance);
 
+  /* بن‌ها فقط وقتی لازم‌اند که کاربر به مرحله‌ی تأیید رسیده باشد */
+  useEffect(() => {
+    if (!confirmOpen) return;
+    let alive = true;
+    fetch('/api/vouchers')
+      .then((r) => r.json())
+      .then((j) => {
+        if (!alive || !j.ok) return;
+        setVouchers(
+          (j.data.vouchers as VoucherDto[]).filter((v) => v.status === 'ACTIVE'),
+        );
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, [confirmOpen]);
+
   async function confirm() {
     if (!courtId) return;
     setSubmitting(true);
@@ -189,7 +220,12 @@ export function BookingFlow({
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courtId, slots: orderedTimes }),
+        body: JSON.stringify({
+          courtId,
+          slots: orderedTimes,
+          voucherCode: voucherCode || undefined,
+          payWithPoints: payWithPoints || undefined,
+        }),
       });
       const json = await res.json();
 
@@ -566,6 +602,50 @@ export function BookingFlow({
 
           <div className="divider" />
 
+          {/* ---- بن رزرو ---- */}
+          {vouchers.length > 0 && (
+            <div>
+              <label className="label" htmlFor="voucher">
+                بن رزرو
+              </label>
+              <select
+                id="voucher"
+                className="field"
+                value={voucherCode}
+                onChange={(e) => setVoucherCode(e.target.value)}
+              >
+                <option value="">بدون بن</option>
+                {vouchers.map((v) => (
+                  <option key={v.id} value={v.code}>
+                    {v.kind === 'FREE_SESSION'
+                      ? 'یک سانس رایگان'
+                      : `${toFaDigits(v.percentOff)}٪ تخفیف`}
+                    {' — تا '}
+                    {formatJalaliDate(new Date(v.expiresAt))}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* ---- پرداخت با امتیاز ---- */}
+          <label className="flex cursor-pointer items-start gap-2.5 rounded-2xl bg-surface-muted p-3.5">
+            <input
+              type="checkbox"
+              checked={payWithPoints}
+              onChange={(e) => setPayWithPoints(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[rgb(var(--c-accent))]"
+            />
+            <span className="min-w-0">
+              <span className="block text-[11.5px] font-extrabold text-brand-700">
+                پرداخت با امتیاز
+              </span>
+              <span className="mt-0.5 block text-[10.5px] font-semibold leading-5 text-brand-400">
+                باقی‌مانده‌ی هزینه به‌جای کیف پول از امتیازهای شما کم می‌شود.
+              </span>
+            </span>
+          </label>
+
           <div className="flex items-center justify-between">
             <span className="text-sm font-extrabold text-brand-800">مبلغ نهایی</span>
             <span className="num text-lg font-black text-brand-800">{formatToman(total)}</span>
@@ -578,7 +658,7 @@ export function BookingFlow({
             </span>
           </div>
 
-          {insufficient ? (
+          {insufficient && !payWithPoints && !voucherCode ? (
             <div className="space-y-3">
               <div className="rounded-2xl bg-danger/[.06] px-4 py-3 text-xs font-bold leading-6 text-danger">
                 موجودی کیف پول شما کافی نیست. ابتدا کیف پول خود را شارژ کنید.

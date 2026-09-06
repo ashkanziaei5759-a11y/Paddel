@@ -2,10 +2,12 @@ import type { Metadata } from 'next';
 import { prisma } from '@/lib/db';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { CancellationPolicyEditor } from './CancellationPolicyEditor';
+import { PointEconomyEditor } from './PointEconomyEditor';
 import { DEFAULT_CANCELLATION_POLICIES } from '@/lib/constants';
 import { availableGateways } from '@/lib/payments';
 import { availableSmsProviders } from '@/lib/sms';
 import { APP_TIMEZONE } from '@/lib/datetime';
+import { getPointEconomy } from '@/lib/point-economy';
 
 export const metadata: Metadata = { title: 'تنظیمات باشگاه' };
 export const dynamic = 'force-dynamic';
@@ -31,6 +33,8 @@ export default async function AdminSettingsPage() {
         isActive: true,
       }));
 
+  const economy = await getPointEconomy();
+
   const activeGateway = (process.env.PAYMENT_PROVIDER || 'mock').toLowerCase();
   const activeSms = (process.env.OTP_PROVIDER || 'console').toLowerCase();
 
@@ -40,6 +44,11 @@ export default async function AdminSettingsPage() {
 
       <div className="grid gap-4 px-4 py-5 sm:px-6 lg:grid-cols-2 lg:px-8">
         <CancellationPolicyEditor initial={policies} />
+
+        <PointEconomyEditor
+          tomanPerPoint={Math.round(economy.rialPerPoint / 10)}
+          maxConvertPerOperation={economy.maxConvertPerOperation}
+        />
 
         <section className="card space-y-4 p-5">
           <div>
