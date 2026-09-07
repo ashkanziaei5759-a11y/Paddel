@@ -192,7 +192,20 @@ export function BookingFlow({
   }, [data, orderedTimes]);
 
   const chosenCourt = courtOptions.find((c) => c.court.id === courtId);
-  const total = chosenCourt?.total ?? 0n;
+  const listTotal = chosenCourt?.total ?? 0n;
+
+  /* پیش‌نمایش تخفیف بن. دقیقاً همان فرمول سمت سرور (voucherDiscount) است تا
+     عددی که کاربر می‌بیند با چیزی که واقعاً کسر می‌شود یکی باشد؛ ولی مرجعِ
+     نهایی همچنان سرور است. */
+  const chosenVoucher = vouchers.find((v) => v.code === voucherCode) ?? null;
+  const discount = (() => {
+    if (!chosenVoucher || listTotal === 0n) return 0n;
+    const raw = (listTotal * BigInt(chosenVoucher.percentOff)) / 100n;
+    const cap = chosenVoucher.maxDiscountRial ? BigInt(chosenVoucher.maxDiscountRial) : null;
+    const capped = cap !== null && raw > cap ? cap : raw;
+    return capped > listTotal ? listTotal : capped;
+  })();
+  const total = listTotal - discount;
   const insufficient = total > BigInt(balance);
 
   /* بن‌ها فقط وقتی لازم‌اند که کاربر به مرحله‌ی تأیید رسیده باشد */
@@ -646,9 +659,23 @@ export function BookingFlow({
             </span>
           </label>
 
+          {discount > 0n && (
+            <div className="flex items-center justify-between text-[11px] font-bold">
+              <span className="text-brand-400">تخفیف بن</span>
+              <span className="num text-success">{formatToman(discount)}</span>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <span className="text-sm font-extrabold text-brand-800">مبلغ نهایی</span>
-            <span className="num text-lg font-black text-brand-800">{formatToman(total)}</span>
+            <span className="flex items-baseline gap-2">
+              {discount > 0n && (
+                <span className="num text-[11px] font-bold text-brand-300 line-through">
+                  {formatToman(listTotal)}
+                </span>
+              )}
+              <span className="num text-lg font-black text-brand-800">{formatToman(total)}</span>
+            </span>
           </div>
 
           <div className="flex items-center justify-between text-[11px] font-bold">
@@ -679,8 +706,11 @@ export function BookingFlow({
           )}
 
           <p className="text-center text-[10px] leading-5 text-brand-300">
-            با تأیید رزرو، مبلغ از کیف پول شما کسر می‌شود. در صورت لغو، بازگشت وجه طبق قوانین باشگاه
-            انجام می‌گیرد.
+            {total === 0n
+              ? 'این رزرو با بن شما رایگان می‌شود و مبلغی از کیف پول کسر نمی‌گردد. در صورت لغو، بن طبق قوانین باشگاه به شما بازمی‌گردد.'
+              : payWithPoints
+                ? 'با تأیید رزرو، معادل امتیازیِ مبلغ نهایی از امتیازهای شما کم می‌شود. در صورت لغو، بازگشت طبق قوانین باشگاه انجام می‌گیرد.'
+                : 'با تأیید رزرو، مبلغ از کیف پول شما کسر می‌شود. در صورت لغو، بازگشت وجه طبق قوانین باشگاه انجام می‌گیرد.'}
           </p>
         </div>
       </Sheet>

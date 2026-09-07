@@ -61,6 +61,9 @@ export function MarketView({
     setMethod(p.pricePoints != null ? 'POINTS' : 'WALLET');
   }
 
+  /* بن رزرو کالای فیزیکی نیست: نه تعداد دارد، نه تحویل حضوری. */
+  const isVoucher = active?.voucherKind != null;
+
   const totalPoints = active?.pricePoints != null ? active.pricePoints * qty : 0;
   const totalRial = active?.priceRial ? BigInt(active.priceRial) * BigInt(qty) : 0n;
   const short =
@@ -82,9 +85,15 @@ export function MarketView({
         return;
       }
 
-      toast.success('سفارش شما ثبت شد. برای تحویل به باشگاه مراجعه کنید.');
+      toast.success(
+        active.voucherKind
+          ? 'بن شما صادر شد و در «بن‌های من» ثبت است.'
+          : 'سفارش شما ثبت شد. برای تحویل به باشگاه مراجعه کنید.',
+      );
+      const wasVoucher = active.voucherKind != null;
       setActive(null);
-      router.refresh();
+      if (wasVoucher) router.push('/vouchers');
+      else router.refresh();
     } catch {
       toast.error('ارتباط با سرور برقرار نشد.');
     } finally {
@@ -208,6 +217,7 @@ export function MarketView({
               />
             )}
 
+            {!isVoucher && (
             <div className="flex items-center justify-between rounded-2xl bg-surface-muted p-3">
               <span className="text-[11px] font-bold text-brand-400">تعداد</span>
               <div className="flex items-center gap-3">
@@ -232,6 +242,18 @@ export function MarketView({
                 </button>
               </div>
             </div>
+            )}
+
+            {isVoucher && (
+              <div className="rounded-2xl bg-accent/10 px-4 py-3 text-xs font-bold leading-6 text-brand-700">
+                {active.voucherKind === 'FREE_SESSION'
+                  ? 'با این بن، هزینه‌ی یک رزرو زمین به‌طور کامل رایگان می‌شود.'
+                  : `با این بن، ${toFaDigits(active.voucherPercent ?? 0)}٪ از هزینه‌ی یک رزرو کم می‌شود.`}
+                {active.voucherDays != null && (
+                  <> اعتبار بن {toFaDigits(active.voucherDays)} روز است.</>
+                )}
+              </div>
+            )}
 
             <div className="divider" />
 
@@ -261,12 +283,14 @@ export function MarketView({
               </div>
             ) : (
               <button type="button" onClick={buy} disabled={loading} className="btn-accent btn-lg w-full">
-                {loading ? <Spinner /> : 'ثبت سفارش'}
+                {loading ? <Spinner /> : isVoucher ? 'دریافت بن' : 'ثبت سفارش'}
               </button>
             )}
 
             <p className="text-center text-[10px] leading-5 text-brand-300">
-              سفارش پس از ثبت، در باشگاه آماده‌ی تحویل می‌شود.
+              {isVoucher
+                ? 'بن بلافاصله در «بن‌های من» ثبت می‌شود و هنگام رزرو زمین قابل استفاده است.'
+                : 'سفارش پس از ثبت، در باشگاه آماده‌ی تحویل می‌شود.'}
             </p>
           </div>
         )}

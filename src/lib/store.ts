@@ -49,6 +49,14 @@ export async function purchase(input: PurchaseInput) {
         );
       }
 
+      /* بنِ رزرو یک کدِ یکتاست و فقط روی یک رزرو خرج می‌شود؛ پس سفارشِ
+         چندتایی معنا ندارد. اگر اجازه بدهیم، چند برابر امتیاز کم می‌شود
+         ولی همچنان یک بن صادر می‌گردد. فرانت را باور نمی‌کنیم و همین‌جا
+         جلویش را می‌گیریم. */
+      if (product.voucherKind && input.quantity !== 1) {
+        throw new AppError('بنِ رزرو فقط تکی قابل خرید است.', 400);
+      }
+
       const usePoints = input.method === 'POINTS';
       if (usePoints && product.pricePoints == null) {
         throw new AppError('این کالا با امتیاز قابل خرید نیست.', 409);
