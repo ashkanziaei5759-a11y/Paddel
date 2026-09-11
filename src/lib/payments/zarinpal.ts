@@ -5,6 +5,7 @@ import type {
   PaymentVerifyInput,
   PaymentVerifyResult,
 } from './types';
+import { GATEWAY_TIMEOUT_MS, gatewayPost } from './http';
 
 /** درگاه زرین‌پال — REST API نسخه‌ی ۴ */
 export class ZarinpalGateway implements PaymentGateway {
@@ -26,23 +27,21 @@ export class ZarinpalGateway implements PaymentGateway {
   }
 
   async init(input: PaymentInitInput): Promise<PaymentInitResult> {
-    const res = await fetch(`${this.apiBase}/pg/v4/payment/request.json`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({
+    const json = await gatewayPost<{
+      data?: { code?: number; authority?: string; message?: string };
+      errors?: { code?: number; message?: string };
+    }>(`${this.apiBase}/pg/v4/payment/request.json`, {
+      gateway: 'zarinpal',
+      timeoutMs: GATEWAY_TIMEOUT_MS.init,
+      body: {
         merchant_id: this.merchantId,
         amount: Number(input.amount),
         currency: 'IRR',
         description: input.description,
         callback_url: input.callbackUrl,
         metadata: { mobile: input.mobile ?? undefined, order_id: input.orderId },
-      }),
+      },
     });
-
-    const json = (await res.json()) as {
-      data?: { code?: number; authority?: string; message?: string };
-      errors?: { code?: number; message?: string };
-    };
 
     const authority = json.data?.authority;
     if (json.data?.code !== 100 || !authority) {
@@ -62,20 +61,19 @@ export class ZarinpalGateway implements PaymentGateway {
       return { success: false, failureCode: 'CANCELLED', failureMessage: 'پرداخت توسط کاربر لغو شد.' };
     }
 
-    const res = await fetch(`${this.apiBase}/pg/v4/payment/verify.json`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({
+    const json = await gatewayPost<{
+      data?: { code?: number; ref_id?: number; card_pan?: string; message?: string };
+      errors?: { code?: number; message?: string };
+    }>(`${this.apiBase}/pg/v4/payment/verify.json`, {
+      gateway: 'zarinpal',
+      timeoutMs: GATEWAY_TIMEOUT_MS.verify,
+      retries: 1,
+      body: {
         merchant_id: this.merchantId,
         amount: Number(input.amount),
         authority: input.providerRef,
-      }),
+      },
     });
-
-    const json = (await res.json()) as {
-      data?: { code?: number; ref_id?: number; card_pan?: string; message?: string };
-      errors?: { code?: number; message?: string };
-    };
 
     // ۱۰۰ = موفق، ۱۰۱ = قبلاً تأیید شده
     if (json.data?.code === 100 || json.data?.code === 101) {

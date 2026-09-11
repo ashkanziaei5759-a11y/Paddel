@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     });
     if (!record) throw new AppError('کاربر یافت نشد.', 404);
 
-    const valid = await verifyPassword(input.currentPassword, record.passwordHash);
+    const { ok: valid } = await verifyPassword(input.currentPassword, record.passwordHash);
     if (!valid) throw new AppError('رمز عبور فعلی نادرست است.', 401);
 
     await prisma.user.update({

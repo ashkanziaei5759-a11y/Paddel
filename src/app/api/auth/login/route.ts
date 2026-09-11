@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { verifyPassword } from '@/lib/auth/password';
+import { hashPassword, verifyPassword } from '@/lib/auth/password';
 import { createSession } from '@/lib/auth/session';
 import { RATE_LIMITS, rateLimit } from '@/lib/rate-limit';
 import { clientIp, fail, handleApiError, ok } from '@/lib/api';
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       return fail('حساب شما توسط مدیریت غیرفعال شده است. با باشگاه تماس بگیرید.', 403);
     }
 
-    const valid = await verifyPassword(input.password, user.passwordHash);
+    const { ok: valid, needsRehash } = await verifyPassword(input.password, user.passwordHash);
 
     if (!valid) {
       const failedCount = user.failedLoginCount + 1;
@@ -64,6 +64,20 @@ export async function POST(req: NextRequest) {
 
     if (!user.phoneVerifiedAt) {
       return fail('شماره موبایل شما تأیید نشده است. لطفاً دوباره ثبت‌نام کنید.', 403);
+    }
+
+    /* ارتقای بی‌سروصدای هش قدیمی. رمز همین حالا درست بود، پس می‌توانیم
+       نسخه‌ی تازه را بسازیم؛ کاربر چیزی نمی‌بیند و دفعه‌ی بعد ورودش سریع‌تر
+       است. اگر این یکی شکست بخورد نباید ورود را خراب کند. */
+    if (needsRehash) {
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { passwordHash: await hashPassword(input.password) },
+        });
+      } catch (error) {
+        console.error('[auth] password rehash failed:', error);
+      }
     }
 
     await prisma.user.update({

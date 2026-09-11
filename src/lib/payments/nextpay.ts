@@ -5,6 +5,7 @@ import type {
   PaymentVerifyInput,
   PaymentVerifyResult,
 } from './types';
+import { GATEWAY_TIMEOUT_MS, gatewayPost } from './http';
 
 /** درگاه نکست‌پی */
 export class NextpayGateway implements PaymentGateway {
@@ -18,21 +19,22 @@ export class NextpayGateway implements PaymentGateway {
   }
 
   async init(input: PaymentInitInput): Promise<PaymentInitResult> {
-    const res = await fetch('https://nextpay.org/nx/gateway/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        api_key: this.apiKey,
-        order_id: input.orderId,
-        amount: Number(input.amount),
-        callback_uri: input.callbackUrl,
-        currency: 'IRR',
-        customer_phone: input.mobile ?? undefined,
-        payer_desc: input.description,
-      }),
-    });
-
-    const json = (await res.json()) as { code?: number; trans_id?: string };
+    const json = await gatewayPost<{ code?: number; trans_id?: string }>(
+      'https://nextpay.org/nx/gateway/token',
+      {
+        gateway: 'nextpay',
+        timeoutMs: GATEWAY_TIMEOUT_MS.init,
+        body: {
+          api_key: this.apiKey,
+          order_id: input.orderId,
+          amount: Number(input.amount),
+          callback_uri: input.callbackUrl,
+          currency: 'IRR',
+          customer_phone: input.mobile ?? undefined,
+          payer_desc: input.description,
+        },
+      },
+    );
 
     if (json.code !== -1 || !json.trans_id) {
       throw new Error('خطا در ایجاد تراکنش نکست‌پی');
@@ -46,23 +48,22 @@ export class NextpayGateway implements PaymentGateway {
   }
 
   async verify(input: PaymentVerifyInput): Promise<PaymentVerifyResult> {
-    const res = await fetch('https://nextpay.org/nx/gateway/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        api_key: this.apiKey,
-        trans_id: input.providerRef,
-        amount: Number(input.amount),
-        currency: 'IRR',
-      }),
-    });
-
-    const json = (await res.json()) as {
+    const json = await gatewayPost<{
       code?: number;
       Shaparak_Ref_Id?: string;
       card_holder?: string;
       amount?: number;
-    };
+    }>('https://nextpay.org/nx/gateway/verify', {
+      gateway: 'nextpay',
+      timeoutMs: GATEWAY_TIMEOUT_MS.verify,
+      retries: 1,
+      body: {
+        api_key: this.apiKey,
+        trans_id: input.providerRef,
+        amount: Number(input.amount),
+        currency: 'IRR',
+      },
+    });
 
     if (json.code === 0) {
       if (json.amount !== undefined && BigInt(json.amount) !== input.amount) {

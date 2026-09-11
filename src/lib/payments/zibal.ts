@@ -5,6 +5,7 @@ import type {
   PaymentVerifyInput,
   PaymentVerifyResult,
 } from './types';
+import { GATEWAY_TIMEOUT_MS, gatewayPost } from './http';
 
 /** درگاه زیبال */
 export class ZibalGateway implements PaymentGateway {
@@ -18,20 +19,21 @@ export class ZibalGateway implements PaymentGateway {
   }
 
   async init(input: PaymentInitInput): Promise<PaymentInitResult> {
-    const res = await fetch('https://gateway.zibal.ir/v1/request', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        merchant: this.merchant,
-        amount: Number(input.amount),
-        callbackUrl: input.callbackUrl,
-        description: input.description,
-        orderId: input.orderId,
-        mobile: input.mobile ?? undefined,
-      }),
-    });
-
-    const json = (await res.json()) as { result?: number; trackId?: number; message?: string };
+    const json = await gatewayPost<{ result?: number; trackId?: number; message?: string }>(
+      'https://gateway.zibal.ir/v1/request',
+      {
+        gateway: 'zibal',
+        timeoutMs: GATEWAY_TIMEOUT_MS.init,
+        body: {
+          merchant: this.merchant,
+          amount: Number(input.amount),
+          callbackUrl: input.callbackUrl,
+          description: input.description,
+          orderId: input.orderId,
+          mobile: input.mobile ?? undefined,
+        },
+      },
+    );
 
     if (json.result !== 100 || !json.trackId) {
       throw new Error(json.message || 'خطا در ایجاد تراکنش زیبال');
@@ -49,19 +51,18 @@ export class ZibalGateway implements PaymentGateway {
       return { success: false, failureCode: 'CANCELLED', failureMessage: 'پرداخت ناموفق بود.' };
     }
 
-    const res = await fetch('https://gateway.zibal.ir/v1/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ merchant: this.merchant, trackId: Number(input.providerRef) }),
-    });
-
-    const json = (await res.json()) as {
+    const json = await gatewayPost<{
       result?: number;
       refNumber?: string | number;
       cardNumber?: string;
       amount?: number;
       message?: string;
-    };
+    }>('https://gateway.zibal.ir/v1/verify', {
+      gateway: 'zibal',
+      timeoutMs: GATEWAY_TIMEOUT_MS.verify,
+      retries: 1,
+      body: { merchant: this.merchant, trackId: Number(input.providerRef) },
+    });
 
     // ۱۰۰ = موفق، ۲۰۱ = قبلاً تأیید شده
     if (json.result === 100 || json.result === 201) {

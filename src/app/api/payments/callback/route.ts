@@ -49,8 +49,8 @@ async function handle(req: NextRequest) {
   const providerRef = gateway.extractRef(params) || payment.providerRef;
 
   if (!providerRef) {
-    await prisma.payment.update({
-      where: { id: payment.id },
+    await prisma.payment.updateMany({
+      where: { id: payment.id, status: { not: 'SUCCESS' } },
       data: { status: 'FAILED', failureMsg: 'شناسه‌ی تراکنش درگاه یافت نشد.' },
     });
     return redirect('failed', 'پرداخت ناموفق بود.');
@@ -64,8 +64,14 @@ async function handle(req: NextRequest) {
     });
 
     if (!result.success) {
-      await prisma.payment.update({
-        where: { id: payment.id },
+      /* `updateMany` با شرط، نه `update`: اگر کاربر دکمه‌ی بازگشت را دو بار
+         بزند یا درگاه هم GET و هم POST بفرستد، دو فراخوانی هم‌زمان می‌رسد.
+         هر دو تراکنش را PENDING می‌بینند و هر دو verify می‌زنند؛ بسیاری از
+         PSPها به تأیید دوم خطا می‌دهند. بدون این شرط، پاسخِ دومِ ناموفق
+         تراکنشی را که همین حالا SUCCESS شده بود FAILED می‌کرد — یعنی پول
+         کم شده ولی کیف پول شارژ نشده. */
+      const { count } = await prisma.payment.updateMany({
+        where: { id: payment.id, status: { not: 'SUCCESS' } },
         data: {
           status: result.failureCode === 'CANCELLED' ? 'CANCELLED' : 'FAILED',
           failureCode: result.failureCode,
@@ -73,6 +79,8 @@ async function handle(req: NextRequest) {
           rawVerifyResponse: result.raw as never,
         },
       });
+      /* چیزی تغییر نکرد یعنی نسخه‌ی هم‌زمانِ دیگری زودتر موفق شده */
+      if (count === 0) return redirect('success');
       return redirect('failed', result.failureMessage || 'پرداخت ناموفق بود.');
     }
 
@@ -113,8 +121,8 @@ async function handle(req: NextRequest) {
     return redirect('success');
   } catch (error) {
     console.error('[payment] verify error:', error);
-    await prisma.payment.update({
-      where: { id: payment.id },
+    await prisma.payment.updateMany({
+      where: { id: payment.id, status: { not: 'SUCCESS' } },
       data: {
         status: 'FAILED',
         failureMsg: error instanceof Error ? error.message : 'خطای تأیید پرداخت',
