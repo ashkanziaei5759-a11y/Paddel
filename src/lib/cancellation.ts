@@ -3,6 +3,7 @@ import type { Role } from '@prisma/client';
 import { prisma } from './db';
 import { AppError } from './api';
 import { mutateWallet } from './wallet';
+import { mutatePoints } from './points';
 import { cancelOpenMatch } from './matches';
 import { DEFAULT_CANCELLATION_POLICIES } from './constants';
 import { notify } from './notifications';
@@ -149,13 +150,70 @@ export async function cancelBooking(input: CancelBookingInput) {
         });
       }
 
+      /* ---- بنِ خرج‌شده برمی‌گردد ----
+         رزروی که با بن رایگان شده، مبلغ ریالی‌اش صفر است؛ پس بازگشت وجه
+         چیزی به بازیکن نمی‌دهد. اگر بن را هم پس ندهیم، بازیکن هم امتیازش
+         را از دست داده و هم رزروش را. تا وقتی تاریخ انقضا نگذشته باشد، بن
+         دوباره فعال می‌شود. */
+      const usedVoucher = await tx.bookingVoucher.findUnique({
+        where: { bookingId: booking.id },
+        select: { id: true, code: true, expiresAt: true },
+      });
+      let restoredVoucher: string | null = null;
+      if (usedVoucher) {
+        const stillValid = usedVoucher.expiresAt.getTime() > Date.now();
+        await tx.bookingVoucher.update({
+          where: { id: usedVoucher.id },
+          data: {
+            status: stillValid ? 'ACTIVE' : 'EXPIRED',
+            usedAt: null,
+            bookingId: null,
+          },
+        });
+        if (stillValid) restoredVoucher = usedVoucher.code;
+      }
+
+      /* ---- پاداش وفاداری پس گرفته می‌شود ----
+         وگرنه «رزرو کن و لغو کن» به یک ماشین تولید امتیاز تبدیل می‌شد.
+         اگر بازیکن آن امتیازها را خرج کرده باشد، فقط تا سقف موجودی‌اش کم
+         می‌کنیم؛ موجودی هرگز منفی نمی‌شود. */
+      const rewardTx = await tx.pointsTransaction.findUnique({
+        where: { referenceKey: `booking:${booking.id}:reward` },
+        select: { amount: true },
+      });
+      if (rewardTx && rewardTx.amount > 0) {
+        const profile = await tx.profile.findUnique({
+          where: { userId: booking.userId },
+          select: { points: true },
+        });
+        const clawback = Math.min(rewardTx.amount, profile?.points ?? 0);
+        if (clawback > 0) {
+          await mutatePoints(tx, {
+            userId: booking.userId,
+            amount: -clawback,
+            type: 'BOOKING_REWARD_REVERSAL',
+            description: `پس‌گرفتن پاداش رزرو لغوشده ${booking.court.name}`,
+            referenceKey: `booking:${booking.id}:reward-reversal`,
+            metadata: { bookingId: booking.id, granted: rewardTx.amount },
+          });
+        }
+      }
+
       /* اگر روی این رزرو بازی بازی ساخته شده، سهم بازیکنان درون همین تراکنش
          بازمی‌گردد تا لغو رزرو و بازگشت سهم‌ها یکجا اتفاق بیفتد یا هیچ‌کدام. */
       const match = booking.openMatch
         ? await cancelOpenMatch(tx, booking.openMatch.id, input.reason ?? 'لغو رزرو')
         : null;
 
-      return { booking, refundAmount, penaltyAmount, penaltyPercent, quote, match };
+      return {
+        booking,
+        refundAmount,
+        penaltyAmount,
+        penaltyPercent,
+        quote,
+        match,
+        restoredVoucher,
+      };
     },
     { isolationLevel: 'ReadCommitted', timeout: 20_000 },
   ).then(async (result) => {
@@ -164,10 +222,12 @@ export async function cancelBooking(input: CancelBookingInput) {
       type: 'BOOKING_CANCELLED',
       title: 'رزرو شما لغو شد',
       body:
-        result.refundAmount > 0n
-          ? `${result.booking.court.name} — ${formatDateTime(result.booking.startsAt)}. مبلغ ${formatToman(result.refundAmount)} به کیف پول شما بازگشت.`
-          : `${result.booking.court.name} — ${formatDateTime(result.booking.startsAt)}.`,
-      actionUrl: '/wallet',
+        result.restoredVoucher !== null
+          ? `${result.booking.court.name} — ${formatDateTime(result.booking.startsAt)}. بن ${result.restoredVoucher} دوباره قابل استفاده شد.`
+          : result.refundAmount > 0n
+            ? `${result.booking.court.name} — ${formatDateTime(result.booking.startsAt)}. مبلغ ${formatToman(result.refundAmount)} به کیف پول شما بازگشت.`
+            : `${result.booking.court.name} — ${formatDateTime(result.booking.startsAt)}.`,
+      actionUrl: result.restoredVoucher !== null ? '/vouchers' : '/wallet',
       data: { bookingId: result.booking.id },
     });
 

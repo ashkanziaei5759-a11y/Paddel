@@ -22,11 +22,34 @@ export interface PointEconomy {
   rialPerPoint: number;
   /** سقف امتیازی که در یک عملیات تبدیل می‌شود — جلوی اشتباه بزرگ را می‌گیرد */
   maxConvertPerOperation: number;
+
+  /**
+   * پاداش وفاداری: به ازای هر چند ریالی که بازیکن *با پول* می‌پردازد، یک
+   * امتیاز می‌گیرد. صفر یعنی پاداش خاموش است.
+   *
+   * توجه: عمداً از نرخ تبدیل (`rialPerPoint`) بزرگ‌تر گرفته شده. اگر برابر
+   * یا کوچک‌تر بود، بازیکن می‌توانست بی‌پایان رزرو کند و بگیرد-و-پس‌بدهد تا
+   * امتیاز بسازد. با نسبت ۵ به ۱، هر پاداش حدود ۲۰٪ ارزش پرداختی است.
+   */
+  rialPerRewardPoint: number;
+
+  /** هر بازیکن در ماه چند بن می‌تواند بخرد. صفر یعنی بی‌نهایت. */
+  maxVouchersPerMonth: number;
+
+  /**
+   * بن سانس رایگان فقط تا این ساعت قابل استفاده است (۲۴ ساعته).
+   * پیش‌فرض ۱۷ یعنی ساعات طلاییِ عصر از دسترس بن بیرون می‌ماند و باشگاه
+   * گران‌ترین سانس‌هایش را رایگان نمی‌دهد. ۲۴ یعنی محدودیتی نیست.
+   */
+  voucherLatestHour: number;
 }
 
 export const DEFAULT_POINT_ECONOMY: PointEconomy = {
   rialPerPoint: 40_000,
   maxConvertPerOperation: 100_000,
+  rialPerRewardPoint: 200_000,
+  maxVouchersPerMonth: 2,
+  voucherLatestHour: 17,
 };
 
 export async function getPointEconomy(): Promise<PointEconomy> {
@@ -34,15 +57,24 @@ export async function getPointEconomy(): Promise<PointEconomy> {
     const row = await prisma.appSetting.findUnique({ where: { key: POINT_ECONOMY_KEY } });
     if (row?.value && typeof row.value === 'object' && !Array.isArray(row.value)) {
       const v = row.value as Record<string, unknown>;
-      const rial = Number(v.rialPerPoint);
-      const max = Number(v.maxConvertPerOperation);
+      /** عددِ ذخیره‌شده را فقط وقتی می‌پذیریم که معتبر باشد، وگرنه پیش‌فرض */
+      const num = (raw: unknown, fallback: number, min = 1, max = Number.MAX_SAFE_INTEGER) => {
+        const n = Number(raw);
+        return Number.isFinite(n) && n >= min && n <= max ? Math.floor(n) : fallback;
+      };
       return {
-        rialPerPoint:
-          Number.isFinite(rial) && rial > 0 ? Math.floor(rial) : DEFAULT_POINT_ECONOMY.rialPerPoint,
-        maxConvertPerOperation:
-          Number.isFinite(max) && max > 0
-            ? Math.floor(max)
-            : DEFAULT_POINT_ECONOMY.maxConvertPerOperation,
+        rialPerPoint: num(v.rialPerPoint, DEFAULT_POINT_ECONOMY.rialPerPoint),
+        maxConvertPerOperation: num(
+          v.maxConvertPerOperation,
+          DEFAULT_POINT_ECONOMY.maxConvertPerOperation,
+        ),
+        rialPerRewardPoint: num(v.rialPerRewardPoint, DEFAULT_POINT_ECONOMY.rialPerRewardPoint),
+        maxVouchersPerMonth: num(
+          v.maxVouchersPerMonth,
+          DEFAULT_POINT_ECONOMY.maxVouchersPerMonth,
+          0,
+        ),
+        voucherLatestHour: num(v.voucherLatestHour, DEFAULT_POINT_ECONOMY.voucherLatestHour, 0, 24),
       };
     }
   } catch {
@@ -87,19 +119,22 @@ export function voucherDiscount(
  */
 export async function lockVoucherForUse(
   tx: Prisma.TransactionClient,
-  input: { code: string; userId: string },
+  input: { code: string; userId: string; for: 'BOOKING' | 'TOURNAMENT' },
 ) {
   const rows = await tx.$queryRaw<
     {
       id: string;
       userId: string;
       status: string;
+      kind: string;
+      scope: string;
       percentOff: number;
       maxDiscountRial: bigint | null;
       expiresAt: Date;
     }[]
   >`
-    SELECT id, "userId", status::text, "percentOff", "maxDiscountRial", "expiresAt"
+    SELECT id, "userId", status::text, kind::text, scope::text,
+           "percentOff", "maxDiscountRial", "expiresAt"
     FROM "booking_vouchers" WHERE code = ${input.code} FOR UPDATE
   `;
 
@@ -112,8 +147,38 @@ export async function lockVoucherForUse(
     await tx.bookingVoucher.update({ where: { id: voucher.id }, data: { status: 'EXPIRED' } });
     throw new AppError('اعتبار این بن تمام شده است.', 409);
   }
+  if (voucher.scope !== 'ANY' && voucher.scope !== input.for) {
+    throw new AppError(
+      input.for === 'BOOKING'
+        ? 'این بن فقط برای ورودی تورنومنت است.'
+        : 'این بن فقط برای رزرو زمین است.',
+      409,
+    );
+  }
 
   return voucher;
+}
+
+/**
+ * بن سانس رایگان روی ساعت طلایی خرج نشود.
+ *
+ * بدون این قاعده، بازیکن طبیعتاً گران‌ترین سانس (عصر پنجشنبه) را انتخاب
+ * می‌کند و باشگاه بیشترین درآمدش را رایگان می‌دهد. تخفیف درصدی محدود نیست،
+ * چون سقف ریالی خودش را دارد.
+ */
+export function assertVoucherHourAllowed(
+  voucher: { kind: string },
+  slotStarts: Date[],
+  latestHour: number,
+) {
+  if (voucher.kind !== 'FREE_SESSION' || latestHour >= 24) return;
+  const tooLate = slotStarts.find((d) => d.getHours() >= latestHour);
+  if (tooLate) {
+    throw new AppError(
+      `بن سانس رایگان تا ساعت ${latestHour}:۰۰ قابل استفاده است. برای این ساعت از کیف پول یا امتیاز پرداخت کنید.`,
+      409,
+    );
+  }
 }
 
 /** صدور بن پس از خرید امتیازی */
@@ -126,6 +191,7 @@ export async function issueVoucher(
     maxDiscountRial: bigint | null;
     pointsSpent: number;
     days: number;
+    scope?: 'BOOKING' | 'TOURNAMENT' | 'ANY';
     productId?: string;
   },
 ) {
@@ -135,6 +201,7 @@ export async function issueVoucher(
       code: generateBookingCode('BN'),
       userId: input.userId,
       kind: input.kind,
+      scope: input.scope ?? 'BOOKING',
       percentOff: input.percentOff,
       maxDiscountRial: input.maxDiscountRial,
       pointsSpent: input.pointsSpent,

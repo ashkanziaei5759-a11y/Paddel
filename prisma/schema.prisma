@@ -114,6 +114,12 @@ enum PointsTxType {
   BOOKING_REFUND
   /// تبدیل امتیاز به موجودی کیف پول توسط مدیر
   CONVERTED_TO_WALLET
+  /// پاداش وفاداری بابت رزروی که با پول پرداخت شده
+  BOOKING_REWARD
+  /// پس‌گرفتن پاداش وفاداری هنگام لغو رزرو
+  BOOKING_REWARD_REVERSAL
+  /// انتقال بن به بازیکن دیگر (فقط برای ردگیری، مبلغش صفر است)
+  VOUCHER_GIFT
 }
 
 /// در کدام بخش فروشگاه نشان داده شود
@@ -129,6 +135,16 @@ enum VoucherKind {
   FREE_SESSION
   /// تخفیف درصدی روی هزینه‌ی رزرو
   PERCENT_DISCOUNT
+}
+
+/// بن روی چه چیزی خرج می‌شود
+enum VoucherScope {
+  /// فقط رزرو زمین
+  BOOKING
+  /// فقط ورودی تورنومنت
+  TOURNAMENT
+  /// هر دو
+  ANY
 }
 
 enum VoucherStatus {
@@ -228,6 +244,10 @@ enum NotificationType {
   TOURNAMENT_ANNOUNCED
   /// پیام مستقیم مدیر به یک بازیکن
   ADMIN_MESSAGE
+  /// بازیکن دیگری بنی را به شما هدیه داد
+  VOUCHER_GIFT_RECEIVED
+  /// بن شما رو به انقضاست
+  VOUCHER_EXPIRING
   GENERAL
 }
 
@@ -328,6 +348,8 @@ model User {
   media              MediaAsset[]        @relation("MediaUploader")
   matchSeats         OpenMatchPlayer[]   @relation("OpenMatchPlayer")
   vouchers           BookingVoucher[]    @relation("VoucherOwner")
+  giftedVouchers     BookingVoucher[]    @relation("VoucherGifter")
+  bankAccount        BankAccount?
 
   @@index([role])
   @@index([status])
@@ -927,6 +949,7 @@ model TournamentRegistration {
 
   partnerRequests PartnerRequest[]
   walletTxs       WalletTransaction[]
+  voucher         BookingVoucher? @relation("RegistrationVoucherUse")
 
   @@index([tournamentId, status])
   @@map("tournament_registrations")
@@ -1181,6 +1204,39 @@ model AppSetting {
   @@map("app_settings")
 }
 
+// ===========================================================================
+// BANK ACCOUNT — اطلاعات بانکی بازیکن، برای واریز جایزه و قرارداد
+//
+// عمداً جدولِ جداست و داخل Profile نیست: هرجا پروفایل بازیکن را می‌خوانیم
+// (رنکینگ، فهرست بازیکن‌ها، کارت بازی) این جدول همراهش نمی‌آید، پس شماره
+// کارت به‌طور تصادفی جایی درز نمی‌کند. فقط خودِ بازیکن و مدیر می‌بینندش.
+// ===========================================================================
+
+model BankAccount {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// نام صاحب حساب — باید با نام دارنده‌ی کارت یکی باشد
+  holderName String
+
+  /// شماره کارت، فقط ۱۶ رقم بدون خط تیره
+  cardNumber String?
+  /// شماره شبا بدون پیشوند IR — دقیقاً ۲۴ رقم
+  iban String?
+  /// نام بانک؛ از روی شش رقم اول کارت تشخیص داده می‌شود
+  bankName String?
+
+  /// مدیر پس از تطبیق با کارت ملی، حساب را تأیید می‌کند
+  verifiedAt DateTime?
+  verifiedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("bank_accounts")
+}
+
 model AuditLog {
   id     String @id @default(cuid())
   userId String?
@@ -1258,9 +1314,24 @@ model BookingVoucher {
   expiresAt DateTime
   usedAt    DateTime?
 
+  /// روی چه چیزی خرج می‌شود: زمین، تورنومنت، یا هر دو
+  scope VoucherScope @default(BOOKING)
+
   /// رزروی که بن رویش خرج شد
   bookingId String?  @unique
   booking   Booking? @relation("BookingVoucherUse", fields: [bookingId], references: [id], onDelete: SetNull)
+
+  /// ثبت‌نام تورنومنتی که بن رویش خرج شد
+  registrationId String?                 @unique
+  registration   TournamentRegistration? @relation("RegistrationVoucherUse", fields: [registrationId], references: [id], onDelete: SetNull)
+
+  /// اگر بن هدیه بوده، فرستنده‌اش که بود
+  giftedFromId String?
+  giftedFrom   User?     @relation("VoucherGifter", fields: [giftedFromId], references: [id], onDelete: SetNull)
+  giftedAt     DateTime?
+
+  /// برای اینکه یادآوریِ انقضا دوبار فرستاده نشود
+  expiryNotifiedAt DateTime?
 
   /// کالای فروشگاه امتیازی که این بن از آن صادر شد
   productId String?
@@ -1291,6 +1362,8 @@ model StoreProduct {
 
   /// اگر پر باشد، خرید این کالا به‌جای جنس، یک بن رزرو صادر می‌کند
   voucherKind    VoucherKind?
+  /// بن این کالا روی چه چیزی خرج می‌شود
+  voucherScope   VoucherScope @default(BOOKING)
   /// درصد تخفیف بن (۱ تا ۱۰۰). برای FREE_SESSION مقدارش ۱۰۰ است.
   voucherPercent Int?
   /// سقف تخفیف به ریال — بدون آن، یک بن ۱۰۰٪ روی گران‌ترین زمین هم کار می‌کند

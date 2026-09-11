@@ -84,6 +84,9 @@ export const POINTS_TX_LABEL: Record<PointsTxType, string> = {
   BOOKING_PAYMENT: 'پرداخت رزرو با امتیاز',
   BOOKING_REFUND: 'بازگشت امتیاز رزرو',
   CONVERTED_TO_WALLET: 'تبدیل به موجودی کیف پول',
+  BOOKING_REWARD: 'پاداش وفاداری رزرو',
+  BOOKING_REWARD_REVERSAL: 'پس‌گرفتن پاداش رزرو لغوشده',
+  VOUCHER_GIFT: 'هدیه‌دادن بن',
 };
 
 /** بخش‌های فروشگاه */
@@ -181,6 +184,8 @@ export const NOTIFICATION_ICON: Record<NotificationType, string> = {
   BOOKING_REMINDER: 'booking',
   TOURNAMENT_ANNOUNCED: 'tournament',
   ADMIN_MESSAGE: 'admin',
+  VOUCHER_GIFT_RECEIVED: 'points',
+  VOUCHER_EXPIRING: 'points',
   GENERAL: 'notification',
 };
 

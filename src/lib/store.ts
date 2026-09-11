@@ -4,7 +4,7 @@ import { prisma } from './db';
 import { AppError } from './api';
 import { mutateWallet } from './wallet';
 import { mutatePoints } from './points';
-import { issueVoucher } from './point-economy';
+import { getPointEconomy, issueVoucher } from './point-economy';
 import { notify } from './notifications';
 import { formatToman, generateBookingCode } from './utils';
 import { toFaDigits } from './datetime';
@@ -55,6 +55,32 @@ export async function purchase(input: PurchaseInput) {
          جلویش را می‌گیریم. */
       if (product.voucherKind && input.quantity !== 1) {
         throw new AppError('بنِ رزرو فقط تکی قابل خرید است.', 400);
+      }
+
+      /* ---- سقف ماهانه‌ی بن ----
+         بدون سقف، بازیکنی که امتیاز زیاد جمع کرده می‌توانست یک ماه کامل
+         را رایگان بازی کند و ظرفیت زمین‌ها را از بقیه بگیرد. شمارش از روی
+         تاریخ صدور است، نه تاریخ مصرف. */
+      if (product.voucherKind) {
+        const economy = await getPointEconomy();
+        if (economy.maxVouchersPerMonth > 0) {
+          const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+          const bought = await tx.bookingVoucher.count({
+            where: {
+              userId: input.userId,
+              createdAt: { gte: monthAgo },
+              /* بنی که هدیه گرفته‌ای سهمیه‌ات را نمی‌سوزاند */
+              giftedFromId: null,
+              status: { not: 'CANCELLED' },
+            },
+          });
+          if (bought >= economy.maxVouchersPerMonth) {
+            throw new AppError(
+              `در هر ۳۰ روز حداکثر ${toFaDigits(economy.maxVouchersPerMonth)} بن می‌توانید بخرید.`,
+              409,
+            );
+          }
+        }
       }
 
       const usePoints = input.method === 'POINTS';
@@ -126,6 +152,7 @@ export async function purchase(input: PurchaseInput) {
           maxDiscountRial: product.voucherMaxRial,
           pointsSpent: totalPoints,
           days: product.voucherDays ?? 30,
+          scope: product.voucherScope,
           productId: product.id,
         });
       }

@@ -31,9 +31,12 @@ export async function GET() {
         kind: true,
         percentOff: true,
         maxDiscountRial: true,
+        scope: true,
         status: true,
         expiresAt: true,
         usedAt: true,
+        giftedAt: true,
+        giftedFrom: { select: { profile: { select: { firstName: true, lastName: true } } } },
       },
     });
 
@@ -44,9 +47,13 @@ export async function GET() {
         kind: v.kind,
         percentOff: v.percentOff,
         maxDiscountRial: v.maxDiscountRial ? v.maxDiscountRial.toString() : null,
+        scope: v.scope,
         status: v.status,
         expiresAt: v.expiresAt.toISOString(),
         usedAt: v.usedAt ? v.usedAt.toISOString() : null,
+        giftedFrom: v.giftedFrom
+          ? `${v.giftedFrom.profile?.firstName ?? ''} ${v.giftedFrom.profile?.lastName ?? ''}`.trim()
+          : null,
       })),
     });
   } catch (error) {

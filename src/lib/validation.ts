@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { normalizePhone } from './utils';
 import { toEnDigits } from './datetime';
+import { isValidCardNumber, isValidIban, normalizeDigits, normalizeIban } from './bank';
 
 const LEVELS = [
   'A_PLUS','A','A_MINUS','B_PLUS','B','B_MINUS',
@@ -283,6 +284,53 @@ export const storePurchaseSchema = z.object({
     errorMap: () => ({ message: 'روش پرداخت معتبر نیست.' }),
   }),
 });
+
+/* ------------------------------------------------------------------ */
+/*  هدیه‌دادن بن                                                        */
+/* ------------------------------------------------------------------ */
+
+export const giftVoucherSchema = z.object({
+  code: z.string().trim().min(3, 'کد بن نامعتبر است.').max(40),
+  /** گیرنده را با شماره موبایلش پیدا می‌کنیم — یکتاست و همه بلدند */
+  phone: zPhone,
+  message: z.string().trim().max(120).optional(),
+});
+
+/* ------------------------------------------------------------------ */
+/*  اطلاعات بانکی                                                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * حداقل یکی از «شماره کارت» یا «شبا» باید پر باشد؛ فرمِ خالی معنا ندارد.
+ * درستیِ خودِ رقم‌ها (لون و mod-97) در `lib/bank.ts` سنجیده می‌شود و اینجا
+ * دوباره فراخوانده می‌شود تا هیچ مسیری بدون اعتبارسنجی نماند.
+ */
+export const bankAccountSchema = z
+  .object({
+    holderName: zPersianName,
+    cardNumber: z
+      .string()
+      .trim()
+      .transform((v) => normalizeDigits(v))
+      .refine((v) => v === '' || isValidCardNumber(v), {
+        message: 'شماره کارت معتبر نیست. ۱۶ رقم را دقیق وارد کنید.',
+      })
+      .optional()
+      .or(z.literal('')),
+    iban: z
+      .string()
+      .trim()
+      .transform((v) => normalizeIban(v))
+      .refine((v) => v === '' || isValidIban(v), {
+        message: 'شماره شبا معتبر نیست. ۲۴ رقم پس از IR را بررسی کنید.',
+      })
+      .optional()
+      .or(z.literal('')),
+  })
+  .refine((v) => (v.cardNumber && v.cardNumber !== '') || (v.iban && v.iban !== ''), {
+    message: 'دست‌کم یکی از شماره کارت یا شبا را وارد کنید.',
+    path: ['cardNumber'],
+  });
 
 export const storeProductSchema = z
   .object({

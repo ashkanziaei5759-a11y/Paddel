@@ -5,6 +5,7 @@ import { AppError } from './api';
 import { mutateWallet } from './wallet';
 import { mutatePoints } from './points';
 import {
+  assertVoucherHourAllowed,
   getPointEconomy,
   lockVoucherForUse,
   rialToPoints,
@@ -287,7 +288,14 @@ export async function createBooking(input: CreateBookingInput) {
         const voucher = await lockVoucherForUse(tx, {
           code: input.voucherCode,
           userId: input.userId,
+          for: 'BOOKING',
         });
+        const economy = await getPointEconomy();
+        assertVoucherHourAllowed(
+          voucher,
+          priced.map((p) => p.startsAt),
+          economy.voucherLatestHour,
+        );
         const discount = voucherDiscount(voucher, payable);
 
         await tx.bookingVoucher.update({
@@ -328,6 +336,23 @@ export async function createBooking(input: CreateBookingInput) {
             bookingId: created.id,
             performedBy: input.performedBy,
           });
+
+          /* ---- پاداش وفاداری ----
+             فقط روی پولِ واقعاً پرداخت‌شده. اگر بابت رزروی که با امتیاز یا
+             با بن انجام شده هم امتیاز می‌دادیم، یک چرخه‌ی بی‌پایان درست
+             می‌شد: امتیاز → رزرو رایگان → امتیاز بیشتر. */
+          const economy = await getPointEconomy();
+          const reward = rialToPoints(payable, economy.rialPerRewardPoint);
+          if (reward > 0) {
+            await mutatePoints(tx, {
+              userId: input.userId,
+              amount: reward,
+              type: 'BOOKING_REWARD',
+              description: `پاداش رزرو ${court.name}`,
+              referenceKey: `booking:${created.id}:reward`,
+              metadata: { bookingId: created.id, paidRial: payable.toString() },
+            });
+          }
         }
       }
 
