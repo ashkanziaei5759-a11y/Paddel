@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { Dot } from '@/components/ui/Dot';
 import { formatJalaliDate, formatTime, toFaDigits } from '@/lib/datetime';
 import { cn, formatToman } from '@/lib/utils';
+import { API_TIMEOUT, ApiError, apiFetch, errorMessage } from '@/lib/client/api';
 
 interface SlotDto {
   startsAt: string;
@@ -212,13 +213,10 @@ export function BookingFlow({
   useEffect(() => {
     if (!confirmOpen) return;
     let alive = true;
-    fetch('/api/vouchers')
-      .then((r) => r.json())
-      .then((j) => {
-        if (!alive || !j.ok) return;
-        setVouchers(
-          (j.data.vouchers as VoucherDto[]).filter((v) => v.status === 'ACTIVE'),
-        );
+    apiFetch<{ vouchers: VoucherDto[] }>('/api/vouchers')
+      .then((d) => {
+        if (!alive) return;
+        setVouchers(d.vouchers.filter((v) => v.status === 'ACTIVE'));
       })
       .catch(() => undefined);
     return () => {
@@ -230,9 +228,9 @@ export function BookingFlow({
     if (!courtId) return;
     setSubmitting(true);
     try {
-      const res = await fetch('/api/bookings', {
+      const data = await apiFetch<{ id: string }>('/api/bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        timeoutMs: API_TIMEOUT.money,
         body: JSON.stringify({
           courtId,
           slots: orderedTimes,
@@ -240,24 +238,21 @@ export function BookingFlow({
           payWithPoints: payWithPoints || undefined,
         }),
       });
-      const json = await res.json();
-
-      if (!res.ok || !json.ok) {
-        toast.error(json.error || 'ثبت رزرو ناموفق بود.');
-        if (json.code === 'SLOT_TAKEN') {
-          setConfirmOpen(false);
-          await load();
-          setStep('time');
-        }
-        return;
-      }
 
       toast.success('رزرو شما با موفقیت ثبت شد');
       setConfirmOpen(false);
-      router.push(`/bookings/${json.data.id}`);
+      router.push(`/bookings/${data.id}`);
       router.refresh();
-    } catch {
-      toast.error('ارتباط با سرور برقرار نشد.');
+    } catch (error) {
+      toast.error(errorMessage(error) || 'ثبت رزرو ناموفق بود.');
+
+      /* سانس را همین لحظه نفر دیگری گرفت: فهرست را تازه کن و کاربر را به
+         مرحله‌ی انتخاب ساعت برگردان، وگرنه دوباره روی همان سانس می‌زند. */
+      if (error instanceof ApiError && error.code === 'SLOT_TAKEN') {
+        setConfirmOpen(false);
+        await load();
+        setStep('time');
+      }
     } finally {
       setSubmitting(false);
     }

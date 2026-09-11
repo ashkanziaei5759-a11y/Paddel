@@ -5,6 +5,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { toEnDigits, toFaDigits } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
+import { API_TIMEOUT, apiFetch, errorMessage } from '@/lib/client/api';
 
 const PRESETS = [200_000, 500_000, 1_000_000, 2_000_000];
 
@@ -23,20 +24,16 @@ export function TopupPanel() {
     }
     setLoading(true);
     try {
-      const res = await fetch('/api/payments/topup', {
+      /* مهلت بلندتر: ساختن تراکنش یعنی یک تماس با درگاه بانکی، و درگاه‌های
+         داخلی گاهی کند پاسخ می‌دهند. ولی بی‌نهایت هم منتظر نمی‌مانیم. */
+      const data = await apiFetch<{ redirectUrl: string }>('/api/payments/topup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        timeoutMs: API_TIMEOUT.money,
         body: JSON.stringify({ amountToman: effective }),
       });
-      const json = await res.json();
-
-      if (!res.ok || !json.ok) {
-        toast.error(json.error || 'ایجاد تراکنش ناموفق بود.');
-        return;
-      }
-      window.location.href = json.data.redirectUrl;
-    } catch {
-      toast.error('ارتباط با سرور برقرار نشد.');
+      window.location.href = data.redirectUrl;
+    } catch (error) {
+      toast.error(errorMessage(error) || 'ایجاد تراکنش ناموفق بود.');
       setLoading(false);
     }
   }

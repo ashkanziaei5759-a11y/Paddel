@@ -12,6 +12,7 @@ import { Segmented } from '@/components/ui/Segmented';
 import { STORE_CATEGORY_LABEL } from '@/lib/constants';
 import { toFaDigits } from '@/lib/datetime';
 import { cn, formatNumber, formatToman } from '@/lib/utils';
+import { API_TIMEOUT, apiFetch, errorMessage } from '@/lib/client/api';
 
 export interface ProductDto {
   id: string;
@@ -73,17 +74,11 @@ export function MarketView({
     if (!active) return;
     setLoading(true);
     try {
-      const res = await fetch('/api/store', {
+      await apiFetch('/api/store', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        timeoutMs: API_TIMEOUT.money,
         body: JSON.stringify({ productId: active.id, quantity: qty, method }),
       });
-      const json = await res.json();
-
-      if (!res.ok || !json.ok) {
-        toast.error(json.error || 'ثبت سفارش ناموفق بود.');
-        return;
-      }
 
       toast.success(
         active.voucherKind
@@ -94,8 +89,8 @@ export function MarketView({
       setActive(null);
       if (wasVoucher) router.push('/vouchers');
       else router.refresh();
-    } catch {
-      toast.error('ارتباط با سرور برقرار نشد.');
+    } catch (error) {
+      toast.error(errorMessage(error) || 'ثبت سفارش ناموفق بود.');
     } finally {
       setLoading(false);
     }
