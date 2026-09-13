@@ -13,7 +13,7 @@
  */
 
 import { PrismaClient, type PlayerLevel } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { hashPassword } from './auth/password';
 
 /** گزارش پیشرفت — در خط فرمان روی کنسول، در API داخل پاسخ برمی‌گردد */
 export type Logger = (line: string) => void;
@@ -86,7 +86,7 @@ export async function runSeed(prisma: PrismaClient, log: Logger = () => {}) {
     update: { role: 'ADMIN' },
     create: {
       username: adminUsername,
-      passwordHash: await bcrypt.hash(adminPassword, 12),
+      passwordHash: await hashPassword(adminPassword),
       phone: adminPhone,
       phoneVerifiedAt: new Date(),
       role: 'ADMIN',
@@ -142,7 +142,7 @@ export async function runSeed(prisma: PrismaClient, log: Logger = () => {}) {
   log(`✅ ${COURTS.length} زمین با قیمت‌گذاری ساعات پرتقاضا آماده شد`);
 
   // ---- ۴. بازیکنان نمونه ----
-  const playerPassword = await bcrypt.hash('Player@12345', 12);
+  const playerPassword = await hashPassword('Player@12345');
   const players = [];
 
   for (const p of SAMPLE_PLAYERS) {
