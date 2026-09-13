@@ -100,6 +100,9 @@ check Install.ps1
 check Install-Service.ps1
 check Install-IIS.ps1
 check Setup-SSL.ps1
+check Set-Gateway.ps1
+check Backup-Database.ps1
+check Update-App.ps1
 [ "$fail" -eq 0 ] || { echo; echo "بسته ناقص است."; exit 1; }
 
 step "فشرده‌سازی"

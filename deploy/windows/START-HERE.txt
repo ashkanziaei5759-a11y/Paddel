@@ -40,7 +40,9 @@
 
   [ ] رمز مدیر را عوض کنید (admin / Admin@12345)
   [ ] سرویس پیامک را در .env تنظیم کنید
-  [ ] درگاه پرداخت را وصل کنید
+  [ ] درگاه پرداخت را وصل کنید:
+        .\Set-Gateway.ps1 -Provider zarinpal -Key "کد-مرچنت"
+        .\Set-Gateway.ps1 -Provider zibal    -Key "کد-مرچنت"
   [ ] پشتیبان‌گیری خودکار را روشن کنید:
         .\Backup-Database.ps1 -InstallSchedule
 
