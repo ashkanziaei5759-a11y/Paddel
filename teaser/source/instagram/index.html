@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<style>
+@font-face{font-family:Dana;src:url(DanaFaNum-Light.ttf) format('truetype');font-weight:300}
+@font-face{font-family:Dana;src:url(DanaFaNum-Regular.ttf) format('truetype');font-weight:400}
+@font-face{font-family:Dana;src:url(DanaFaNum-Bold.ttf) format('truetype');font-weight:700 900}
+:root{--navy:#001a2c;--blue:#0B5F87;--amber:#FCA311;--sky:#CAF0F8;--red:#ff5d5d}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:var(--navy);font-family:Dana,sans-serif;color:#fff}
+.layer{position:absolute;inset:0}
+.amber{color:var(--amber)}
+#bg{background:
+  radial-gradient(800px 900px at 50% 72%, rgba(11,95,135,.6), transparent 70%),
+  radial-gradient(700px 600px at 90% 10%, rgba(0,69,106,.65), transparent 70%),
+  radial-gradient(600px 500px at 5% 40%, rgba(252,163,17,.10), transparent 70%),
+  linear-gradient(170deg,#00121f 0%,#002438 55%,#013a57 100%)}
+#grid{opacity:.14;background-image:linear-gradient(rgba(202,240,248,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(202,240,248,.35) 1px,transparent 1px);
+  background-size:72px 72px;-webkit-mask-image:radial-gradient(900px 1100px at 50% 60%,#000 20%,transparent 75%)}
+
+/* S1 mosaic */
+.col{position:absolute;top:0;width:350px}
+.col img{display:block;width:350px;height:525px;object-fit:cover;margin-bottom:14px;border-radius:26px}
+.scrimV{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,18,31,.2) 0%,rgba(0,18,31,.55) 35%,rgba(0,18,31,.92) 62%,rgba(0,18,31,.97) 100%)}
+.hookB{position:absolute;left:70px;right:70px;top:1020px;text-align:center}
+.hookB h1{font-size:112px;font-weight:900;line-height:1.3}
+.hookB p{font-size:46px;margin-top:26px;color:var(--sky)}
+
+/* S2 pains */
+#s2bg{position:absolute;inset:-40px;background:url(court-3.jpg) center/cover;filter:blur(14px) brightness(.35)}
+#s2 h1{position:absolute;left:70px;right:70px;top:330px;text-align:center;font-size:92px;font-weight:900;line-height:1.35}
+.pain{position:absolute;left:110px;right:110px;height:150px;border-radius:36px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+  display:flex;align-items:center;gap:30px;padding:0 44px;font-size:46px;font-weight:700;backdrop-filter:blur(8px)}
+.pain b{flex:none;display:grid;place-items:center;width:74px;height:74px;border-radius:50%;background:rgba(255,93,93,.18);color:var(--red);font-size:40px;border:2px solid rgba(255,93,93,.6)}
+
+/* S3 reveal */
+#logoWrap{position:absolute;left:0;right:0;top:560px;text-align:center}
+#logoImg{width:300px;height:300px;border-radius:72px;box-shadow:0 40px 100px rgba(0,0,0,.5)}
+.ring{position:absolute;left:50%;top:710px;width:340px;height:340px;margin:-170px 0 0 -170px;border-radius:50%;border:4px solid var(--amber)}
+#brand{font-size:34px;letter-spacing:.5em;margin-top:56px;color:var(--sky);font-weight:700;direction:ltr}
+#brandFa{font-size:120px;font-weight:900;margin-top:6px}
+#brandTag{font-size:52px;font-weight:700;margin-top:10px;line-height:1.5}
+#byline{position:absolute;left:0;right:0;top:1470px;text-align:center;font-size:36px;color:rgba(255,255,255,.75)}
+#byline b{color:#fff}
+
+/* phone */
+#stage{position:absolute;left:50%;top:640px;width:590px;height:1260px;margin-left:-295px;perspective:2400px}
+#phone{position:absolute;inset:0;border-radius:82px;background:linear-gradient(145deg,#2a3440,#0b1015 60%,#222c36);padding:16px;
+  box-shadow:0 70px 140px rgba(0,0,0,.6),0 0 0 2px rgba(255,255,255,.07) inset,0 0 0 1px #000}
+#screen{position:relative;width:100%;height:100%;border-radius:67px;overflow:hidden;background:#0d1720}
+#screen img{position:absolute;left:0;top:62px;width:100%;height:calc(100% - 62px);object-fit:cover;object-position:top}
+#sbar{position:absolute;left:0;right:0;top:0;height:62px;background:#101b25;z-index:3;display:flex;align-items:center;justify-content:space-between;padding:10px 50px 0;font-size:21px;font-weight:700;direction:ltr}
+#island{position:absolute;top:28px;left:50%;width:134px;height:38px;margin-left:-67px;border-radius:22px;background:#000;z-index:5}
+#glow{position:absolute;left:540px;top:1300px;width:1100px;height:1100px;margin:-550px 0 0 -550px;border-radius:50%;
+  background:radial-gradient(circle,rgba(11,140,200,.55),rgba(11,95,135,.18) 45%,transparent 70%)}
+
+/* feature text (top) */
+.feat{position:absolute;left:70px;right:70px;top:190px;text-align:center}
+.kick{display:inline-flex;align-items:center;gap:14px;padding:12px 30px 12px 14px;border-radius:40px;background:rgba(252,163,17,.14);border:1px solid rgba(252,163,17,.45);font-size:30px;font-weight:700;color:var(--amber)}
+.kick b{display:inline-grid;place-items:center;width:48px;height:48px;border-radius:50%;background:var(--amber);color:#1b1300;font-size:26px}
+.feat h2{font-size:84px;font-weight:900;line-height:1.28;margin-top:24px}
+.chips{display:flex;flex-wrap:wrap;gap:14px;margin-top:26px;justify-content:center}
+.chip{padding:13px 26px;border-radius:22px;background:rgba(255,255,255,.08);border:1px solid rgba(202,240,248,.2);font-size:32px;font-weight:700}
+.chip i{font-style:normal;color:var(--amber);margin-left:10px}
+
+/* outro */
+#oLogo{position:absolute;left:50%;top:230px;width:190px;height:190px;margin-left:-95px;border-radius:48px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+#oTitle{position:absolute;left:0;right:0;top:440px;text-align:center;font-size:110px;font-weight:900}
+#oTag{position:absolute;left:60px;right:60px;top:615px;text-align:center;font-size:58px;font-weight:900;line-height:1.4}
+#oList{position:absolute;left:0;right:0;top:820px;display:flex;flex-wrap:wrap;justify-content:center;gap:14px;padding:0 90px}
+#cta{position:absolute;left:90px;right:90px;top:960px;padding:34px 40px 38px;border-radius:40px;text-align:center;
+  background:linear-gradient(135deg,#FCA311,#E08C05);color:#1b1300;box-shadow:0 24px 70px rgba(252,163,17,.38)}
+#cta .l1{font-size:42px;font-weight:900}
+#cta .num{font-size:96px;font-weight:900;letter-spacing:.04em;line-height:1.25;margin-top:6px;direction:ltr}
+#cta .name{font-size:40px;font-weight:700;opacity:.85}
+#amaria{position:absolute;left:0;right:0;top:1330px;text-align:center}
+#amaria .lbl{font-size:30px;color:rgba(255,255,255,.65);margin-bottom:22px}
+.am{display:inline-block;direction:rtl}
+.am .row{display:flex;align-items:flex-end;justify-content:center;gap:34px}
+.am .bars{direction:ltr;display:flex;align-items:flex-end;gap:12px;height:150px;padding-bottom:26px}
+.am .bars i{display:block;width:30px;border-radius:3px}
+.am .word{font-size:190px;font-weight:900;line-height:1;color:#fff;letter-spacing:-.01em}
+.am .tag{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:22px;font-size:30px;font-weight:700;color:#dfe8f1;white-space:nowrap}
+.am .tag s{text-decoration:none;color:#d9262e;font-weight:900}
+.am .tag u{display:block;width:90px;height:3px;background:currentColor;opacity:.8;text-decoration:none}
+#flash{background:#fff}
+#vign{background:radial-gradient(1000px 1500px at 50% 50%,transparent 60%,rgba(0,0,0,.45))}
+</style>
+</head>
+<body>
+<div id="bg" class="layer"></div>
+<div id="grid" class="layer"></div>
+
+<!-- S1 -->
+<div id="s1" class="layer">
+  <div id="c1" class="col" style="left:-110px"><img src="p1.jpg"><img src="p6.jpg"><img src="p3.jpg"><img src="p8.jpg"><img src="p1.jpg"></div>
+  <div id="c2" class="col" style="left:365px"><img src="p7.jpg"><img src="p2.jpg"><img src="p10.jpg"><img src="p5.jpg"><img src="p7.jpg"></div>
+  <div id="c3" class="col" style="left:840px"><img src="p9.jpg"><img src="p4.jpg"><img src="p6.jpg"><img src="p3.jpg"><img src="p9.jpg"></div>
+  <div class="scrimV"></div>
+  <div class="hookB">
+    <h1 id="s1a">صاحب<br><span class="amber">زمین پدل</span> هستی؟</h1>
+    <p id="s1b">این ویدیو مخصوص توئه</p>
+  </div>
+</div>
+
+<!-- S2 -->
+<div id="s2" class="layer">
+  <div id="s2bg"></div>
+  <h1 id="s2h">هنوز باشگاهت رو<br><span class="amber">دستی</span> مدیریت می‌کنی؟</h1>
+  <div class="pain" id="pn1" style="top:760px"><b>✕</b>رزرو با تماس و واتس‌اپ</div>
+  <div class="pain" id="pn2" style="top:940px"><b>✕</b>سانس‌های خالی و بی‌برنامه</div>
+  <div class="pain" id="pn3" style="top:1120px"><b>✕</b>حساب‌وکتاب با دفترچه</div>
+  <div class="pain" id="pn4" style="top:1300px"><b>✕</b>پیدا نکردن هم‌بازی برای مشتری‌ها</div>
+</div>
+
+<!-- S3 -->
+<div id="s3" class="layer">
+  <div id="ring1" class="ring"></div><div id="ring2" class="ring"></div>
+  <div id="logoWrap">
+    <img id="logoImg" src="logo-256.png">
+    <div id="brand">PERSIAN PADEL</div>
+    <div id="brandFa">پرشین پدل</div>
+    <div id="brandTag">نرم‌افزار جامع<br><span class="amber">مدیریت باشگاه پدل</span></div>
+  </div>
+  <div id="byline">محصولی از <b>شرکت آماریا</b></div>
+</div>
+
+<!-- phone -->
+<div id="glow"></div>
+<div id="stage"><div id="phone"><div id="screen">
+  <img id="imA"><img id="imB"><div id="sbar"><span>۹:۴۱</span><span style="letter-spacing:4px;font-size:16px">▮▮▮ ◔ ▭</span></div><div id="island"></div>
+</div></div></div>
+
+<!-- features -->
+<div id="f0" class="feat"><div class="kick"><b>★</b>پنل مدیریت</div>
+  <h2>همه‌چیز باشگاه<br><span class="amber">زیر نظر خودت</span></h2>
+  <div class="chips"><div class="chip"><i>●</i>درآمد لحظه‌ای</div><div class="chip"><i>●</i>آمار رزرو و کاربران</div></div></div>
+<div id="f1" class="feat"><div class="kick"><b>۱</b>رزرو آنلاین</div>
+  <h2>مشتری‌هات خودشون<br><span class="amber">آنلاین رزرو می‌کنن</span></h2>
+  <div class="chips"><div class="chip"><i>●</i>۲۴ ساعته</div><div class="chip"><i>●</i>پرداخت آنلاین</div><div class="chip"><i>●</i>بدون تماس تلفنی</div></div></div>
+<div id="f2" class="feat"><div class="kick"><b>۲</b>مدیریت رزروها</div>
+  <h2>رزرو و لغو،<br><span class="amber">بدون دردسر</span></h2>
+  <div class="chips"><div class="chip"><i>●</i>جریمه‌ی لغو خودکار</div><div class="chip"><i>●</i>بازگشت وجه به کیف پول</div></div></div>
+<div id="f3" class="feat"><div class="kick"><b>۳</b>قیمت‌گذاری هوشمند</div>
+  <h2>ساعت پرتقاضا،<br><span class="amber">قیمت متفاوت</span></h2>
+  <div class="chips"><div class="chip"><i>●</i>قوانین قیمت زمانی</div><div class="chip"><i>●</i>مدیریت چند زمین</div></div></div>
+<div id="f4" class="feat"><div class="kick"><b>۴</b>فروشگاه باشگاه</div>
+  <h2>فروشگاه آنلاین،<br><span class="amber">درآمد بیشتر</span></h2>
+  <div class="chips"><div class="chip"><i>●</i>راکت، توپ و پوشاک</div><div class="chip"><i>●</i>پرداخت با کیف پول یا امتیاز</div><div class="chip"><i>●</i>مدیریت سفارش‌ها</div></div></div>
+<div id="f5" class="feat"><div class="kick"><b>۵</b>جامعه‌ی بازیکنان</div>
+  <h2>بازیکن بیشتر،<br><span class="amber">زمین پُرتر</span></h2>
+  <div class="chips"><div class="chip"><i>●</i>بازی‌های باز</div><div class="chip"><i>●</i>تورنومنت و رنکینگ</div></div></div>
+<div id="f6" class="feat"><div class="kick"><b>۶</b>اعلان و بازاریابی</div>
+  <h2>پیام و تخفیف<br><span class="amber">با یک کلیک</span></h2>
+  <div class="chips"><div class="chip"><i>●</i>اعلان به همه‌ی بازیکنان</div><div class="chip"><i>●</i>پر کردن سانس‌های خالی</div></div></div>
+<div id="f7" class="feat"><div class="kick"><b>۷</b>گزارش مالی</div>
+  <h2>حساب‌وکتاب<br><span class="amber">دقیق و خودکار</span></h2>
+  <div class="chips"><div class="chip"><i>●</i>درآمد و بازگشت وجه</div><div class="chip"><i>●</i>مقایسه با دوره‌ی قبل</div></div></div>
+
+<!-- outro -->
+<div id="outro" class="layer">
+  <img id="oLogo" src="logo-256.png">
+  <div id="oTitle">پرشین پدل</div>
+  <div id="oTag">اپ اختصاصی باشگاهت رو<br><span class="amber">همین حالا داشته باش</span></div>
+  <div id="oList"><div class="chip">رزرو</div><div class="chip">فروشگاه</div><div class="chip">تورنومنت</div><div class="chip">کیف پول</div><div class="chip">گزارش مالی</div></div>
+  <div id="cta"><div class="l1">برای دموی رایگان تماس بگیرید</div><div class="num">۰۹۱۳ ۴۵۷ ۵۷۵۹</div><div class="name">اشکان ضیایی</div></div>
+  <div id="amaria"><div class="lbl">طراحی و توسعه: شرکت آماریا</div>
+    <div class="am" id="amLogo"><div class="row"><div class="word">آمـاریا</div><div class="bars"><i style="height:32px;background:#16a99a"></i><i style="height:62px;background:#16a99a"></i><i style="height:98px;background:#2a6b7d"></i><i style="height:140px;background:#c8202a"></i></div></div>
+      <div class="tag"><u></u>تحلیل داده <s style="color:#16a99a">|</s> هوش تجاری <s>|</s> رشد هوشمند<u></u></div></div></div>
+</div>
+
+<div id="vign" class="layer"></div>
+<div id="flash" class="layer" style="opacity:0"></div>
+
+<script>
+const FPS=30;
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ramp=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3);
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const back=x=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const $=id=>document.getElementById(id);
+const T={s1:[0,4.05],s2:[4.05,8.05],s3:[8.05,12.05],f0:[12.05,16.05],f1:[16.05,22.05],f2:[22.05,26.05],f3:[26.05,30.05],f4:[30.05,36.05],f5:[36.05,40.05],f6:[40.05,44.05],f7:[44.05,48.05],out:[48.05,55.5]};
+const FEATS=['f0','f1','f2','f3','f4','f5','f6','f7'];
+window.CLIPS={};
+const show=(id,on)=>{$(id).style.display=on?'block':'none'};
+const inR=(t,[a,b])=>t>=a-.01&&t<b+.01;
+function pop(el,t,a,d=.6,dy=50){const e=eo(ramp(t,a,a+d));el.style.opacity=e;el.style.transform=`translateY(${(1-e)*dy}px)`;return e;}
+
+async function render(t){
+  $('grid').style.backgroundPosition=`${t*10}px ${t*14}px`;
+  // S1 mosaic
+  show('s1',inR(t,T.s1));
+  if(inR(t,T.s1)){const o=ramp(t,3.65,4.05);$('s1').style.opacity=ramp(t,0,.3)*(1-o);
+    $('c1').style.transform=`translateY(${-60-t*70}px) rotate(-4deg)`;$('c2').style.transform=`translateY(${-700+t*70}px) rotate(-4deg)`;$('c3').style.transform=`translateY(${-160-t*70}px) rotate(-4deg)`;
+    const h=eo(ramp(t,.3,1.0));$('s1a').style.opacity=h;$('s1a').style.transform=`scale(${.8+.2*back(h)})`;pop($('s1b'),t,1.1);}
+  // S2 pains
+  show('s2',inR(t,T.s2));
+  if(inR(t,T.s2)){const [a,b]=T.s2;$('s2').style.opacity=1-ramp(t,b-.35,b);$('s2bg').style.transform=`scale(${1.05+(t-a)*.02})`;
+    pop($('s2h'),t,a+.1,.6,60);['pn1','pn2','pn3','pn4'].forEach((id,k)=>{const e=eo(ramp(t,a+.7+k*.5,a+1.2+k*.5));$(id).style.opacity=e;$(id).style.transform=`translateX(${(1-e)*-240}px)`;});}
+  // S3 reveal
+  show('s3',inR(t,T.s3));
+  if(inR(t,T.s3)){const [a,b]=T.s3;const o=ramp(t,b-.35,b);$('s3').style.opacity=1-o;
+    const l=ramp(t,a+.05,a+.75);$('logoImg').style.transform=`scale(${back(l)*(1+o*.3)}) rotate(${(1-eo(l))*-25}deg)`;$('logoImg').style.opacity=l>0?1:0;
+    [['ring1',.1],['ring2',.35]].forEach(([id,d])=>{const r=ramp(t,a+d,a+d+1.4);$(id).style.transform=`scale(${1+eo(r)*2.2})`;$(id).style.opacity=(1-r)*(r>0?.9:0);});
+    pop($('brand'),t,a+.55);pop($('brandFa'),t,a+.75);pop($('brandTag'),t,a+1.0);pop($('byline'),t,a+1.6);
+    $('brand').style.letterSpacing=`${.85-.35*eo(ramp(t,a+.55,a+1.6))}em`;}
+
+  // phone
+  const pa=T.f0[0],pb=T.f7[1],pon=inR(t,[pa,pb]);
+  show('stage',pon);show('glow',pon);
+  if(pon){const e=eo(ramp(t,pa,pa+.9)),x=eio(ramp(t,pb-.5,pb));
+    $('stage').style.opacity=clamp(e*1.5)*(1-x);
+    $('phone').style.transform=`translateY(${(1-e)*1100+Math.sin(t*1.6)*10+x*400}px) rotateX(${6+Math.sin(t*.6)*2}deg) rotateY(${Math.sin(t*.7)*6}deg)`;
+    const beat=((t-0.05)%0.5+0.5)%0.5,pulse=t>=16.05?Math.exp(-beat*7)*.35:0;
+    $('glow').style.opacity=(0.75+pulse)*(1-x)*e;$('glow').style.transform=`scale(${1+pulse*.25})`;
+    let cur=FEATS.findIndex(f=>t>=T[f][0]&&t<T[f][1]);if(cur<0)cur=t<pa?0:FEATS.length-1;
+    const f=FEATS[cur],[a]=T[f],frames=CLIPS[f];const i=Math.min(frames.length-1,Math.max(0,Math.floor((t-a)*FPS)));
+    const A=$('imA'),B=$('imB'),tr=ramp(t,a,a+.35);
+    if(A.getAttribute('src')!==frames[i])A.setAttribute('src',frames[i]);
+    if(cur>0&&tr<1){const pf=CLIPS[FEATS[cur-1]],ps=pf[pf.length-1];if(B.getAttribute('src')!==ps)B.setAttribute('src',ps);
+      const k=eio(tr);B.style.display='block';B.style.transform=`translateX(${k*105}%)`;A.style.transform=`translateX(${(k-1)*105}%)`;}
+    else{B.style.display='none';A.style.transform='none';}
+    const ds=[A];if(B.style.display!=='none')ds.push(B);
+    await Promise.all(ds.map(im=>im.complete&&im.naturalWidth?Promise.resolve():im.decode().catch(()=>{})));}
+  FEATS.forEach(f=>{const el=$(f),[a,b]=T[f],on=inR(t,[a,b]);el.style.display=on?'block':'none';
+    if(on){const parts=[el.querySelector('.kick'),el.querySelector('h2'),...el.querySelectorAll('.chip')];
+      parts.forEach((p,k)=>{const i=eo(ramp(t,a+.12+k*.09,a+.72+k*.09)),o=ramp(t,b-.35,b);p.style.opacity=i*(1-o);p.style.transform=`translateY(${(1-i)*50-o*30}px)`;});}});
+
+  // outro
+  {const [a,b]=T.out,on=t>=a-.01;show('outro',on);
+   if(on){const l=ramp(t,a+.2,a+.9);$('oLogo').style.opacity=l>0?1:0;$('oLogo').style.transform=`scale(${back(l)})`;
+    pop($('oTitle'),t,a+.45);pop($('oTag'),t,a+.75);
+    [...$('oList').children].forEach((c,k)=>pop(c,t,a+1.05+k*.08,.5,30));
+    const c=ramp(t,a+1.4,a+2.1);$('cta').style.opacity=c>0?1:0;$('cta').style.transform=`scale(${t>a+2.2?1+Math.sin((t-a)*4)*.015:back(c)})`;
+    pop($('amaria'),t,a+2.3,.7);
+    document.body.style.filter=`brightness(${1-ramp(t,b-.6,b)})`;} else document.body.style.filter='none';}
+  let fl=0;for(const [ft,s] of [[8.05,.55],[16.05,.7],[32.05,.3],[48.05,.5]]){if(t>=ft)fl=Math.max(fl,s*Math.exp(-(t-ft)*9));}
+  $('flash').style.opacity=fl;
+}
+window.render=render;
+</script>
+</body>
+</html>
