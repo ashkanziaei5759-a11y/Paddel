@@ -35,13 +35,13 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--navy);font
 .pain b{flex:none;display:grid;place-items:center;width:74px;height:74px;border-radius:50%;background:rgba(255,93,93,.18);color:var(--red);font-size:40px;border:2px solid rgba(255,93,93,.6)}
 
 /* S3 reveal */
-#logoWrap{position:absolute;left:0;right:0;top:560px;text-align:center}
+#logoWrap{position:absolute;left:0;right:0;top:470px;text-align:center}
 #logoImg{width:300px;height:300px;border-radius:72px;box-shadow:0 40px 100px rgba(0,0,0,.5)}
-.ring{position:absolute;left:50%;top:710px;width:340px;height:340px;margin:-170px 0 0 -170px;border-radius:50%;border:4px solid var(--amber)}
-#brand{font-size:34px;letter-spacing:.5em;margin-top:56px;color:var(--sky);font-weight:700;direction:ltr}
-#brandFa{font-size:120px;font-weight:900;margin-top:6px}
-#brandTag{font-size:52px;font-weight:700;margin-top:10px;line-height:1.5}
-#byline{position:absolute;left:0;right:0;top:1470px;text-align:center;font-size:36px;color:rgba(255,255,255,.75)}
+.ring{position:absolute;left:50%;top:620px;width:340px;height:340px;margin:-170px 0 0 -170px;border-radius:50%;border:4px solid var(--amber)}
+#brand{font-size:40px;margin-top:56px;color:var(--sky);font-weight:700}
+#brandFa{font-size:124px;font-weight:900;margin-top:10px;line-height:1.2}
+#brandTag{font-size:46px;font-weight:700;margin-top:22px;line-height:1.5;color:rgba(255,255,255,.9)}
+#byline{position:absolute;left:0;right:0;top:1500px;text-align:center;font-size:36px;color:rgba(255,255,255,.75)}
 #byline b{color:#fff}
 
 /* phone */
@@ -66,7 +66,7 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--navy);font
 
 /* outro */
 #oLogo{position:absolute;left:50%;top:230px;width:190px;height:190px;margin-left:-95px;border-radius:48px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
-#oTitle{position:absolute;left:0;right:0;top:440px;text-align:center;font-size:110px;font-weight:900}
+#oTitle{position:absolute;left:0;right:0;top:455px;text-align:center;font-size:92px;font-weight:900}
 #oTag{position:absolute;left:60px;right:60px;top:615px;text-align:center;font-size:58px;font-weight:900;line-height:1.4}
 #oList{position:absolute;left:0;right:0;top:820px;display:flex;flex-wrap:wrap;justify-content:center;gap:14px;padding:0 90px}
 #cta{position:absolute;left:90px;right:90px;top:960px;padding:34px 40px 38px;border-radius:40px;text-align:center;
@@ -118,10 +118,10 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--navy);font
 <div id="s3" class="layer">
   <div id="ring1" class="ring"></div><div id="ring2" class="ring"></div>
   <div id="logoWrap">
-    <img id="logoImg" src="logo-256.png">
-    <div id="brand">PERSIAN PADEL</div>
-    <div id="brandFa">پرشین پدل</div>
-    <div id="brandTag">نرم‌افزار جامع<br><span class="amber">مدیریت باشگاه پدل</span></div>
+    <img id="logoImg" src="appicon.svg">
+    <div id="brand">معرفی می‌کنیم</div>
+    <div id="brandFa">اپ هوشمند<br><span class="amber">زمین پدل</span></div>
+    <div id="brandTag">نرم‌افزار جامع مدیریت باشگاه پدل</div>
   </div>
   <div id="byline">محصولی از <b>شرکت آماریا</b></div>
 </div>
@@ -160,8 +160,8 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:var(--navy);font
 
 <!-- outro -->
 <div id="outro" class="layer">
-  <img id="oLogo" src="logo-256.png">
-  <div id="oTitle">پرشین پدل</div>
+  <img id="oLogo" src="appicon.svg">
+  <div id="oTitle">اپ هوشمند زمین پدل</div>
   <div id="oTag">اپ اختصاصی باشگاهت رو<br><span class="amber">همین حالا داشته باش</span></div>
   <div id="oList"><div class="chip">رزرو</div><div class="chip">فروشگاه</div><div class="chip">تورنومنت</div><div class="chip">کیف پول</div><div class="chip">گزارش مالی</div></div>
   <div id="cta"><div class="l1">برای دموی رایگان تماس بگیرید</div><div class="num">۰۹۱۳ ۴۵۷ ۵۷۵۹</div><div class="name">اشکان ضیایی</div></div>
@@ -205,7 +205,7 @@ async function render(t){
     const l=ramp(t,a+.05,a+.75);$('logoImg').style.transform=`scale(${back(l)*(1+o*.3)}) rotate(${(1-eo(l))*-25}deg)`;$('logoImg').style.opacity=l>0?1:0;
     [['ring1',.1],['ring2',.35]].forEach(([id,d])=>{const r=ramp(t,a+d,a+d+1.4);$(id).style.transform=`scale(${1+eo(r)*2.2})`;$(id).style.opacity=(1-r)*(r>0?.9:0);});
     pop($('brand'),t,a+.55);pop($('brandFa'),t,a+.75);pop($('brandTag'),t,a+1.0);pop($('byline'),t,a+1.6);
-    $('brand').style.letterSpacing=`${.85-.35*eo(ramp(t,a+.55,a+1.6))}em`;}
+    }
 
   // phone
   const pa=T.f0[0],pb=T.f7[1],pon=inR(t,[pa,pb]);
