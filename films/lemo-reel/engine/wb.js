@@ -344,6 +344,7 @@ export class Board {
     this.tl = tl; this.W = o.W ?? 8000; this.H = o.H ?? 4500; this.ghosts = o.ghosts || []; this.warp = o.warp || null; this.texScale = o.texScale ?? .9;
     this.ink = new OffscreenCanvas(SW, SH); this.ig = this.ink.getContext('2d');
     this.nt = noiseTile(7); this.bt = boardTile(11);
+    this.under = [];                                // {draw(ctx, t, c, board)} ink-like layers drawn right after the ink
     this.objs = [];                                 // {draw(ctx, t, cam)} in world, drawn after ink
     this.overlays = [];                             // {draw(ctx, t, cam)} in screen space
   }
@@ -383,6 +384,7 @@ export class Board {
       if (s.epoch > ep) flushErasers(s.epoch);
       const b = s.box; if (b[2] < vx0 || b[0] > vx1 || b[3] < vy0 || b[1] > vy1) continue;
       if (s.hide && s.hide(t)) continue;
+      if (!s.alpha) continue;                       // invisible guide paths (a pen's route over set text)
       const L = s.prog(t) * s.len;
       if (s.clip) { ig.save(); ig.beginPath(); ig.roundRect(...s.clip); ig.clip(); }
       ig.globalAlpha = s.alpha; ig.fillStyle = s.color || INK.black; ig.beginPath(); ribbon(ig, s, L, 1); ig.fill();
@@ -398,6 +400,7 @@ export class Board {
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(this.ink, 0, 0); ctx.restore();
+    for (const o of this.under) { ctx.save(); o.draw(ctx, t, c, this); ctx.restore(); }   // extra ink (e.g. set Persian text), under the sheen
     // specular sheen: a soft window reflection that drifts slower than the board (sells the gloss)
     ctx.save(); applyCam(ctx, c); ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
     ctx.setTransform(1, 0, 0, 1, 0, 0);

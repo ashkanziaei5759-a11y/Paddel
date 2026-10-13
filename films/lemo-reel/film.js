@@ -22,7 +22,7 @@ export async function build(timing) {
   const B3 = new W.Pen('blue3', INK.blue, { park: [-160, 900] });
   const PENS = [K, B, O, B2, B3];
   const T = W.text, D = (pen, shapes, a, b, o = {}) => tl.draw(pen, shapes, a, { by: b, ...o });
-  const CX = 1100, LX = 640, RX = 1560;            // board centre column, left/right content edges
+  const CX = 1100, RX = 1560;                      // board centre column; RX = the step rail (right side, RTL)
   const BW = 2200, BH = 8400;
 
   // ghost marks of old lessons
@@ -36,34 +36,46 @@ export async function build(timing) {
     else ghosts.push(W.line(x, y, x + 160 + gR() * 420, y + (gR() - .5) * 70, o));
   }
   const strikes = [];                              // for the sound: strike-throughs get their own scratch
-  const word = (pen, str, x, y, h, a, b, o = {}) => D(pen, T(str, x, y, { h, align: 'center', ...o }), a, b);
 
-  // ═════════ R1 · HOOK (0–6): Camera, Editor, Footage written and struck; a big 0 is left
-  const R1 = [{ s: 'CAMERA', y: 740 }, { s: 'EDITOR', y: 960 }, { s: 'FOOTAGE', y: 1180 }];
-  const wH = 104;
+  // ───────── Persian lettering. No single-line Persian font exists, so words are set in Vazirmatn on an ink layer
+  // (multiply + dry-marker texture) and revealed right to left behind a floating pen that rides an invisible path.
+  const FA = [], mctx = new OffscreenCanvas(8, 8).getContext('2d');
+  const faW = (str, size, wt) => { mctx.font = `${wt} ${size}px Vazirmatn`; mctx.direction = 'rtl'; return mctx.measureText(str).width; };
+  const faText = (pen, str, x, y, size, a, b, o = {}) => {
+    const wt = o.wt ?? 600, w = faW(str, size, wt), al = o.align ?? 'center';
+    const xr = al === 'center' ? x + w / 2 : al === 'right' ? x : x + w, xl = xr - w;
+    const pts = [], n = Math.max(4, Math.round(w / (size * .3)));
+    for (let i = 0; i <= n; i++) pts.push(xr - w * i / n, y - size * (.26 + .14 * Math.sin(i * 2.1)));
+    const st = new W.Stroke(pts, { w: 4, jitter: 0, alpha: 0, kind: 'text' });
+    tl.draw(pen, st, a, { by: b });
+    const f = { s: str, xr, xl, y, size, wt, color: o.color || pen.color, st }; FA.push(f); return f;
+  };
+
+  // ═════════ R1 · HOOK (0–6): «دوربین»، «ادیتور»، «فوتیج» written and struck; a big 0 is left
+  const R1 = [{ s: 'دوربین', y: 760 }, { s: 'ادیتور', y: 985 }, { s: 'فوتیج', y: 1210 }];
+  const wS = 150;
   R1.forEach((r, i) => {
     const [w0, w1, s0, s1] = A.hook[i];            // write window, strike window
-    word(K, r.s, CX, r.y, wH, w0, w1);
-    const half = T(r.s, CX, r.y, { h: wH, align: 'center' }).width / 2 + 34;
-    const st = W.line(CX - half, r.y - wH * .42 + 10, CX + half, r.y - wH * .5 - 6, { w: 15 + i * 2, over: 18, bow: .02 });
+    const f = faText(K, r.s, CX, r.y, wS, w0, w1);
+    const half = (f.xr - f.xl) / 2 + 40;
+    const st = W.line(CX + half, r.y - wS * .2 - 4, CX - half, r.y - wS * .26 + 8, { w: 15 + i * 2, over: 18, bow: .02 });   // struck right → left
     D(K, st, s0, s1); strikes.push(st);
   });
   const [z0, z1] = A.zero;
   const zero = [W.circle(CX, 960, 235, { ry: 345, w: 40, lap: .5, a0: -1.75, dir: -1 })];
   D(O, zero, z0, z1);
 
-  // ═════════ R2 · INTRO (6.5–17): ride the line down to the title; 39 styles arrive as magnets
+  // ═════════ R2 · INTRO (6.5–17): ride the line down to the open-source mark and the title; 39 styles arrive as magnets
   const lead = W.curve([[CX, 1340], [CX - 60, 1520], [CX + 40, 1700], [CX, 1810]], { w: 9 });
   D(B, lead, A.zero[1] + .02, A.open[0]);
   const tH = 120, tY = 2330;
-  // open-source mark: </> plus a little branch graph
   const [os0, os1] = A.open;
   const osY = 1990;
-  D(B, T('</>', CX - 190, osY, { h: 100, align: 'center' }), os0 + .02, lerp(os0, os1, .45));
-  const nodes = [[CX + 80, osY - 90], [CX + 80, osY + 10], [CX + 230, osY - 40]];
-  D(K, [W.line(nodes[0][0], nodes[0][1], nodes[1][0], nodes[1][1], { w: 8 }), W.curve([[nodes[0][0], nodes[0][1] + 25], [nodes[2][0] - 10, nodes[2][1] - 60], nodes[2]], { w: 8 }),
+  const nodes = [[CX - 230, osY - 40], [CX - 80, osY - 90], [CX - 80, osY + 10]];
+  D(K, [W.line(nodes[1][0], nodes[1][1], nodes[2][0], nodes[2][1], { w: 8 }), W.curve([[nodes[1][0], nodes[1][1] + 25], [nodes[0][0] + 10, nodes[0][1] - 60], nodes[0]], { w: 8 }),
     ...nodes.map(([x, y]) => W.circle(x, y, 22, { w: 8 }))], lerp(os0, os1, .45), os1);
-  D(B, T('open source', CX, osY + 115, { h: 46, align: 'center' }), lerp(os0, os1, .45) + .03, os1 + .1);
+  D(B, T('</>', CX + 190, osY, { h: 100, align: 'center' }), os0 + .02, lerp(os0, os1, .45));
+  faText(B, 'متن‌باز', CX, osY + 130, 66, lerp(os0, os1, .45) + .03, os1 + .1, { wt: 600 });
   const parts = [['Lemo-', K], ['O', O], ['puscar', K]];
   const ws = parts.map(([s]) => T(s, 0, 0, { h: tH }).width), tot = ws.reduce((a, b) => a + b, 0);
   let tx = CX - tot / 2;
@@ -72,73 +84,75 @@ export async function build(timing) {
     const a = lerp(ti0, ti1, ws.slice(0, i).reduce((p, q) => p + q, 0) / tot), b = lerp(ti0, ti1, ws.slice(0, i + 1).reduce((p, q) => p + q, 0) / tot);
     D(pen, T(s, tx, tY, { h: tH }), a, b - .02); tx += ws[i];
   });
-  // 39
+  // ۳۹ سبک (read right to left: the number, then the word)
   const [n0, n1] = A.n39;
-  D(O, T('39', CX - 150, 3020, { h: 330, align: 'center', w: 30 }), n0, n1);
-  D(K, T('styles', CX + 300, 3010, { h: 86, align: 'center' }), n1 + .02, n1 + .55);
-  // style magnets: hero five, then the burst
+  const f39 = faText(O, '۳۹', CX + 150, 3040, 400, n0, n1, { wt: 700 });
+  faText(K, 'سبک', CX - 250, 3030, 130, n1 + .02, n1 + .55);
+  // style magnets: hero five (first on the right), then the burst
   const mags = [];
   const heroIcons = ['watercolor', 'pictogram', 'silent', 'pixel', 'whiteboard'];
-  heroIcons.forEach((ic, i) => mags.push({ icon: ic, x: CX - 440 + i * 220, y: 3330, r: 84, t: A.styles[i], hero: 1 }));
+  heroIcons.forEach((ic, i) => mags.push({ icon: ic, x: CX + 440 - i * 220, y: 3330, r: 84, t: A.styles[i], hero: 1 }));
   const burstIcons = ['star', 'brush', 'umbrella', 'cube', 'leaf', 'ghost', 'game', 'wave', 'sun', 'rocket', 'note', 'scissors', 'moon', 'brick'];
   const [b0, b1] = A.burst;
-  const slots = [];                                // left and right columns beside the content, then a row below it
-  for (let j = 0; j < 5; j++) { const y = 2230 + j * 300; slots.push([CX - 700 - (j % 2) * 140, y], [CX + 700 + ((j + 1) % 2) * 140, y + 150]); }
-  slots.push([CX - 330, 3540], [CX - 110, 3580], [CX + 110, 3540], [CX + 330, 3580]);
+  const slots = [];                                // right and left columns beside the content, then a row below it
+  for (let j = 0; j < 5; j++) { const y = 2230 + j * 300; slots.push([CX + 700 + (j % 2) * 140, y], [CX - 700 - ((j + 1) % 2) * 140, y + 150]); }
+  slots.push([CX + 330, 3540], [CX + 110, 3580], [CX - 110, 3540], [CX - 330, 3580]);
   burstIcons.forEach((ic, i) => mags.push({ icon: ic, x: slots[i][0], y: slots[i][1], r: 60, t: b0 + (b1 - b0) * (i / (burstIcons.length - 1)) ** .8, hero: 0 }));
   for (const m of mags) tl.cue(m.t, 'magnet', { x: Math.round(m.x), y: Math.round(m.y), hero: m.hero });
 
-  // ═════════ R3 · HOW IT WORKS (17.5–32)
+  // ═════════ R3 · HOW IT WORKS (17.5–32), laid out right to left: numbers on a rail at the right
   const [h0, h1] = A.how;
-  const hY = 4330;
-  D(K, T('How it works', CX, hY, { h: 96, align: 'center' }), h0, h1);
-  D(B, W.line(CX - 420, hY + 38, CX + 420, hY + 30, { w: 10, over: 14 }), h1 + .02, h1 + .32);
-  D(B, W.dashed([[LX, 4500], [LX, 6260]], { w: 6, dash: 30, gap: 30, alpha: .7 }), h1 + .3, h1 + 1.0, { minGap: .005, maxGap: .01 });
-  const num = (n, y, a) => { D(K, W.circle(LX, y, 54, { w: 9, lap: .25 }), a, a + .3); D(K, T(String(n), LX, y + 27, { h: 58, align: 'center' }), a + .3, a + .52); };
-  // ① copy a link → paste into the Claude Code terminal
+  const hY = 4340;
+  faText(K, 'چطور کار می‌کنه؟', CX, hY, 112, h0, h1);
+  D(B, W.line(CX + 430, hY + 46, CX - 430, hY + 40, { w: 10, over: 14 }), h1 + .02, h1 + .32);
+  D(B, W.dashed([[RX, 4500], [RX, 6260]], { w: 6, dash: 30, gap: 30, alpha: .7 }), h1 + .3, h1 + 1.0, { minGap: .005, maxGap: .01 });
+  const num = (n, y, a) => { D(K, W.circle(RX, y, 54, { w: 9, lap: .25 }), a, a + .3); faText(K, n, RX, y + 30, 78, a + .3, a + .52); };
+  const L0 = CX - 470, R0 = CX + 330;              // content spans L0…R0 (800 wide), left of the rail
+  // ۱ copy a link → paste into the Claude Code terminal
   const S1 = A.step1, y1 = 4680;
-  num(1, y1, S1[0]);
-  const pill = [W.roundRect(LX + 130, y1 - 60, 800, 120, 58, { w: 8 })];
-  const chain = [W.roundRect(LX + 170, y1 - 22, 70, 40, 20, { w: 7, color: INK.blue }), W.roundRect(LX + 215, y1 - 18, 70, 40, 20, { w: 7, color: INK.blue })];
+  num('۱', y1, S1[0]);
+  const pill = [W.roundRect(L0, y1 - 60, 800, 120, 58, { w: 8 })];
+  const chain = [W.roundRect(R0 - 110, y1 - 22, 70, 40, 20, { w: 7, color: INK.blue }), W.roundRect(R0 - 155, y1 - 18, 70, 40, 20, { w: 7, color: INK.blue })];
   D(K, pill, S1[0] + .54, S1[0] + .92); D(B, chain, S1[0] + .92, S1[0] + 1.15);
-  D(K, T('lemo-opuscar', LX + 320, y1 + 17, { h: 50 }), S1[0] + .95, S1[1]);
-  // copy: a blue copy glyph flicks on, then the arrow carries it down into the terminal
-  const cp = [W.roundRect(LX + 860, y1 - 34, 44, 52, 8, { w: 6 }), W.roundRect(LX + 874, y1 - 20, 44, 52, 8, { w: 6 })];
+  D(K, T('lemo-opuscar', R0 - 180, y1 + 17, { h: 50, align: 'right' }), S1[0] + .95, S1[1]);
+  // copy: a blue copy glyph flicks on at the end of the link, then the arrow carries it down into the terminal
+  const cp = [W.roundRect(L0 + 30, y1 - 34, 44, 52, 8, { w: 6 }), W.roundRect(L0 + 44, y1 - 20, 44, 52, 8, { w: 6 })];
   D(B, cp, S1[1] + .02, S1[1] + .35);
-  const tm = { x: LX + 130, y: y1 + 150, w: 800, h: 330 };
-  D(B, W.arrow(LX + 880, y1 + 70, LX + 700, tm.y + 150, { w: 8, curve: [LX + 880, y1 + 200], head: 28 }), S1[1] + .36, S1[2] + .2);
+  const tm = { x: L0, y: y1 + 150, w: 800, h: 330 };
+  D(B, W.arrow(L0 + 60, y1 + 70, L0 + 240, tm.y + 150, { w: 8, curve: [L0 + 40, y1 + 200], head: 28 }), S1[1] + .36, S1[2] + .2);
   D(K, [W.roundRect(tm.x, tm.y, tm.w, tm.h, 26, { w: 9 }), W.line(tm.x + 6, tm.y + 70, tm.x + tm.w - 6, tm.y + 70, { w: 7 })], S1[2] - .5, S1[2] + .2);
   D(K, [0, 1, 2].map(i => W.circle(tm.x + 44 + i * 40, tm.y + 36, 9, { w: 6 })), S1[2] + .2, S1[2] + .45);
   D(K, T('Claude Code', tm.x + tm.w / 2 + 50, tm.y + 52, { h: 34, align: 'center' }), S1[2] + .45, S1[2] + .95);
   D(B, T('>', tm.x + 50, tm.y + 185, { h: 60 }), S1[3] - .25, S1[3]);
   D(B, [W.roundRect(tm.x + 120, tm.y + 130, 520, 76, 36, { w: 7 }), ...T('lemo-opuscar', tm.x + 160, tm.y + 185, { h: 40 })], S1[3], S1[4]);
   D(B, T('↓', tm.x + 700, tm.y + 205, { h: 60 }), S1[4], S1[4] + .25);
-  // ② pick a style · tell the story
+  // ۲ pick a style · tell the story
   const S2 = A.step2, y2 = 5340;
-  num(2, y2, S2[0]);
-  const thumbs = [0, 1, 2, 3].map(i => ({ x: LX + 140 + i * 205, y: y2 - 95, s: 160 }));
+  num('۲', y2, S2[0]);
+  const thumbs = [0, 1, 2, 3].map(i => ({ x: R0 - 160 - i * 213, y: y2 - 95, s: 160 }));
   D(K, thumbs.map(q => W.roundRect(q.x, q.y, q.s, q.s, 18, { w: 7 })), S2[0] + .45, S2[1]);
   const doodle = [
     q => [W.curve([[q.x + 80, q.y + 30], [q.x + 50, q.y + 85], [q.x + 60, q.y + 120], [q.x + 80, q.y + 128], [q.x + 100, q.y + 120], [q.x + 110, q.y + 85], [q.x + 80, q.y + 30]], { w: 6 })],
     q => [W.circle(q.x + 80, q.y + 45, 16, { w: 6 }), W.line(q.x + 80, q.y + 62, q.x + 80, q.y + 105, { w: 6 }), W.line(q.x + 50, q.y + 80, q.x + 110, q.y + 80, { w: 6 }), W.line(q.x + 80, q.y + 105, q.x + 58, q.y + 135, { w: 6 }), W.line(q.x + 80, q.y + 105, q.x + 102, q.y + 135, { w: 6 })],
     q => [W.poly([[q.x + 40, q.y + 115], [q.x + 80, q.y + 40], [q.x + 120, q.y + 115], [q.x + 40, q.y + 115]], { w: 6 }), W.circle(q.x + 110, q.y + 45, 12, { w: 6 })],
-    q => [W.curve([[q.x + 30, q.y + 90], [q.x + 55, q.y + 60], [q.x + 80, q.y + 90], [q.x + 105, q.y + 120], [q.x + 130, q.y + 90]], { w: 6 }), W.curve([[q.x + 30, q.y + 120], [q.x + 55, q.y + 95], [q.x + 80, q.y + 120], [q.x + 105, q.y + 140], [q.x + 130, q.y + 120]], { w: 6 })],
+    q => [W.curve([[q.x + 130, q.y + 90], [q.x + 105, q.y + 60], [q.x + 80, q.y + 90], [q.x + 55, q.y + 120], [q.x + 30, q.y + 90]], { w: 6 }), W.curve([[q.x + 130, q.y + 120], [q.x + 105, q.y + 95], [q.x + 80, q.y + 120], [q.x + 55, q.y + 140], [q.x + 30, q.y + 120]], { w: 6 })],
   ];
   D(B, thumbs.map((q, i) => doodle[i](q)), S2[1], S2[1] + .7);
   const pk = thumbs[2];
   D(O, W.circle(pk.x + pk.s / 2, pk.y + pk.s / 2, 118, { w: 12, lap: .35 }), S2[2], S2[2] + .45);
-  const bb = { x: LX + 160, y: y2 + 130, w: 760, h: 230 };
-  const bubble = new W.Stroke([bb.x + 40, bb.y, bb.x + bb.w - 40, bb.y, bb.x + bb.w, bb.y + 40, bb.x + bb.w, bb.y + bb.h - 40, bb.x + bb.w - 40, bb.y + bb.h,
-    bb.x + 190, bb.y + bb.h, bb.x + 110, bb.y + bb.h + 70, bb.x + 130, bb.y + bb.h, bb.x + 40, bb.y + bb.h, bb.x, bb.y + bb.h - 40, bb.x, bb.y + 40, bb.x + 40, bb.y, bb.x + 60, bb.y], { w: 9, smooth: 2, wav: 400 });
+  const bb = { x: L0 + 40, y: y2 + 130, w: 760, h: 230 }, mxb = x => 2 * bb.x + bb.w - x;   // speech bubble, tail on the right
+  const bpts = [bb.x + 40, bb.y, bb.x + bb.w - 40, bb.y, bb.x + bb.w, bb.y + 40, bb.x + bb.w, bb.y + bb.h - 40, bb.x + bb.w - 40, bb.y + bb.h,
+    bb.x + 190, bb.y + bb.h, bb.x + 110, bb.y + bb.h + 70, bb.x + 130, bb.y + bb.h, bb.x + 40, bb.y + bb.h, bb.x, bb.y + bb.h - 40, bb.x, bb.y + 40, bb.x + 40, bb.y, bb.x + 60, bb.y];
+  const bubble = new W.Stroke(bpts.map((v, i) => i % 2 ? v : mxb(v)), { w: 9, smooth: 2, wav: 400 });
   D(K, bubble, S2[3], S2[3] + .6);
-  const wav = (y, len) => { const p = []; for (let i = 0; i <= 16; i++) p.push([bb.x + 70 + i * len / 16, y + Math.sin(i * 1.3) * 9]); return W.curve(p, { w: 7 }); };
+  const wav = (y, len) => { const p = []; for (let i = 0; i <= 16; i++) p.push([bb.x + bb.w - 70 - i * len / 16, y + Math.sin(i * 1.3) * 9]); return W.curve(p, { w: 7 }); };
   D(B, [wav(bb.y + 65, 600), wav(bb.y + 115, 560), wav(bb.y + 165, 380)], S2[3] + .65, S2[4]);
-  // ③ the agent works by itself: code → render → music, three pens tick at once
+  // ۳ the agent works by itself: code → render → music (right to left), three pens tick at once
   const S3 = A.step3, y3 = 6010;
-  num(3, y3, S3[0]);
-  const box = [0, 1, 2].map(i => ({ x: LX + 150 + i * 280, y: y3 - 90, w: 200, h: 170 }));
+  num('۳', y3, S3[0]);
+  const box = [0, 1, 2].map(i => ({ x: R0 - 200 - i * 280, y: y3 - 90, w: 200, h: 170 }));
   D(K, box.map(q => W.roundRect(q.x, q.y, q.w, q.h, 22, { w: 8 })), S3[0] + .45, S3[1] - .5);
-  D(K, [W.arrow(box[0].x + box[0].w + 12, y3 - 5, box[1].x - 12, y3 - 5, { w: 7, head: 20 }), W.arrow(box[1].x + box[1].w + 12, y3 - 5, box[2].x - 12, y3 - 5, { w: 7, head: 20 })], S3[1] - .5, S3[1]);
+  D(K, [W.arrow(box[0].x - 12, y3 - 5, box[1].x + box[1].w + 12, y3 - 5, { w: 7, head: 20 }), W.arrow(box[1].x - 12, y3 - 5, box[2].x + box[2].w + 12, y3 - 5, { w: 7, head: 20 })], S3[1] - .5, S3[1]);
   const q0 = box[0], q1 = box[1], q2 = box[2];
   D(B, T('{ }', q0.x + q0.w / 2, y3 + 25, { h: 80, align: 'center' }), S3[1], S3[1] + .4);
   D(B, W.poly([[q1.x + 75, y3 - 45], [q1.x + 140, y3 - 5], [q1.x + 75, y3 + 35], [q1.x + 75, y3 - 45]], { w: 8 }), S3[1] + .35, S3[1] + .65);
@@ -153,10 +167,7 @@ export async function build(timing) {
   D(K, W.roundRect(cb.x, cb.y, cb.w, cb.h, 120, { w: 10 }), E.box0, E.box0 + .55);
   D(K, [W.circle(cb.x + cb.w - 120, eY, 70, { w: 9, lap: .2 }), W.circle(cb.x + cb.w - 120, eY - 22, 24, { w: 7 }), W.arc(cb.x + cb.w - 120, eY + 50, 42, Math.PI * 1.15, Math.PI * 1.85, { w: 7 })], E.box0 + .5, E.box0 + .85);
   D(B, [W.poly([[cb.x + 150, eY - 50], [cb.x + 80, eY], [cb.x + 150, eY + 50], [cb.x + 128, eY], [cb.x + 150, eY - 50]], { w: 8 })], E.box0 + .85, E.box0 + 1.1);
-  // «ریپو» is set in Vazirmatn (no single-line Persian font exists) and revealed right to left by the orange pen
-  const fa = { x1: cb.x + cb.w - 230, x0: cb.x + cb.w - 230 - 360, y: eY + 40, size: 150 };
-  const faStroke = new W.Stroke([fa.x1, fa.y - 40, fa.x0, fa.y - 40], { w: 4, jitter: 0, alpha: 0 });
-  tl.draw(O, faStroke, E.word0, { by: E.word1 });
+  const fa = faText(O, 'ریپو', cb.x + cb.w - 230, eY + 40, 150, E.word0, E.word1, { wt: 800, align: 'right', color: '#da7d5e' });
   const tile = { x: CX - 420, y: eY + 250, w: 140, h: 122 };
   const logo = { x: tile.x + 66, y: tile.y + 60, s: 76, t: E.cc0 };    // the official Claude mark (Simple Icons path), on a magnet
   tl.cue(logo.t, 'magnet', { x: Math.round(logo.x), y: Math.round(logo.y), hero: 1 });
@@ -225,27 +236,35 @@ export async function build(timing) {
   const noPens = new URLSearchParams(location.search).has('nopens');
   const pose = (p, t) => (t > E.rw0 - .05 && t < E.ff1 + .05) ? null : W.penPose(p, t, cam);
   if (!noPens) board.objs.push({ draw: (ctx, t, c) => { for (const p of PENS) W.drawMarker(ctx, p, pose(p, t), c, t); } });
-  // the Persian word: real glyph shaping, revealed by the pen moving right → left
+  // Persian lettering layer: every set word is drawn source-over on its own layer (no seams where glyphs join),
+  // clipped by its pen's progress (right → left), given the dry-marker texture, then multiplied onto the board
   const faLayer = new OffscreenCanvas(SW, SH);
-  board.objs.push({
-    draw: (ctx, t, c) => {
-      if (t < E.word0) return;
-      const u = clamp(faStroke.prog(t));
-      // the word is set on its own layer first (source-over), then multiplied onto the board: no seams where glyphs join
-      const lg = faLayer.getContext('2d'); lg.setTransform(1, 0, 0, 1, 0, 0); lg.clearRect(0, 0, SW, SH); W.applyCam(lg, c);
-      const xr = lerp(fa.x1 + 30, fa.x0 - 30, u);
-      lg.beginPath(); lg.rect(xr, fa.y - 220, fa.x1 + 60 - xr, 330); lg.clip();
+  board.under.push({ draw: (ctx, t, c, bd) => {
+    const lg = faLayer.getContext('2d'); lg.setTransform(1, 0, 0, 1, 0, 0); lg.clearRect(0, 0, SW, SH);
+    let any = false;
+    for (const f of FA) {
+      const tt = warp(t, f.st); if (tt <= f.st.t0) continue;
+      const u = clamp(f.st.prog(tt)); any = true;
+      lg.save(); W.applyCam(lg, c);
+      const xc = lerp(f.xr + f.size * .12, f.xl - f.size * .12, u);
+      lg.beginPath(); lg.rect(xc, f.y - f.size * 1.4, f.xr + f.size * .4 - xc, f.size * 2.1); lg.clip();
       lg.direction = 'rtl'; lg.textAlign = 'right'; lg.textBaseline = 'alphabetic';
-      lg.font = `800 ${fa.size}px Vazirmatn`; lg.fillStyle = '#da7d5e';
-      lg.fillText('ریپو', fa.x1, fa.y);
-      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(faLayer, 0, 0); ctx.restore();
-      if (u >= 1 && Math.floor((t - E.word1) * 2.4) % 2 === 0) {   // blinking text cursor after the word (on its left, RTL)
-        ctx.save(); W.applyCam(ctx, c); ctx.globalAlpha = .85; ctx.fillStyle = INK.black;
-        ctx.fillRect(fa.x0 - 40, fa.y - 128, 10, 150); ctx.restore();
-      }
+      lg.font = `${f.wt} ${f.size}px Vazirmatn`; lg.fillStyle = f.color; lg.fillText(f.s, f.xr, f.y);
+      lg.restore();
     }
-  });
-
+    if (!any) return;
+    if (c.z > .3) {                                 // dry-marker speckle, locked to the board like the ink's
+      lg.save(); lg.globalCompositeOperation = 'destination-out'; W.applyCam(lg, c);
+      const np = lg.createPattern(bd.nt, 'repeat'); np.setTransform(new DOMMatrix().scale(bd.texScale)); lg.fillStyle = np;
+      lg.globalAlpha = clamp((c.z - .3) * 2) * .9; lg.fillRect(c.x - 4000, c.y - 4000, 8000, 8000); lg.restore();
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = .94; ctx.drawImage(faLayer, 0, 0);
+  } });
+  // blinking text cursor after «ریپو» in the comment box (on its left: RTL)
+  board.objs.push({ draw: (ctx, t, c) => {
+    if (t < E.word1 || Math.floor((t - E.word1) * 2.4) % 2) return;
+    ctx.save(); W.applyCam(ctx, c); ctx.globalAlpha = .85; ctx.fillStyle = INK.black; ctx.fillRect(fa.xl - 40, fa.y - 128, 10, 150); ctx.restore();
+  } });
 
   // ───────── frame render with camera motion blur
   const off = new OffscreenCanvas(SW, SH), oc = off.getContext('2d');
@@ -266,12 +285,13 @@ export async function build(timing) {
 
   // on-screen texts for readcheck (board words that must be readable)
   const box2 = (x0, y0, x1, y1, t) => { const c = cam.at(t), [ax, ay] = W.toScreen(c, x0, y0), [bx, by] = W.toScreen(c, x1, y1); return [ax, ay, bx, by]; };
+  const fb = f => [f.xl, f.y - f.size * .95, f.xr, f.y + f.size * .3];
   const TX = [
     { id: 'title', text: 'Lemo-Opuscar', t0: ti1, t1: 17.2, b: [CX - tot / 2, tY - tH, CX + tot / 2, tY + 10] },
-    { id: '39', text: '39 styles', t0: n1 + .55, t1: 17.2, b: [CX - 260, 2690, CX + 380, 3030] },
-    { id: 'how', text: 'How it works', t0: h1, t1: E.rw0, b: [CX - 440, hY - 100, CX + 440, hY + 30] },
+    { id: '39', text: '۳۹ سبک', t0: n1 + .55, t1: 17.2, b: [CX - 330, 2720, f39.xr, 3060] },
+    { id: 'how', text: 'چطور کار می‌کنه؟', t0: h1, t1: E.rw0, b: fb(FA.find(f => f.s.startsWith('چطور'))) },
     { id: 'cc', text: 'Claude Code', t0: E.cc1, t1: END, b: [tile.x, tile.y, tile.x + 1000, tile.y + 130] },
-    { id: 'repo', text: 'ریپو', t0: E.word1, t1: END, b: [fa.x0, fa.y - 150, fa.x1, fa.y + 40] },
+    { id: 'repo', text: 'ریپو', t0: E.word1, t1: END, b: fb(fa) },
   ];
   const texts = t => TX.filter(x => t >= x.t0 && t < x.t1).map(x => { const [x0, y0, x1, y1] = box2(...x.b, t); return { id: x.id, text: x.text, x0, y0, x1, y1 }; });
 
