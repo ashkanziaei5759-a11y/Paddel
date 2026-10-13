@@ -1,0 +1,22 @@
+Lemo-Opuscar reel (Sci-fi Hologram HUD) — vertical 9:16, 40 s
+Picture, score, foley and mix: made in code (film.js, sound.py). No generated video, no stock footage.
+
+Voice
+  The author's own recording (Persian), cleaned and edited (audio/enhance.sh, audio/edit.py).
+
+Images (shown on screen)
+  Gallery mosaic (docs/cover.jpg) and style frames (docs/frames/*.jpg) from the project's GitHub page,
+  github.com/lemomo-ai/lemo-opuscar — MIT License, Copyright (c) 2026 LemoLab (assets/LICENSE-lemo-opuscar.txt).
+Logo
+  Claude mark, vector path from Simple Icons (simple-icons 16.35.0, CC0 for the SVG data; the mark is a trademark of
+  Anthropic and is shown here to name the tool the film is about).
+
+Fonts
+  Vazirmatn — The Vazirmatn Project Authors, SIL Open Font License 1.1 (fonts/OFL-Vazirmatn.txt)
+  Rajdhani — Indian Type Foundry, SIL Open Font License 1.1 (fonts/rajdhani_OFL.txt)
+  Share Tech Mono — Carrois Apostrophe, SIL Open Font License 1.1 (fonts/sharetechmono_OFL.txt)
+
+Engine
+  Hologram wireframe and HUD helpers adapted from the Lemo-Opuscar library (styles/hologram-hud/demo/engine, MIT).
+Music and sound effects
+  Original, synthesized in sound.py (no samples).
