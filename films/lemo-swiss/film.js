@@ -55,7 +55,7 @@ export async function build(timing) {
   // ═════════ timing (film seconds), derived from the voice's word map
   const T = {
     grid0: .15,
-    words: [['دوربین', 'dorbin', 520], ['ادیتور', 'editor', 800], ['فوتیج', 'footage', 1080]].map(([s, k, y]) => ({ s, y, tin: q8(ws(k)), tcut: q8(we(k) + .1) })),
+    words: [['دوربین', 'dorbin', 620], ['ادیتور', 'editor', 880], ['فوتیج', 'footage', 1140]].map(([s, k, y]) => ({ s, y, tin: q8(ws(k)), tcut: q8(we(k) + .1) })),
     zero: 5.75, note: 6.0,
     pan1: 6.5, rule: 6.25, tag: q8(ws('matnbaz')), name: [q8(ws('lemo')), q8(ws('lemo') + .38)], n39: q8(ws('n39')), sabk: q8(ws('sabk')),
     pan2: 11.0, named: ['abrang', 'icon', 'silent', 'pixel', 'wb'].map(k => q8(ws(k))), more: q8(ws('more') + .1),
@@ -70,9 +70,11 @@ export async function build(timing) {
   const P = {};
   P.A = t => {                                                       // hook: three needs, knife-cut; a zero is left
     gridLines(t, T.grid0);
+    font(900, 112); reveal('فیلم', R, 330, 112, snap(t, q8(ws('film')), E8)); reveal('ساختم', R - tw('فیلم '), 330, 112, snap(t, q8(ws('film') + .42), E8));
+    hline(R, M, 376, lin(t, ws('film') + .3, ws('film') + .8));
     font(900, 210);
     for (const w of T.words) knifed(w.s, R, w.y, 210, snap(t, w.tin, E8), w.tcut, t);
-    if (t > 6.0) zeroGlyph(R - 250, 800, 470, C.g1);                 // the zero's print stays behind when the dot leaves
+    if (t > 6.0) zeroGlyph(R - 250, 860, 470, C.g1);                 // the zero's print stays behind when the dot leaves
     font(300, 26); hline(R, R - 560, 1262, snap(t, T.note, E8));
     reveal('۰ دوربین   ·   ۰ ادیتور   ·   ۰ ثانیه فوتیج', R, 1306, 26, snap(t, T.note + E16, E16), 0, C.g3);
   };
@@ -123,10 +125,7 @@ export async function build(timing) {
     hline(R, M, 376, lin(t, T.how + .4, T.how + .9));
     const nx = R - ruleNum('۱', t, T.link) - 40; font(900, 120);
     reveal('کپی', nx, 600, 120, snap(t, T.copy, E8)); reveal('پیست', nx, 740, 120, snap(t, T.paste, E8));
-    // the link: an ink bar with a chain glyph and a label
     const lb = { x: R - 620, y: 880, w: 620, h: 72 }, f = lin(t, T.link, T.link + .5);
-    wipeRect(lb.x, lb.y, lb.w, lb.h, f, C.ink);
-    if (f >= 1) { font(500, 32); g.fillStyle = C.paper; g.fillText('لینک ریپو', lb.x + lb.w - 90, lb.y + 47); g.strokeStyle = C.paper; g.lineWidth = 5; g.strokeRect(lb.x + lb.w - 66, lb.y + 24, 26, 22); g.strokeRect(lb.x + lb.w - 52, lb.y + 28, 26, 22); }
     const tb = { x: M, y: 1040, w: R - M, h: 270 }, tp = snap(t, T.term, E8);
     if (tp > 0) { g.fillStyle = C.ink; g.fillRect(tb.x, tb.y, tb.w, tb.h * tp);
       if (tp >= 1) { g.fillStyle = C.g3; g.fillRect(tb.x, tb.y + 64, tb.w, 1); font(500, 30); g.fillStyle = C.paper; g.fillText('کلاد کد', tb.x + tb.w - 28, tb.y + 44);
@@ -138,6 +137,9 @@ export async function build(timing) {
       const r = A0.map((v, i) => lerp(lerp(v, A1[i], cpy), B1[i], pst));
       g.fillStyle = pst >= 1 ? C.paper : C.g2; g.fillRect(...r);
     }
+    // the link: an ink bar with a chain glyph and a label
+    wipeRect(lb.x, lb.y, lb.w, lb.h, f, C.ink);
+    if (f >= 1) { font(500, 32); g.fillStyle = C.paper; g.fillText('لینک ریپو', lb.x + lb.w - 90, lb.y + 47); g.strokeStyle = C.paper; g.lineWidth = 5; g.strokeRect(lb.x + lb.w - 66, lb.y + 24, 26, 22); g.strokeRect(lb.x + lb.w - 52, lb.y + 28, 26, 22); }
   };
   P.E = t => {                                                       // rule ۲: pick a style, tell the story
     gridLines(t, T.pan4 - .25);
@@ -203,8 +205,8 @@ export async function build(timing) {
   // ═════════ the dot (the exception): world position and ink height, linear between keys
   const DK = [];
   const dk = (t, id, x, y, h) => { const [ox, oy] = org(id); DK.push([t, ox + x, oy + y, h]); };
-  dk(0, 'A', R - 250, 800, 0); dk(T.zero - .25, 'A', R - 250, 800, 0);
-  dk(6.0, 'A', R - 250, 800, 470);                                   // the giant zero (climbs in, below)
+  dk(0, 'A', R - 250, 860, 0); dk(T.zero - .25, 'A', R - 250, 860, 0);
+  dk(6.0, 'A', R - 250, 860, 470);                                   // the giant zero (climbs in, below)
   dk(6.45, 'B', M + 20, TOP, 26); dk(T.pan2 - .5, 'B', M + 20, TOP, 26);
   dk(T.pan2 + .4, 'C', M + 20, TOP - 48, 26); dk(T.pan3 - .5, 'C', M + 20, TOP - 48, 26);
   dk(T.pan3 + .4, 'D', M + 20, 140, 26); dk(T.paste, 'D', M + 20, 140, 26);
@@ -278,6 +280,7 @@ export async function build(timing) {
   }
 
   // ═════════ sound events (picture and sound share these numbers)
+  cue(q8(ws('film')) - E8, 'clack'); cue(q8(ws('film') + .42) - E8, 'clack'); cue(ws('film') + .3, 'tss', { dur: .5 });
   T.words.forEach(w => { cue(w.tin - E8, 'clack', { pan: .3 }); cue(w.tcut, 'snick', { pan: .3 }); });
   cue(T.grid0, 'tss', { dur: .9 }); cue(T.zero - .5, 'thunk4', { dur: .5 }); cue(T.zero, 'zero');
   [T.pan1, T.pan2, T.pan3, T.pan4, T.pan5].forEach(p => cue(p - BEAT, 'slide', { dur: BEAT }));
