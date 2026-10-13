@@ -5,13 +5,14 @@ import * as W from './engine/wb.js';
 import { clamp, lerp, TAU, mulberry } from '/core/lib.js';
 
 export const SW = 1080, SH = 1920;
-W.setScreen(SW, SH);
+W.setScreen(SW, SH, 820);                         // frame centre sits high: subtitles + Instagram UI below
 const { INK } = W;
 export const END = 40, BPM = 120, BEAT = .5;
 const BREATH = [[6.0, 6.5], [17.0, 17.5], [32.0, 32.5]];
 
 export async function build(timing) {
   await W.loadFont('tech', 'fonts/EMSTech.json');
+  const LOGO = new Path2D((await (await fetch('assets/claude-logo.svg')).text()).match(/ d="([^"]+)"/)[1]);   // Claude mark, Simple Icons
   const A = timing.anchors;                       // word anchors in film time (see audio/edit.py)
   const tl = new W.Timeline();
   const K = new W.Pen('black', INK.black, { park: [1180, 1500] });
@@ -52,9 +53,17 @@ export async function build(timing) {
   D(O, zero, z0, z1);
 
   // ═════════ R2 · INTRO (6.5–17): ride the line down to the title; 39 styles arrive as magnets
-  const lead = W.curve([[CX, 1360], [CX - 60, 1560], [CX + 40, 1760], [CX, 1880]], { w: 9 });
-  D(B, lead, 6.5, 7.05);
-  const tH = 138, tY = 2120;
+  const lead = W.curve([[CX, 1340], [CX - 60, 1520], [CX + 40, 1700], [CX, 1810]], { w: 9 });
+  D(B, lead, A.zero[1] + .02, A.open[0]);
+  const tH = 120, tY = 2330;
+  // open-source mark: </> plus a little branch graph
+  const [os0, os1] = A.open;
+  const osY = 1990;
+  D(B, T('</>', CX - 190, osY, { h: 100, align: 'center' }), os0 + .02, lerp(os0, os1, .45));
+  const nodes = [[CX + 80, osY - 90], [CX + 80, osY + 10], [CX + 230, osY - 40]];
+  D(K, [W.line(nodes[0][0], nodes[0][1], nodes[1][0], nodes[1][1], { w: 8 }), W.curve([[nodes[0][0], nodes[0][1] + 25], [nodes[2][0] - 10, nodes[2][1] - 60], nodes[2]], { w: 8 }),
+    ...nodes.map(([x, y]) => W.circle(x, y, 22, { w: 8 }))], lerp(os0, os1, .45), os1);
+  D(B, T('open source', CX, osY + 115, { h: 46, align: 'center' }), lerp(os0, os1, .45) + .03, os1 + .1);
   const parts = [['Lemo-', K], ['O', O], ['puscar', K]];
   const ws = parts.map(([s]) => T(s, 0, 0, { h: tH }).width), tot = ws.reduce((a, b) => a + b, 0);
   let tx = CX - tot / 2;
@@ -63,14 +72,6 @@ export async function build(timing) {
     const a = lerp(ti0, ti1, ws.slice(0, i).reduce((p, q) => p + q, 0) / tot), b = lerp(ti0, ti1, ws.slice(0, i + 1).reduce((p, q) => p + q, 0) / tot);
     D(pen, T(s, tx, tY, { h: tH }), a, b - .02); tx += ws[i];
   });
-  // open-source mark: </> plus a little branch graph
-  const [os0, os1] = A.open;
-  const osY = 2420;
-  D(B, T('</>', CX - 190, osY, { h: 100, align: 'center' }), os0, lerp(os0, os1, .45));
-  const nodes = [[CX + 80, osY - 90], [CX + 80, osY + 10], [CX + 230, osY - 40]];
-  D(K, [W.line(nodes[0][0], nodes[0][1], nodes[1][0], nodes[1][1], { w: 8 }), W.curve([[nodes[0][0], nodes[0][1] + 25], [nodes[2][0] - 10, nodes[2][1] - 60], nodes[2]], { w: 8 }),
-    ...nodes.map(([x, y]) => W.circle(x, y, 22, { w: 8 }))], lerp(os0, os1, .5), os1);
-  D(K, T('open source', CX, osY + 120, { h: 46, align: 'center' }), os1, os1 + .55);
   // 39
   const [n0, n1] = A.n39;
   D(O, T('39', CX - 150, 3020, { h: 330, align: 'center', w: 30 }), n0, n1);
@@ -83,7 +84,7 @@ export async function build(timing) {
   const [b0, b1] = A.burst;
   const slots = [];                                // left and right columns beside the content, then a row below it
   for (let j = 0; j < 5; j++) { const y = 2230 + j * 300; slots.push([CX - 700 - (j % 2) * 140, y], [CX + 700 + ((j + 1) % 2) * 140, y + 150]); }
-  slots.push([CX - 330, 3640], [CX - 110, 3700], [CX + 110, 3640], [CX + 330, 3700]);
+  slots.push([CX - 330, 3540], [CX - 110, 3580], [CX + 110, 3540], [CX + 330, 3580]);
   burstIcons.forEach((ic, i) => mags.push({ icon: ic, x: slots[i][0], y: slots[i][1], r: 60, t: b0 + (b1 - b0) * (i / (burstIcons.length - 1)) ** .8, hero: 0 }));
   for (const m of mags) tl.cue(m.t, 'magnet', { x: Math.round(m.x), y: Math.round(m.y), hero: m.hero });
 
@@ -99,13 +100,13 @@ export async function build(timing) {
   num(1, y1, S1[0]);
   const pill = [W.roundRect(LX + 130, y1 - 60, 800, 120, 58, { w: 8 })];
   const chain = [W.roundRect(LX + 170, y1 - 22, 70, 40, 20, { w: 7, color: INK.blue }), W.roundRect(LX + 215, y1 - 18, 70, 40, 20, { w: 7, color: INK.blue })];
-  D(K, pill, S1[0] + .5, S1[0] + 1.0); D(B, chain, S1[0] + 1.0, S1[0] + 1.3);
-  D(K, T('lemo-opuscar', LX + 320, y1 + 17, { h: 50 }), S1[0] + 1.3, S1[1]);
+  D(K, pill, S1[0] + .54, S1[0] + .92); D(B, chain, S1[0] + .92, S1[0] + 1.15);
+  D(K, T('lemo-opuscar', LX + 320, y1 + 17, { h: 50 }), S1[0] + .95, S1[1]);
   // copy: a blue copy glyph flicks on, then the arrow carries it down into the terminal
   const cp = [W.roundRect(LX + 860, y1 - 34, 44, 52, 8, { w: 6 }), W.roundRect(LX + 874, y1 - 20, 44, 52, 8, { w: 6 })];
   D(B, cp, S1[1] + .02, S1[1] + .35);
   const tm = { x: LX + 130, y: y1 + 150, w: 800, h: 330 };
-  D(B, W.arrow(LX + 880, y1 + 70, LX + 700, tm.y + 150, { w: 8, curve: [LX + 880, y1 + 200], head: 28 }), S1[1] + .4, S1[2]);
+  D(B, W.arrow(LX + 880, y1 + 70, LX + 700, tm.y + 150, { w: 8, curve: [LX + 880, y1 + 200], head: 28 }), S1[1] + .36, S1[2] + .2);
   D(K, [W.roundRect(tm.x, tm.y, tm.w, tm.h, 26, { w: 9 }), W.line(tm.x + 6, tm.y + 70, tm.x + tm.w - 6, tm.y + 70, { w: 7 })], S1[2] - .5, S1[2] + .2);
   D(K, [0, 1, 2].map(i => W.circle(tm.x + 44 + i * 40, tm.y + 36, 9, { w: 6 })), S1[2] + .2, S1[2] + .45);
   D(K, T('Claude Code', tm.x + tm.w / 2 + 50, tm.y + 52, { h: 34, align: 'center' }), S1[2] + .45, S1[2] + .95);
@@ -157,9 +158,9 @@ export async function build(timing) {
   const faStroke = new W.Stroke([fa.x1, fa.y - 40, fa.x0, fa.y - 40], { w: 4, jitter: 0, alpha: 0 });
   tl.draw(O, faStroke, E.word0, { by: E.word1 });
   const tile = { x: CX - 420, y: eY + 250, w: 140, h: 122 };
-  D(K, W.roundRect(tile.x, tile.y, tile.w, tile.h, 24, { w: 9 }), E.cc0, E.cc0 + .4);
-  D(O, T('>_', tile.x + tile.w / 2, tile.y + 92, { h: 64, align: 'center' }), E.cc0 + .4, E.cc0 + .7);
-  D(K, T('Claude Code', tile.x + tile.w + 36, tile.y + 98, { h: 74 }), E.cc0 + .72, E.cc1);
+  const logo = { x: tile.x + 66, y: tile.y + 60, s: 76, t: E.cc0 };    // the official Claude mark (Simple Icons path), on a magnet
+  tl.cue(logo.t, 'magnet', { x: Math.round(logo.x), y: Math.round(logo.y), hero: 1 });
+  D(K, T('Claude Code', tile.x + tile.w + 36, tile.y + 98, { h: 74 }), E.cc0 + .1, E.cc1);
   tl.end();
 
   // ───────── the board redrawing itself: strokes before 32 s rewind, then replay fast, with no pens
@@ -175,15 +176,15 @@ export async function build(timing) {
   // ───────── camera (x, y, zoom): a vertical board ridden top to bottom
   const FB = [CX, 4000, .215];                      // full-board view
   const cam = new W.Camera([
-    [0, CX, 960, 1.0], [A.zero[0], CX, 960, 1.14, 0, 's'], [6.5, CX, 980, 1.12, 0, 's'],
-    [7.05, CX, 1900, .78, 0, 'io'],                 // ride the blue line down to the title
-    [ti1 + .3, CX, 2250, .74, 0, 's'],
-    [n0 - .1, CX, 2850, .80, 0, 'io'],              // pan down to the 39 and the magnets
-    [b0 - .15, CX, 2980, .84, 0, 's'],
-    [b1 + .35, CX, 2960, .52, 0, 'o'],              // pull back: the burst
-    [17.0, CX, 2965, .50, 0, 's'],
-    [17.45, CX + 10, 4560, .86, 0, 'io'],                // whip to How it works
-    [S1[0] - .05, CX + 10, 4620, .86, 0, 's'],
+    [0, CX, 960, 1.0], [A.zero[0], CX, 960, 1.14, 0, 's'], [A.zero[1] + .05, CX, 980, 1.12, 0, 's'],
+    [os1 - .1, CX, 2060, .80, 0, 'io'],             // ride the blue line down to the open-source mark
+    [ti1 - .05, CX, 2240, .74, 0, 's'],             // the title
+    [n0 + .3, CX, 2860, .74, 0, 'io'],              // pan down to the 39 and the magnets (title and mark stay fully in)
+    [b0 - .15, CX, 2900, .76, 0, 's'],
+    [16.9, CX, 2960, .52, 0, 'o'],                  // pull back: the burst
+    [17.05, CX, 2965, .51, 0, 's'],
+    [17.5, CX + 10, 4630, .86, 0, 'io'],            // whip to How it works
+    [S1[0] - .05, CX + 10, 4660, .86, 0, 's'],
     [S1[4] + .2, CX + 10, 4820, .88, 0, 's'],            // track down step 1
     [S2[0] + .35, CX + 10, 5420, .86, 0, 'io'],
     [S2[4] + .1, CX + 10, 5450, .88, 0, 's'],
@@ -200,22 +201,44 @@ export async function build(timing) {
   const magAt = (m, t) => { const u = clamp((t - m.t + .3) / .3); return { vis: t > m.t - .3, lift: 1 - u * u }; };
   const board = new W.Board(tl, { ghosts, W: BW, H: BH, warp });
   board.objs.push({ draw: (ctx, t, c) => { const tw = warpT(t); for (const m of mags) { const s = magAt(m, tw); if (s.vis) drawMagnet(ctx, m, c, s.lift); } } });
+  board.objs.push({ draw: (ctx, t, c) => { const s = magAt(logo, t); if (s.vis) drawLogoMagnet(ctx, logo, c, s.lift); } });
+  // burned subtitles: Persian, Vazirmatn, right to left; off-white label with an orange marker dash
+  const cues = timing.cues || [];
+  board.overlays.push({ draw: (ctx, t) => {
+    const s = cues.find(s => t >= s.t0 && t < s.t1); if (!s) return;
+    const a = Math.min(1, (t - s.t0) / .12, (s.t1 - t) / .12), X = 510, Y = 1500;
+    ctx.font = '700 46px Vazirmatn'; ctx.direction = 'rtl';
+    let rows = [s.text];
+    if (ctx.measureText(s.text).width > 800) {
+      const ws = s.text.split(' '); let best = 1, bd = 1e9;
+      for (let i = 1; i < ws.length; i++) { const d = Math.abs(ctx.measureText(ws.slice(0, i).join(' ')).width - ctx.measureText(ws.slice(i).join(' ')).width); if (d < bd) { bd = d; best = i; } }
+      rows = [ws.slice(0, best).join(' '), ws.slice(best).join(' ')];
+    }
+    const w = Math.max(...rows.map(r => ctx.measureText(r).width)) + 70, h = 84 + (rows.length - 1) * 66, y0 = Y - h / 2;
+    ctx.globalAlpha = a * .92; ctx.fillStyle = '#fdfcf8'; ctx.shadowColor = 'rgba(30,30,40,.18)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 4;
+    ctx.beginPath(); ctx.roundRect(X - w / 2, y0, w, h, 18); ctx.fill();
+    ctx.shadowColor = 'transparent'; ctx.globalAlpha = a;
+    ctx.fillStyle = INK.orange; ctx.fillRect(X + w / 2 - 62, y0 + h - 13, 38, 5);
+    ctx.fillStyle = INK.black; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    rows.forEach((r, i) => ctx.fillText(r, X, y0 + 44 + i * 66));
+  } });
   const noPens = new URLSearchParams(location.search).has('nopens');
   const pose = (p, t) => (t > E.rw0 - .05 && t < E.ff1 + .05) ? null : W.penPose(p, t, cam);
   if (!noPens) board.objs.push({ draw: (ctx, t, c) => { for (const p of PENS) W.drawMarker(ctx, p, pose(p, t), c, t); } });
   // the Persian word: real glyph shaping, revealed by the pen moving right → left
+  const faLayer = new OffscreenCanvas(SW, SH);
   board.objs.push({
     draw: (ctx, t, c) => {
       if (t < E.word0) return;
       const u = clamp(faStroke.prog(t));
-      ctx.save(); W.applyCam(ctx, c);
+      // the word is set on its own layer first (source-over), then multiplied onto the board: no seams where glyphs join
+      const lg = faLayer.getContext('2d'); lg.setTransform(1, 0, 0, 1, 0, 0); lg.clearRect(0, 0, SW, SH); W.applyCam(lg, c);
       const xr = lerp(fa.x1 + 30, fa.x0 - 30, u);
-      ctx.beginPath(); ctx.rect(xr, fa.y - 220, fa.x1 + 60 - xr, 330); ctx.clip();
-      ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 1;   // alpha 1: overlapping glyph contours must not show seams
-      ctx.direction = 'rtl'; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic';
-      ctx.font = `800 ${fa.size}px Vazirmatn`; ctx.fillStyle = '#da7d5e';
-      ctx.fillText('ریپو', fa.x1, fa.y);
-      ctx.restore();
+      lg.beginPath(); lg.rect(xr, fa.y - 220, fa.x1 + 60 - xr, 330); lg.clip();
+      lg.direction = 'rtl'; lg.textAlign = 'right'; lg.textBaseline = 'alphabetic';
+      lg.font = `800 ${fa.size}px Vazirmatn`; lg.fillStyle = '#da7d5e';
+      lg.fillText('ریپو', fa.x1, fa.y);
+      ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(faLayer, 0, 0); ctx.restore();
       if (u >= 1 && Math.floor((t - E.word1) * 2.4) % 2 === 0) {   // blinking text cursor after the word (on its left, RTL)
         ctx.save(); W.applyCam(ctx, c); ctx.globalAlpha = .85; ctx.fillStyle = INK.black;
         ctx.fillRect(fa.x0 - 40, fa.y - 128, 10, 150); ctx.restore();
@@ -265,6 +288,20 @@ export async function build(timing) {
   ev.push(...replay); ev.sort((a, b) => a.t - b.t);
   return { dur: END, render, ev, texts, cues: { BEAT, BREATH, A } };
 
+  // ───────── the Claude logo magnet: a glossy cream rounded square with the mark printed in its brand orange
+  function drawLogoMagnet(ctx, m, c, lift) {
+    const [sx, sy] = W.toScreen(c, m.x, m.y), s = m.s * c.z, up = lift * 46 * c.z;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.save(); ctx.filter = `blur(${(5 + lift * 16) * c.z}px)`; ctx.fillStyle = `rgba(40,40,52,${.34 - lift * .18})`;
+    ctx.beginPath(); ctx.roundRect(sx - s + 6 + up * .7, sy - s + 10 * c.z + up * .9, 2 * s, 2 * s, s * .38); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.translate(sx, sy - up); const k = 1 + lift * .1; ctx.scale(k, k);
+    const g = ctx.createLinearGradient(-s, -s, s, s); g.addColorStop(0, '#ffffff'); g.addColorStop(.6, '#f1ede4'); g.addColorStop(1, '#d3ccbf');
+    ctx.fillStyle = '#b9b2a4'; ctx.beginPath(); ctx.roundRect(-s, -s + s * .06, 2 * s, 2 * s, s * .38); ctx.fill();
+    ctx.fillStyle = g; ctx.beginPath(); ctx.roundRect(-s * .97, -s * .97, s * 1.94, s * 1.94, s * .36); ctx.fill();
+    ctx.save(); const ls = s * 1.36 / 24; ctx.scale(ls, ls); ctx.translate(-12, -12); ctx.fillStyle = '#D97757'; ctx.fill(LOGO); ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.ellipse(-s * .45, -s * .62, s * .32, s * .1, -.4, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
   // ───────── magnet drawer: glossy cream disc + printed icon
   function drawMagnet(ctx, m, c, lift) {
     const [sx, sy] = W.toScreen(c, m.x, m.y), s = m.r * c.z, up = lift * 46 * c.z;

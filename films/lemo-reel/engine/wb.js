@@ -6,8 +6,8 @@
 import { clamp, lerp, vnoise, hash, mulberry, TAU } from '/core/lib.js';
 
 // Screen size is set by the film (vertical 1080×1920 here); the original engine assumed 1920×1080.
-let SW = 1920, SH = 1080;
-export function setScreen(w, h) { SW = w; SH = h; }
+let SW = 1920, SH = 1080, CY = 540;
+export function setScreen(w, h, cy = h / 2) { SW = w; SH = h; CY = cy; }
 export const INK = { black: '#23262c', blue: '#2a5cb3', orange: '#d97757', red: '#c8413a', green: '#2e7a4d' };
 const RGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 
@@ -308,10 +308,10 @@ export class Camera {
     const za = a.z, zb = b.z, z = Math.exp(lz), wgt = Math.abs(zb - za) > 1e-4 ? (1 / za - 1 / z) / (1 / za - 1 / zb) : e;
     return { x: lerp(a.x, b.x, wgt), y: lerp(a.y, b.y, wgt), z, r: lerp(a.r, b.r, e) };
   }
-  toWorld(sx, sy, t) { const c = this.at(t), dx = (sx - SW / 2) / c.z, dy = (sy - SH / 2) / c.z, cs = Math.cos(-c.r), sn = Math.sin(-c.r); return [c.x + dx * cs - dy * sn, c.y + dx * sn + dy * cs]; }
+  toWorld(sx, sy, t) { const c = this.at(t), dx = (sx - SW / 2) / c.z, dy = (sy - CY) / c.z, cs = Math.cos(-c.r), sn = Math.sin(-c.r); return [c.x + dx * cs - dy * sn, c.y + dx * sn + dy * cs]; }
 }
-export function applyCam(ctx, c) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.translate(SW / 2, SH / 2); ctx.rotate(c.r); ctx.scale(c.z, c.z); ctx.translate(-c.x, -c.y); }
-export function toScreen(c, x, y) { const dx = (x - c.x) * c.z, dy = (y - c.y) * c.z, cs = Math.cos(c.r), sn = Math.sin(c.r); return [SW / 2 + dx * cs - dy * sn, SH / 2 + dx * sn + dy * cs]; }
+export function applyCam(ctx, c) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.translate(SW / 2, CY); ctx.rotate(c.r); ctx.scale(c.z, c.z); ctx.translate(-c.x, -c.y); }
+export function toScreen(c, x, y) { const dx = (x - c.x) * c.z, dy = (y - c.y) * c.z, cs = Math.cos(c.r), sn = Math.sin(c.r); return [SW / 2 + dx * cs - dy * sn, CY + dx * sn + dy * cs]; }
 
 // ───────────────────────── textures
 function noiseTile(seed) {                          // dry-marker speckle & streaks (used with destination-out)
