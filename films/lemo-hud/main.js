@@ -1,0 +1,11 @@
+const timing = await (await fetch('timing.json')).json();
+timing.cues = await (await fetch('out/cues.json')).json();
+for (const w of [300, 400, 500, 600, 700]) await document.fonts.load(`${w} 60px Vazirmatn`, 'فیلم ۰۱۲۳۹');
+for (const w of [300, 500, 600]) await document.fonts.load(`${w} 60px Rajdhani`, 'LEMO-OPUSCAR');
+await document.fonts.load('24px ShareTechMono', 'github.com');
+const mod = await import('./film.js');
+const F = await mod.build(timing);
+const ctx = document.getElementById('c').getContext('2d');
+window.DUR = F.dur; window.EV = F.ev;
+window.render = t => F.render(ctx, t);
+window.READY = true;
