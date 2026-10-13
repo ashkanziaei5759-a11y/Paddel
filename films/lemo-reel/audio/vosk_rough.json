@@ -1,0 +1,674 @@
+[
+ {
+  "conf": 0.534087,
+  "end": 1.65,
+  "start": 1.17,
+  "word": "films"
+ },
+ {
+  "conf": 0.837824,
+  "end": 1.8,
+  "start": 1.65,
+  "word": "of"
+ },
+ {
+  "conf": 1.0,
+  "end": 2.07,
+  "start": 1.804865,
+  "word": "them"
+ },
+ {
+  "conf": 0.96855,
+  "end": 2.61,
+  "start": 2.25,
+  "word": "between"
+ },
+ {
+  "conf": 0.723059,
+  "end": 2.67,
+  "start": 2.61,
+  "word": "a"
+ },
+ {
+  "conf": 0.364121,
+  "end": 2.85,
+  "start": 2.67,
+  "word": "dude"
+ },
+ {
+  "conf": 0.862053,
+  "end": 3.21,
+  "start": 2.88,
+  "word": "been"
+ },
+ {
+  "conf": 0.445008,
+  "end": 3.66,
+  "start": 3.3,
+  "word": "bitten"
+ },
+ {
+  "conf": 1.0,
+  "end": 3.75,
+  "start": 3.66,
+  "word": "a"
+ },
+ {
+  "conf": 1.0,
+  "end": 3.93,
+  "start": 3.75,
+  "word": "the"
+ },
+ {
+  "conf": 1.0,
+  "end": 4.08,
+  "start": 3.93,
+  "word": "to"
+ },
+ {
+  "conf": 1.0,
+  "end": 4.23,
+  "start": 4.11,
+  "word": "be"
+ },
+ {
+  "conf": 1.0,
+  "end": 4.38,
+  "start": 4.23,
+  "word": "there"
+ },
+ {
+  "conf": 1.0,
+  "end": 4.560694,
+  "start": 4.38,
+  "word": "had"
+ },
+ {
+  "conf": 0.940017,
+  "end": 4.674148,
+  "start": 4.560694,
+  "word": "to"
+ },
+ {
+  "conf": 0.386737,
+  "end": 4.889773,
+  "start": 4.68,
+  "word": "eke"
+ },
+ {
+  "conf": 0.405355,
+  "end": 5.25,
+  "start": 4.889773,
+  "word": "sonia"
+ },
+ {
+  "conf": 1.0,
+  "end": 5.73,
+  "start": 5.253205,
+  "word": "footage"
+ },
+ {
+  "conf": 0.523711,
+  "end": 6.48,
+  "start": 6.3,
+  "word": "yeah"
+ },
+ {
+  "conf": 1.0,
+  "end": 7.075946,
+  "start": 6.48,
+  "word": "diplomats"
+ },
+ {
+  "conf": 0.607754,
+  "end": 7.32,
+  "start": 7.08,
+  "word": "both"
+ },
+ {
+  "conf": 0.606209,
+  "end": 7.5,
+  "start": 7.32,
+  "word": "as"
+ },
+ {
+  "conf": 1.0,
+  "end": 7.95,
+  "start": 7.5,
+  "word": "basement"
+ },
+ {
+  "conf": 1.0,
+  "end": 8.31,
+  "start": 7.98,
+  "word": "level"
+ },
+ {
+  "conf": 0.58625,
+  "end": 8.450338,
+  "start": 8.31,
+  "word": "up"
+ },
+ {
+  "conf": 0.251235,
+  "end": 8.52,
+  "start": 8.46,
+  "word": "a"
+ },
+ {
+  "conf": 0.540897,
+  "end": 9.269999,
+  "start": 9.0,
+  "word": "kiss"
+ },
+ {
+  "conf": 0.506251,
+  "end": 9.419999,
+  "start": 9.269999,
+  "word": "you"
+ },
+ {
+  "conf": 0.584808,
+  "end": 9.57,
+  "start": 9.42,
+  "word": "know"
+ },
+ {
+  "conf": 0.243879,
+  "end": 9.81,
+  "start": 9.677319,
+  "word": "up"
+ },
+ {
+  "conf": 0.725817,
+  "end": 9.96,
+  "start": 9.81,
+  "word": "give"
+ },
+ {
+  "conf": 0.725817,
+  "end": 10.14,
+  "start": 9.96,
+  "word": "him"
+ },
+ {
+  "conf": 1.0,
+  "end": 10.38,
+  "start": 10.141494,
+  "word": "says"
+ },
+ {
+  "conf": 1.0,
+  "end": 10.59,
+  "start": 10.38,
+  "word": "that"
+ },
+ {
+  "conf": 1.0,
+  "end": 10.74,
+  "start": 10.59,
+  "word": "it"
+ },
+ {
+  "conf": 0.404647,
+  "end": 11.64,
+  "start": 11.34,
+  "word": "over"
+ },
+ {
+  "conf": 0.404647,
+  "end": 11.97,
+  "start": 11.64,
+  "word": "and"
+ },
+ {
+  "conf": 0.550404,
+  "end": 12.39,
+  "start": 12.21,
+  "word": "i"
+ },
+ {
+  "conf": 0.496887,
+  "end": 12.650156,
+  "start": 12.39,
+  "word": "couldn't"
+ },
+ {
+  "conf": 0.386804,
+  "end": 13.11,
+  "start": 12.699367,
+  "word": "gaudy"
+ },
+ {
+  "conf": 0.976885,
+  "end": 13.53,
+  "start": 13.32,
+  "word": "see"
+ },
+ {
+  "conf": 0.976885,
+  "end": 13.71,
+  "start": 13.53,
+  "word": "now"
+ },
+ {
+  "conf": 0.976885,
+  "end": 13.92,
+  "start": 13.71,
+  "word": "is"
+ },
+ {
+  "conf": 1.0,
+  "end": 14.1,
+  "start": 13.92,
+  "word": "on"
+ },
+ {
+  "conf": 1.0,
+  "end": 14.34,
+  "start": 14.1,
+  "word": "it"
+ },
+ {
+  "conf": 0.915707,
+  "end": 14.97,
+  "start": 14.64,
+  "word": "peaks"
+ },
+ {
+  "conf": 0.915707,
+  "end": 15.42,
+  "start": 14.97,
+  "word": "alert"
+ },
+ {
+  "conf": 0.549012,
+  "end": 15.96,
+  "start": 15.66,
+  "word": "sub"
+ },
+ {
+  "conf": 0.985096,
+  "end": 16.08,
+  "start": 15.973281,
+  "word": "your"
+ },
+ {
+  "conf": 0.985096,
+  "end": 16.32,
+  "start": 16.08,
+  "word": "voice"
+ },
+ {
+  "conf": 0.713307,
+  "end": 16.5,
+  "start": 16.35,
+  "word": "or"
+ },
+ {
+  "conf": 0.479663,
+  "end": 16.585113,
+  "start": 16.5,
+  "word": "to"
+ },
+ {
+  "conf": 1.0,
+  "end": 16.71,
+  "start": 16.585113,
+  "word": "the"
+ },
+ {
+  "conf": 1.0,
+  "end": 17.25,
+  "start": 16.71,
+  "word": "qualities"
+ },
+ {
+  "conf": 1.0,
+  "end": 17.67,
+  "start": 17.25,
+  "word": "idea"
+ },
+ {
+  "conf": 0.607889,
+  "end": 18.84,
+  "start": 18.48,
+  "word": "chetry"
+ },
+ {
+  "conf": 0.516251,
+  "end": 19.166644,
+  "start": 18.84,
+  "word": "current"
+ },
+ {
+  "conf": 1.0,
+  "end": 19.53,
+  "start": 19.166644,
+  "word": "gonna"
+ },
+ {
+  "conf": 1.0,
+  "end": 20.253752,
+  "start": 19.95,
+  "word": "link"
+ },
+ {
+  "conf": 0.265422,
+  "end": 20.4,
+  "start": 20.28,
+  "word": "your"
+ },
+ {
+  "conf": 0.94388,
+  "end": 20.52,
+  "start": 20.4,
+  "word": "out"
+ },
+ {
+  "conf": 0.488067,
+  "end": 20.602925,
+  "start": 20.52,
+  "word": "on"
+ },
+ {
+  "conf": 1.0,
+  "end": 20.7,
+  "start": 20.602925,
+  "word": "me"
+ },
+ {
+  "conf": 1.0,
+  "end": 20.82,
+  "start": 20.7,
+  "word": "for"
+ },
+ {
+  "conf": 1.0,
+  "end": 21.125189,
+  "start": 20.82,
+  "word": "some"
+ },
+ {
+  "conf": 0.602138,
+  "end": 21.296358,
+  "start": 21.125189,
+  "word": "coffee"
+ },
+ {
+  "conf": 0.397862,
+  "end": 21.69,
+  "start": 21.296358,
+  "word": "popcorn"
+ },
+ {
+  "conf": 0.610891,
+  "end": 22.02,
+  "start": 21.75,
+  "word": "daughter"
+ },
+ {
+  "conf": 1.0,
+  "end": 22.14,
+  "start": 22.02,
+  "word": "like"
+ },
+ {
+  "conf": 1.0,
+  "end": 22.23,
+  "start": 22.14,
+  "word": "a"
+ },
+ {
+  "conf": 1.0,
+  "end": 22.38,
+  "start": 22.23,
+  "word": "lot"
+ },
+ {
+  "conf": 0.750865,
+  "end": 22.53,
+  "start": 22.38,
+  "word": "good"
+ },
+ {
+  "conf": 0.982109,
+  "end": 22.83,
+  "start": 22.53,
+  "word": "pace"
+ },
+ {
+  "conf": 0.369702,
+  "end": 23.1,
+  "start": 22.83,
+  "word": "one"
+ },
+ {
+  "conf": 0.611377,
+  "end": 23.64,
+  "start": 23.49,
+  "word": "a"
+ },
+ {
+  "conf": 0.582964,
+  "end": 23.76,
+  "start": 23.64,
+  "word": "you"
+ },
+ {
+  "conf": 0.293943,
+  "end": 24.09,
+  "start": 23.76,
+  "word": "suck"
+ },
+ {
+  "conf": 0.347893,
+  "end": 24.299473,
+  "start": 24.21,
+  "word": "to"
+ },
+ {
+  "conf": 0.562485,
+  "end": 24.51,
+  "start": 24.299473,
+  "word": "home"
+ },
+ {
+  "conf": 0.778498,
+  "end": 24.72,
+  "start": 24.51,
+  "word": "agree"
+ },
+ {
+  "conf": 1.0,
+  "end": 24.875612,
+  "start": 24.72,
+  "word": "with"
+ },
+ {
+  "conf": 0.468006,
+  "end": 24.959568,
+  "start": 24.875612,
+  "word": "the"
+ },
+ {
+  "conf": 0.499169,
+  "end": 25.29,
+  "start": 24.959568,
+  "word": "silence"
+ },
+ {
+  "conf": 0.90457,
+  "end": 25.47,
+  "start": 25.29,
+  "word": "from"
+ },
+ {
+  "conf": 1.0,
+  "end": 25.68,
+  "start": 25.47,
+  "word": "you"
+ },
+ {
+  "conf": 0.749366,
+  "end": 26.61,
+  "start": 26.22,
+  "word": "cannot"
+ },
+ {
+  "conf": 0.388474,
+  "end": 26.97,
+  "start": 26.88,
+  "word": "a"
+ },
+ {
+  "conf": 1.0,
+  "end": 27.39,
+  "start": 26.975092,
+  "word": "scottish"
+ },
+ {
+  "conf": 1.0,
+  "end": 27.6,
+  "start": 27.39,
+  "word": "about"
+ },
+ {
+  "conf": 1.0,
+  "end": 27.63,
+  "start": 27.6,
+  "word": "a"
+ },
+ {
+  "conf": 1.0,
+  "end": 28.05,
+  "start": 27.63,
+  "word": "tangible"
+ },
+ {
+  "conf": 0.687687,
+  "end": 28.2,
+  "start": 28.05,
+  "word": "it"
+ },
+ {
+  "conf": 0.741864,
+  "end": 29.19,
+  "start": 28.95,
+  "word": "if"
+ },
+ {
+  "conf": 0.484639,
+  "end": 29.396351,
+  "start": 29.19,
+  "word": "any"
+ },
+ {
+  "conf": 0.585264,
+  "end": 29.55,
+  "start": 29.396351,
+  "word": "can"
+ },
+ {
+  "conf": 0.479247,
+  "end": 29.67,
+  "start": 29.55,
+  "word": "we"
+ },
+ {
+  "conf": 0.904532,
+  "end": 29.88,
+  "start": 29.67,
+  "word": "need"
+ },
+ {
+  "conf": 0.600786,
+  "end": 30.09,
+  "start": 29.88,
+  "word": "have"
+ },
+ {
+  "conf": 0.803193,
+  "end": 30.267504,
+  "start": 30.09,
+  "word": "been"
+ },
+ {
+  "conf": 1.0,
+  "end": 30.51,
+  "start": 30.267504,
+  "word": "having"
+ },
+ {
+  "conf": 1.0,
+  "end": 30.6,
+  "start": 30.51,
+  "word": "to"
+ },
+ {
+  "conf": 0.56297,
+  "end": 30.707999,
+  "start": 30.66,
+  "word": "be"
+ },
+ {
+  "conf": 0.43703,
+  "end": 30.777275,
+  "start": 30.707999,
+  "word": "is"
+ },
+ {
+  "conf": 0.664543,
+  "end": 31.23,
+  "start": 30.777275,
+  "word": "sufficient"
+ },
+ {
+  "conf": 0.694871,
+  "end": 32.49,
+  "start": 32.19,
+  "word": "barry"
+ },
+ {
+  "conf": 1.0,
+  "end": 32.73,
+  "start": 32.49,
+  "word": "that"
+ },
+ {
+  "conf": 0.777194,
+  "end": 32.79,
+  "start": 32.73,
+  "word": "he"
+ },
+ {
+  "conf": 0.92352,
+  "end": 33.18,
+  "start": 32.79,
+  "word": "oft"
+ },
+ {
+  "conf": 0.870082,
+  "end": 34.35197,
+  "start": 33.96,
+  "word": "calorie"
+ },
+ {
+  "conf": 0.55909,
+  "end": 34.56,
+  "start": 34.35197,
+  "word": "early"
+ },
+ {
+  "conf": 0.318944,
+  "end": 34.86,
+  "start": 34.56,
+  "word": "puro"
+ },
+ {
+  "conf": 1.0,
+  "end": 35.25,
+  "start": 34.86,
+  "word": "comments"
+ }
+]
