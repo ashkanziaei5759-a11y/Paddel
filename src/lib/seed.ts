@@ -75,7 +75,16 @@ const SAMPLE_PLAYERS: {
   { username: 'zahra', firstName: 'زهرا', lastName: 'موسوی', phone: '09128888888', level: 'D_PLUS', points: 15, gender: 'FEMALE' },
 ];
 
-export async function runSeed(prisma: PrismaClient, log: Logger = () => {}) {
+export interface SeedOptions {
+  /** فقط حساب مدیر و تنظیمات پایه — بدون زمین، بازیکن و محتوای نمونه */
+  essentialsOnly?: boolean;
+}
+
+export async function runSeed(
+  prisma: PrismaClient,
+  log: Logger = () => {},
+  options: SeedOptions = {},
+) {
   // ---- ۱. حساب مدیر ----
   const adminUsername = process.env.SEED_ADMIN_USERNAME || 'admin';
   const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'Admin@12345';
@@ -101,6 +110,33 @@ export async function runSeed(prisma: PrismaClient, log: Logger = () => {}) {
   if (policyCount === 0) {
     await prisma.cancellationPolicy.createMany({ data: DEFAULT_POLICIES });
     log(`✅ ${DEFAULT_POLICIES.length} پله‌ی جریمه‌ی لغو ثبت شد`);
+  }
+
+  // ---- ۶. تنظیمات سراسری ----
+  await prisma.appSetting.upsert({
+    where: { key: 'wallet.topup.presets' },
+    update: {},
+    create: {
+      key: 'wallet.topup.presets',
+      value: [200_000, 500_000, 1_000_000, 2_000_000],
+      description: 'مبالغ پیشنهادی شارژ کیف پول (تومان)',
+    },
+  });
+
+  await prisma.appSetting.upsert({
+    where: { key: 'club.contact' },
+    update: {},
+    create: {
+      key: 'club.contact',
+      value: { phone: '021-00000000', instagram: '@persianpadel', address: 'تهران' },
+      description: 'اطلاعات تماس باشگاه',
+    },
+  });
+
+  // نصب واقعی بدون داده‌ی نمونه: فقط مدیر، پله‌های جریمه و تنظیمات سراسری
+  if (options.essentialsOnly) {
+    log('ℹ️ داده‌ی نمونه (زمین، بازیکن، تورنومنت، بنر، کالا، خبر) وارد نشد.');
+    return { adminUsername, players: 0, courts: 0 };
   }
 
   // ---- ۳. زمین‌ها و قیمت‌گذاری ----
@@ -242,27 +278,6 @@ export async function runSeed(prisma: PrismaClient, log: Logger = () => {}) {
     });
     log(`✅ تورنومنت نمونه ساخته شد: ${tournament.name}`);
   }
-
-  // ---- ۶. تنظیمات سراسری ----
-  await prisma.appSetting.upsert({
-    where: { key: 'wallet.topup.presets' },
-    update: {},
-    create: {
-      key: 'wallet.topup.presets',
-      value: [200_000, 500_000, 1_000_000, 2_000_000],
-      description: 'مبالغ پیشنهادی شارژ کیف پول (تومان)',
-    },
-  });
-
-  await prisma.appSetting.upsert({
-    where: { key: 'club.contact' },
-    update: {},
-    create: {
-      key: 'club.contact',
-      value: { phone: '021-00000000', instagram: '@persianpadel', address: 'تهران' },
-      description: 'اطلاعات تماس باشگاه',
-    },
-  });
 
   // ---- ۷. بنرهای صفحه‌ی اصلی ----
   if ((await prisma.banner.count()) === 0) {

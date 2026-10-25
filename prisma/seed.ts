@@ -10,7 +10,10 @@ const prisma = new PrismaClient();
 
 console.info('🎾 شروع مقداردهی اولیه پایگاه داده…\n');
 
-runSeed(prisma, (line) => console.info(line))
+// SEED_ESSENTIALS_ONLY=1 → فقط حساب مدیر و تنظیمات پایه (نصب واقعی)
+const essentialsOnly = process.env.SEED_ESSENTIALS_ONLY === '1';
+
+runSeed(prisma, (line) => console.info(line), { essentialsOnly })
   .then(() => console.info('\n🎉 مقداردهی اولیه با موفقیت انجام شد.\n'))
   .catch((error) => {
     console.error('❌ خطا در مقداردهی اولیه:', error);

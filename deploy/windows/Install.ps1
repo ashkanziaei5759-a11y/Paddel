@@ -11,6 +11,9 @@
     دوباره اجرایش کنید. هر مرحله‌ای که قبلاً انجام شده باشد، رد می‌شود.
 .EXAMPLE
     .\Install.ps1 -Domain persianpdl.ir -DbPassword 'YourStrongPass!23'
+.EXAMPLE
+    .\Install.ps1 -Domain persianpdl.ir -NoSeed
+    نصب واقعی: فقط حساب مدیر ساخته می‌شود، بدون زمین و بازیکن نمونه.
 #>
 [CmdletBinding()]
 param(
@@ -19,6 +22,9 @@ param(
 
     # رمز کاربر پایگاه داده. اگر ندهید، ساخته می‌شود و در پایان نشان داده می‌شود.
     [string]$DbPassword,
+
+    # رمز حساب مدیر (admin). اگر ندهید، یک رمز تصادفی قوی ساخته و در پایان نشان داده می‌شود.
+    [string]$AdminPassword,
 
     # مسیر نصب اپ
     [string]$InstallPath = 'C:\PersianPadel',
@@ -356,21 +362,40 @@ try {
     }
     Write-Ok "$tableCount جدول در پایگاه داده تأیید شد."
 
-    if (-not $NoSeed) {
-        $seed = Join-Path $InstallPath 'prisma\seed.js'
-        if (Test-Path $seed) {
+    # حساب مدیر همیشه ساخته می‌شود؛ -NoSeed فقط داده‌ی نمونه (زمین، بازیکن،
+    # تورنومنت، کالا، خبر) را کنار می‌گذارد. بدون این، نصب واقعی هیچ مدیری
+    # نداشت و راهی برای ورود به پنل نمی‌ماند.
+    $seed = Join-Path $InstallPath 'prisma\seed.js'
+    if (Test-Path $seed) {
+        # رمز پیش‌فرض مدیر در کد عمومی است؛ روی سرور واقعی هرگز استفاده نشود.
+        # seed رمز را فقط هنگام «ساختن» مدیر می‌گذارد، پس اگر مدیر از اجرای قبلی
+        # وجود دارد، رمزش دست نمی‌خورد و رمز جدید را هم نشان نمی‌دهیم.
+        $adminExists = & node -e "const{PrismaClient}=require('@prisma/client');const c=new PrismaClient();c.user.count({where:{username:'admin'}}).then(n=>{console.log(n);return c.`$disconnect()}).catch(()=>{console.log(0)})" 2>$null
+        $script:AdminCreated = ([int]$adminExists -lt 1)
+        if (-not $AdminPassword) { $AdminPassword = New-DbPassword }
+
+        $env:SEED_ESSENTIALS_ONLY = if ($NoSeed) { '1' } else { '' }
+        $env:SEED_ADMIN_PASSWORD = $AdminPassword
+        try {
             & node $seed 2>&1 | ForEach-Object { Write-Host "    $_" }
             if ($LASTEXITCODE -ne 0) { throw 'ورود داده‌ی اولیه ناموفق بود.' }
+        } finally {
+            Remove-Item Env:SEED_ESSENTIALS_ONLY -ErrorAction SilentlyContinue
+            Remove-Item Env:SEED_ADMIN_PASSWORD -ErrorAction SilentlyContinue
+        }
 
-            # «موفق» گفتنِ اسکریپت کافی نیست؛ خودمان می‌شماریم
-            $userCount = & node -e "const{PrismaClient}=require('@prisma/client');const c=new PrismaClient();c.user.count().then(n=>{console.log(n);return c.`$disconnect()}).catch(()=>{console.log(0)})" 2>$null
-            if ([int]$userCount -lt 1) {
-                throw 'داده‌ی اولیه وارد نشد — هیچ کاربری ساخته نشد.'
-            }
+        # «موفق» گفتنِ اسکریپت کافی نیست؛ خودمان می‌شماریم
+        $userCount = & node -e "const{PrismaClient}=require('@prisma/client');const c=new PrismaClient();c.user.count().then(n=>{console.log(n);return c.`$disconnect()}).catch(()=>{console.log(0)})" 2>$null
+        if ([int]$userCount -lt 1) {
+            throw 'داده‌ی اولیه وارد نشد — هیچ کاربری ساخته نشد.'
+        }
+        if ($NoSeed) {
+            Write-Ok 'حساب مدیر و تنظیمات پایه ساخته شد (بدون داده‌ی نمونه).'
+        } else {
             Write-Ok "داده‌ی اولیه وارد شد ($userCount کاربر)."
         }
     } else {
-        Write-Warn2 'داده‌ی نمونه وارد نشد (NoSeed-).'
+        Write-Warn2 'فایل seed.js پیدا نشد؛ حساب مدیر ساخته نشد.'
     }
 } finally {
     Pop-Location
@@ -442,10 +467,18 @@ Write-Host ''
 Write-Host '   رمز پایگاه داده (یادداشت کنید):' -ForegroundColor Yellow
 Write-Host "     $DbPassword" -ForegroundColor White
 Write-Host ''
+if ($script:AdminCreated) {
+    Write-Host '   ورود به پنل مدیریت (یادداشت کنید):' -ForegroundColor Yellow
+    Write-Host '     نام کاربری : admin' -ForegroundColor White
+    Write-Host "     رمز عبور   : $AdminPassword" -ForegroundColor White
+} else {
+    Write-Host '   حساب مدیر از قبل وجود داشت؛ رمزش تغییری نکرد.' -ForegroundColor Yellow
+}
+Write-Host ''
 Write-Host '   کارهای باقی‌مانده:' -ForegroundColor Cyan
 Write-Host '     ۱. دامنه را به IP این سرور اشاره دهید (رکورد A).'
 Write-Host "     ۲. گواهی SSL بگیرید:  .\Setup-SSL.ps1 -Domain $Domain"
 Write-Host '     ۳. سرویس پیامک را در .env تنظیم کنید (OTP_PROVIDER).'
 Write-Host '     ۴. درگاه پرداخت را وصل کنید — docs\PAYMENT-GATEWAY.md'
-Write-Host '     ۵. رمز مدیر را از پنل عوض کنید.'
+Write-Host '     ۵. رمز مدیر را یادداشت کنید و در صورت تمایل از پنل عوضش کنید.'
 Write-Host ''
