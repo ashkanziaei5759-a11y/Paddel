@@ -29,6 +29,10 @@ export async function purchase(input: PurchaseInput) {
     throw new AppError('تعداد انتخابی معتبر نیست.');
   }
 
+  /* پیش از تراکنش: getPointEconomy اتصالِ جداگانه می‌گیرد و داخل تراکنش، زیر
+     بار، ممکن است هیچ اتصالِ آزادی نماند (همان قفل متقابلی که در رزرو دیدیم). */
+  const economy = await getPointEconomy();
+
   const result = await prisma.$transaction(
     async (tx) => {
       const locked = await tx.$queryRaw<
@@ -62,7 +66,6 @@ export async function purchase(input: PurchaseInput) {
          را رایگان بازی کند و ظرفیت زمین‌ها را از بقیه بگیرد. شمارش از روی
          تاریخ صدور است، نه تاریخ مصرف. */
       if (product.voucherKind) {
-        const economy = await getPointEconomy();
         if (economy.maxVouchersPerMonth > 0) {
           const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
           const bought = await tx.bookingVoucher.count({

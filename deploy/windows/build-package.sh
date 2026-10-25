@@ -41,6 +41,7 @@ cp -r .next/standalone/. "$OUT/"
 mkdir -p "$OUT/.next"
 cp -r .next/static "$OUT/.next/static"
 [ -d public ] && cp -r public "$OUT/public"
+cp deploy/windows/server-cluster.js "$OUT/"
 ok "server.js و فایل‌های ایستا کپی شدند"
 
 step "افزودن ابزار مهاجرت پایگاه داده"
@@ -59,6 +60,27 @@ cp -r "$TMP_CLI/node_modules/." "$OUT/node_modules/"
 rm -rf "$TMP_CLI"
 [ -f "$OUT/node_modules/prisma/build/index.js" ] || { echo "ابزار prisma کپی نشد"; exit 1; }
 ok "prisma CLI v${PRISMA_VER} و $(ls prisma/migrations | grep -c '^2' || true) مهاجرت اضافه شد"
+
+step "افزودن موتورهای ویندوزی prisma"
+# ابزار prisma روی همین سیستمِ سازنده نصب شده و فقط موتور «این» سیستم (لینوکس)
+# را دارد. روی ویندوز، «migrate deploy» موتور schema-engine ویندوزی می‌خواهد و
+# اگر نباشد سعی می‌کند از اینترنت خارجی بگیردش — که روی سرورهای ایرانی معمولاً
+# شکست می‌خورد و نصب وسط ساخت جدول‌ها می‌ماند. پس همین‌جا می‌گذاریمش.
+ENG_HASH="$(node -p "require('$ROOT/node_modules/@prisma/engines-version').enginesVersion")"
+ENG_DIR="$OUT/node_modules/@prisma/engines"
+ENG_URL="https://binaries.prisma.sh/all_commits/${ENG_HASH}/windows/schema-engine.exe.gz"
+TMP_ENG="$(mktemp -d)"
+curl -fsSL --retry 3 -o "$TMP_ENG/se.gz" "$ENG_URL"
+curl -fsSL --retry 3 -o "$TMP_ENG/se.gz.sha256" "$ENG_URL.sha256"
+EXPECTED="$(cut -d' ' -f1 < "$TMP_ENG/se.gz.sha256")"
+ACTUAL="$(sha256sum "$TMP_ENG/se.gz" | cut -d' ' -f1)"
+[ "$EXPECTED" = "$ACTUAL" ] || { echo "checksum موتور ویندوزی نادرست است"; exit 1; }
+gunzip -c "$TMP_ENG/se.gz" > "$ENG_DIR/schema-engine-windows.exe"
+rm -rf "$TMP_ENG"
+cp "$OUT/node_modules/.prisma/client/query_engine-windows.dll.node" "$ENG_DIR/query_engine-windows.dll.node"
+# موتورهای لینوکسی روی ویندوز به کاری نمی‌آیند؛ حذفشان بسته را حدود ۵۰ مگ سبک می‌کند
+find "$OUT/node_modules" \( -name 'schema-engine-debian*' -o -name 'libquery_engine-debian*' \) -delete
+ok "schema-engine-windows.exe ($(du -h "$ENG_DIR/schema-engine-windows.exe" | cut -f1)) و موتور کوئری ویندوز اضافه شد"
 
 step "ترجمه‌ی فایل seed به جاوااسکریپت"
 # seed.ts روی سرور مفسر ندارد؛ اینجا به یک فایل مستقل تبدیلش می‌کنیم
@@ -90,12 +112,15 @@ step "بررسی سلامت بسته"
 fail=0
 check() { if [ -e "$OUT/$1" ]; then ok "$1"; else printf '    \033[31m[X]    %s غایب است\033[0m\n' "$1"; fail=1; fi }
 check server.js
+check server-cluster.js
 check .next/static
 check prisma/schema.prisma
 check prisma/migrations
 check prisma/seed.js
 check node_modules/prisma/build/index.js
 check node_modules/.prisma/client/query_engine-windows.dll.node
+check node_modules/@prisma/engines/schema-engine-windows.exe
+check node_modules/@prisma/engines/query_engine-windows.dll.node
 check Install.ps1
 check Install-Service.ps1
 check Install-IIS.ps1

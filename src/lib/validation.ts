@@ -369,7 +369,18 @@ export const bannerSchema = z.object({
   title: z.string().trim().min(1, 'عنوان بنر الزامی است.').max(80),
   subtitle: z.string().trim().max(160).optional().nullable(),
   imageUrl: z.string().trim().min(1, 'نشانی تصویر الزامی است.').max(500),
-  linkUrl: z.string().trim().max(500).optional().nullable(),
+  /* فقط مسیر داخلی (/booking) یا نشانی http(s). بدون این، «javascript:...» در
+     href بنر صفحه‌ی اصلیِ همه‌ی بازیکن‌ها اجرا می‌شد؛ «//» هم کاربر را بی‌صدا به
+     دامنه‌ی دیگری می‌برد. */
+  linkUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => v === '' || (v.startsWith('/') && !v.startsWith('//')) || /^https?:\/\//i.test(v), {
+      message: 'لینک باید با / (صفحه‌ای از همین سایت) یا https:// شروع شود.',
+    })
+    .optional()
+    .nullable(),
   sortOrder: z.coerce.number().int().min(0).max(999).default(0),
   isActive: z.boolean().default(true),
   startsAt: z.string().datetime({ offset: true }).optional().nullable(),

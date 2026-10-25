@@ -155,7 +155,7 @@ tr:nth-child(even) td{background:#FAFBFD}
     <tr><td><b>Administrator</b></td><td>نام کاربری مدیر کامل سرور ویندوز.</td></tr>
     <tr><td><b>SSL / https</b></td><td>همان قفل کنار نشانی سایت. بدون آن مرورگر هشدار «ناامن» می‌دهد و <b>درگاه پرداخت هم وصل نمی‌شود</b>.</td></tr>
     <tr><td><b>PowerShell</b></td><td>پنجره‌ی دستور ویندوز. ما فقط چند دستور آماده در آن کپی می‌کنیم.</td></tr>
-    <tr><td><b>بسته‌ی نصب</b></td><td>فایل <code>persian-padel-windows.zip</code> که همه‌چیزِ اپ و اسکریپت‌های نصب داخلش است.</td></tr>
+    <tr><td><b>بسته‌ی نصب</b></td><td>سه فایل <code>persian-padel-windows.part1</code> تا <code>part3</code> که همه‌چیزِ اپ و اسکریپت‌های نصب داخلشان است.</td></tr>
   </table>
   <div class="flow">
     <div class="s"><b>بازیکن</b>نشانی سایت را باز می‌کند</div><div class="a">←</div>
@@ -191,6 +191,8 @@ tr:nth-child(even) td{background:#FAFBFD}
   <div class="box tip"><div class="t"><span class="ic">i</span>چرا ۴ گیگ رم کمترین مقدار است؟</div>
     خودِ ویندوز سرور حدود ۲ گیگ رم مصرف می‌کند، پایگاه داده نیم گیگ و اپ تا یک گیگ. با رم کمتر، سرور کُند می‌شود. اگر بودجه اجازه می‌دهد ۸ گیگ بگیرید تا با زیاد شدن بازیکن‌ها خیالتان راحت باشد.
   </div>
+  <div class="box tip"><div class="t"><span class="ic">i</span>این سرور چند نفر را هم‌زمان جواب می‌دهد؟</div>
+    اپ روی سروری با <b>۴ هسته و ۸ گیگ رم</b> با <b>۳۰۰ کاربرِ هم‌زمان</b> تست شد (ورود، صفحه‌ی اصلی، رزرو، کیف پول و شارژ — بیش از ۱۶ هزار درخواست در ۳ دقیقه): <b>بدون حتی یک خطا</b>، بدون رزرو تکراری و بدون اشتباه در موجودی کیف پول‌ها. صفحه‌ها معمولاً زیر ۲ ثانیه باز شدند. اپ خودش از همه‌ی هسته‌ها استفاده می‌کند؛ اگر روزی کاربرانتان خیلی بیشتر شد، سرور را به ۶ یا ۸ هسته ارتقا دهید — نیازی به تغییر در اپ نیست.</div>
 
   <h3>ویندوز یا لینوکس؟</h3>
   <div class="two">
@@ -367,9 +369,13 @@ tr:nth-child(even) td{background:#FAFBFD}
   <h2>نصب اپ با بسته‌ی آماده</h2>
   <p class="lead">همه‌ی کارهای سخت (ساخت پایگاه داده، تنظیمات، رمزها، سرویس ویندوز، IIS و فایروال) را یک اسکریپت انجام می‌دهد. شما فقط سه دستور کپی می‌کنید.</p>
 
-  <div class="step"><div class="n">۱</div><div class="b"><h4>بسته‌ی نصب را بگیرید</h4>فایل <code>persian-padel-windows.zip</code> (حدود ۹۰ مگابایت) را از لینکی که برایتان فرستاده شده دانلود کنید و به <b>Desktop سرور</b> کپی کنید (فصل ۴).</div></div>
-  <div class="step"><div class="n">۲</div><div class="b"><h4>باز کردن فایل zip</h4>روی فایل راست‌کلیک کنید، <b>Extract All…</b> و بعد <b>Extract</b>. پوشه‌ای به نام <code>persian-padel-windows</code> روی Desktop ساخته می‌شود.</div></div>
-  <div class="step"><div class="n">۳</div><div class="b"><h4>باز کردن PowerShell به‌عنوان مدیر</h4>روی Start راست‌کلیک ← <b>Windows PowerShell (Admin)</b> یا <b>Terminal (Admin)</b>. اگر پرسید «اجازه‌ی تغییر می‌دهید؟»، Yes.</div></div>
+  <div class="step"><div class="n">۱</div><div class="b"><h4>بسته‌ی نصب را بگیرید</h4>بسته در <b>سه فایل</b> برایتان فرستاده شده: <code>persian-padel-windows.part1</code>، <code>part2</code> و <code>part3</code> (روی هم حدود ۸۰ مگابایت). هر سه را دانلود کنید و کنار هم روی <b>Desktop سرور</b> کپی کنید (فصل ۴). اسمشان را عوض نکنید.</div></div>
+  <div class="step"><div class="n">۲</div><div class="b"><h4>باز کردن PowerShell به‌عنوان مدیر</h4>روی Start راست‌کلیک ← <b>Windows PowerShell (Admin)</b> یا <b>Terminal (Admin)</b>. اگر پرسید «اجازه‌ی تغییر می‌دهید؟»، Yes.</div></div>
+  <div class="step"><div class="n">۳</div><div class="b"><h4>چسباندن سه فایل و باز کردن بسته</h4>این سه خط را با هم کپی کنید و Enter بزنید. سه تکه به یک فایل zip تبدیل و بعد باز می‌شود (یکی دو دقیقه طول می‌کشد):
+    <div class="code">cd $HOME\Desktop
+cmd /c copy /b persian-padel-windows.part1+persian-padel-windows.part2+persian-padel-windows.part3 persian-padel-windows.zip
+Expand-Archive persian-padel-windows.zip -DestinationPath . -Force</div>
+    اگر خطای «cannot find» دیدید، یعنی یکی از سه فایل روی Desktop نیست یا اسمش فرق دارد.</div></div>
   <div class="step"><div class="n">۴</div><div class="b"><h4>رفتن به پوشه‌ی بسته</h4>این دستور پوشه‌ی درست را خودش روی Desktop پیدا می‌کند (هر جا Extract کرده باشید):
     <div class="code">cd (Get-ChildItem $HOME\Desktop -Recurse -Filter Install.ps1 | Select-Object -First 1).DirectoryName</div></div></div>
   <div class="step"><div class="n">۵</div><div class="b"><h4>اجازه‌ی اجرای اسکریپت (فقط همین پنجره)</h4>
@@ -521,7 +527,7 @@ cd C:\PersianPadel\deploy\windows
     <tr><td>پشتیبان‌گیری دستی</td><td><code>powershell -ExecutionPolicy Bypass -File C:\PersianPadel\deploy\windows\Backup-Database.ps1</code></td></tr>
   </table>
   <h3>به‌روزرسانی اپ به نسخه‌ی جدید</h3>
-  <p>وقتی بسته‌ی جدید برایتان فرستاده شد: اول پوشه‌ی بسته‌ی قبلی را از Desktop سرور پاک کنید، بسته‌ی جدید را کپی و Extract کنید، بعد در PowerShell مدیر:</p>
+  <p>وقتی بسته‌ی جدید برایتان فرستاده شد: اول پوشه‌ی بسته‌ی قبلی و فایل‌های part قدیمی را از Desktop سرور پاک کنید، سه فایل جدید را کپی کنید و مثل قدم ۳ فصل ۶ بچسبانید و باز کنید. بعد در همان PowerShell مدیر:</p>
   <div class="code">Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 $pkg = (Get-ChildItem $HOME\Desktop -Recurse -Filter Install.ps1 | Select-Object -First 1).DirectoryName
 cd C:\PersianPadel\deploy\windows

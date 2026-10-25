@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   /**
+   * اپ از next/image استفاده نمی‌کند؛ مسیر /_next/image را می‌بندیم تا کتابخانه‌ی
+   * sharp/libvips (که چند آسیب‌پذیری شناخته‌شده دارد) هرگز روی ورودی کاربر اجرا نشود.
+   */
+  images: { unoptimized: true },
+  /**
    * خروجی مستقل — برای Docker، Vercel و پلتفرم‌هایی مانند لیارا و آروان.
    *
    * روی cPanel این حالت به درد نمی‌خورد: آنجا Passenger اپ را اجرا می‌کند و

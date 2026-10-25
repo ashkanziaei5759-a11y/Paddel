@@ -6,6 +6,11 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+    /* پیش‌فرض prisma فقط ۲ ثانیه برای گرفتن اتصالِ شروع تراکنش صبر می‌کند.
+       در تست بار، وقتی ۵۰ نفر هم‌زمان یک سانس را رزرو کردند، بقیه پشت قفلِ
+       تراکنشِ اول صف کشیدند و ۱۲ نفر به‌جای پیام «این سانس گرفته شد» خطای ۵۰۰
+       گرفتند (P2028). با ۱۰ ثانیه، زیر بار صبر می‌کنند و جواب درست می‌گیرند. */
+    transactionOptions: { maxWait: 10_000 },
   });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;

@@ -66,6 +66,11 @@ $env:DIRECT_URL   = $dbUrl
 
 Push-Location $InstallPath
 try {
+    # موتورهای ویندوزیِ داخل بسته را صریح معرفی می‌کنیم تا prisma سراغ دانلود
+    # از اینترنت خارجی نرود (روی سرورهای ایرانی معمولاً در دسترس نیست).
+    $env:PRISMA_SCHEMA_ENGINE_BINARY = Join-Path $InstallPath 'node_modules\@prisma\engines\schema-engine-windows.exe'
+    $env:PRISMA_QUERY_ENGINE_LIBRARY = Join-Path $InstallPath 'node_modules\.prisma\client\query_engine-windows.dll.node'
+    $env:PRISMA_HIDE_UPDATE_MESSAGE = '1'
     & node (Join-Path $InstallPath 'node_modules\prisma\build\index.js') migrate deploy 2>&1 |
         ForEach-Object { Write-Host "    $_" }
     if ($LASTEXITCODE -ne 0) { throw 'مهاجرت ناموفق بود.' }
@@ -82,6 +87,12 @@ try {
 }
 
 Write-Step 'راه‌اندازی سرویس'
+# نصب‌های قدیمی server.js را تک‌هسته‌ای اجرا می‌کردند؛ به نسخه‌ی چندهسته‌ای منتقل شود
+$nssm = Join-Path $InstallPath 'tools\nssm.exe'
+$cluster = Join-Path $InstallPath 'server-cluster.js'
+if ((Test-Path $nssm) -and (Test-Path $cluster)) {
+    & $nssm set $ServiceName AppParameters $cluster | Out-Null
+}
 Start-Service $ServiceName
 Start-Sleep -Seconds 5
 

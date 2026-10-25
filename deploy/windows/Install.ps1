@@ -347,6 +347,11 @@ if (-not $envLine) { Write-Fail 'DATABASE_URL در .env پیدا نشد.'; exit 
 $dbUrl = $envLine.Line -replace '^DATABASE_URL=', '' -replace '^"', '' -replace '"$', ''
 $env:DATABASE_URL = $dbUrl
 $env:DIRECT_URL   = $dbUrl
+# موتورهای ویندوزیِ داخل بسته را صریح معرفی می‌کنیم تا prisma سراغ دانلود
+# از اینترنت خارجی نرود (روی سرورهای ایرانی معمولاً در دسترس نیست).
+$env:PRISMA_SCHEMA_ENGINE_BINARY = Join-Path $InstallPath 'node_modules\@prisma\engines\schema-engine-windows.exe'
+$env:PRISMA_QUERY_ENGINE_LIBRARY = Join-Path $InstallPath 'node_modules\.prisma\client\query_engine-windows.dll.node'
+$env:PRISMA_HIDE_UPDATE_MESSAGE = '1'
 
 Push-Location $InstallPath
 try {

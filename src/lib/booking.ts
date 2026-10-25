@@ -229,6 +229,12 @@ export async function createBooking(input: CreateBookingInput) {
   });
   const totalPrice = priced.reduce((sum, s) => sum + s.price, 0n);
 
+  /* تنظیمات امتیاز پیش از تراکنش خوانده می‌شود، نه داخل آن. getPointEconomy
+     از اتصال‌های عمومی استفاده می‌کند؛ وقتی ۵۰ نفر هم‌زمان یک سانس را می‌زدند،
+     همه‌ی اتصال‌ها دستِ تراکنش‌هایی بود که پشت قفلِ تراکنشِ برنده منتظر بودند و
+     برنده برای همین خواندن اتصالی پیدا نمی‌کرد — قفلِ متقابل تا پایان مهلت. */
+  const economy = await getPointEconomy();
+
   const booking = await prisma.$transaction(
     async (tx) => {
       const created = await tx.booking.create({
@@ -290,7 +296,6 @@ export async function createBooking(input: CreateBookingInput) {
           userId: input.userId,
           for: 'BOOKING',
         });
-        const economy = await getPointEconomy();
         assertVoucherHourAllowed(
           voucher,
           priced.map((p) => p.startsAt),
@@ -313,7 +318,6 @@ export async function createBooking(input: CreateBookingInput) {
 
       if (payable > 0n) {
         if (input.payWithPoints) {
-          const economy = await getPointEconomy();
           const cost = rialToPoints(payable, economy.rialPerPoint);
           await mutatePoints(tx, {
             userId: input.userId,
@@ -341,7 +345,6 @@ export async function createBooking(input: CreateBookingInput) {
              فقط روی پولِ واقعاً پرداخت‌شده. اگر بابت رزروی که با امتیاز یا
              با بن انجام شده هم امتیاز می‌دادیم، یک چرخه‌ی بی‌پایان درست
              می‌شد: امتیاز → رزرو رایگان → امتیاز بیشتر. */
-          const economy = await getPointEconomy();
           const reward = rialToPoints(payable, economy.rialPerRewardPoint);
           if (reward > 0) {
             await mutatePoints(tx, {

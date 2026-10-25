@@ -24,6 +24,54 @@ export default async function HomePage() {
   const user = await requirePage();
   const now = new Date();
 
+  /*
+   * همه‌ی کوئری‌ها هم‌زمان شروع می‌شوند. قبلاً سه موج پشت‌سرهم بودند و هر
+   * موج منتظر رفت‌وبرگشتِ موج قبلی به پایگاه داده می‌ماند، در حالی که هیچ‌کدام
+   * به نتیجه‌ی دیگری نیاز ندارند.
+   */
+  // کوئری‌های prisma تنبل‌اند و تا await نشوند اجرا نمی‌شوند؛ Promise.all
+  // همین‌جا راهشان می‌اندازد.
+  const restQuery = Promise.all([
+    /* بازی‌هایی که هنوز جای خالی دارند و کاربر در آن‌ها نیست */
+    prisma.openMatch.findMany({
+      where: {
+        status: 'OPEN',
+        booking: { status: 'CONFIRMED', startsAt: { gt: now } },
+        players: { none: { userId: user.id } },
+        OR: [{ levelPolicy: 'ANY' }, { allowedLevels: { has: user.level } }],
+      },
+      include: {
+        booking: { include: { court: { select: { name: true } } } },
+        players: { select: { id: true } },
+      },
+      orderBy: { booking: { startsAt: 'asc' } },
+      take: 3,
+    }),
+    prisma.court.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: 'asc' },
+      select: { id: true, name: true, description: true, imageUrl: true, basePrice: true },
+      take: 8,
+    }),
+    prisma.article.findMany({
+      where: { status: 'PUBLISHED', publishedAt: { not: null } },
+      orderBy: [{ isPinned: 'desc' }, { publishedAt: 'desc' }],
+      take: 4,
+    }),
+    prisma.profile.findMany({
+      where: { user: { status: 'ACTIVE' }, points: { gt: 0 } },
+      orderBy: [{ points: 'desc' }, { firstName: 'asc' }],
+      take: 5,
+      select: {
+        userId: true, firstName: true, lastName: true,
+        avatarUrl: true, level: true, points: true, gender: true,
+      },
+    }),
+  ]);
+  // اگر موج اول خطا بدهد، این یکی هنوز await نشده؛ بدون این، خطای «رد نشده»
+  // می‌تواند کل فرایند Node را بیندازد. خطای واقعی همان پایین با await بالا می‌آید.
+  restQuery.catch(() => {});
+
   const [wallet, unread, nextBooking, bookingCount, upcomingTournaments, pendingRequests, banners] =
     await Promise.all([
       prisma.wallet.findUnique({ where: { userId: user.id }, select: { balance: true } }),
@@ -53,44 +101,7 @@ export default async function HomePage() {
       }),
     ]);
 
-  /* بازی‌هایی که هنوز جای خالی دارند و کاربر در آن‌ها نیست */
-  const openMatches = await prisma.openMatch.findMany({
-    where: {
-      status: 'OPEN',
-      booking: { status: 'CONFIRMED', startsAt: { gt: now } },
-      players: { none: { userId: user.id } },
-      OR: [{ levelPolicy: 'ANY' }, { allowedLevels: { has: user.level } }],
-    },
-    include: {
-      booking: { include: { court: { select: { name: true } } } },
-      players: { select: { id: true } },
-    },
-    orderBy: { booking: { startsAt: 'asc' } },
-    take: 3,
-  });
-
-  const [courts, articles, topPlayers] = await Promise.all([
-    prisma.court.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: 'asc' },
-      select: { id: true, name: true, description: true, imageUrl: true, basePrice: true },
-      take: 8,
-    }),
-    prisma.article.findMany({
-      where: { status: 'PUBLISHED', publishedAt: { not: null } },
-      orderBy: [{ isPinned: 'desc' }, { publishedAt: 'desc' }],
-      take: 4,
-    }),
-    prisma.profile.findMany({
-      where: { user: { status: 'ACTIVE' }, points: { gt: 0 } },
-      orderBy: [{ points: 'desc' }, { firstName: 'asc' }],
-      take: 5,
-      select: {
-        userId: true, firstName: true, lastName: true,
-        avatarUrl: true, level: true, points: true, gender: true,
-      },
-    }),
-  ]);
+  const [openMatches, courts, articles, topPlayers] = await restQuery;
 
   const topPlayersWithAlpha = await withAlphaFlags(topPlayers);
 
