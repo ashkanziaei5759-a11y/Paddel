@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>راهنمای راه‌اندازی اپ هوشمند زمین پدل روی سرور ویندوز</title>
+<style>
+@font-face{font-family:V;src:url(vazirmatn-arabic-800-normal.woff2) format('woff2');font-weight:800}
+@font-face{font-family:V;src:url(vazirmatn-arabic-900-normal.woff2) format('woff2');font-weight:900}
+@font-face{font-family:D;src:url(DanaFaNum-Regular.ttf) format('truetype');font-weight:400}
+@font-face{font-family:D;src:url(DanaFaNum-Bold.ttf) format('truetype');font-weight:700}
+:root{--navy:#0B2A43;--blue:#0B5F87;--amber:#FCA311;--ink:#14212E;--mute:#5B6B7C;--line:#E3E8EE;--soft:#F5F8FB;--green:#15803D;--red:#C62828}
+@page{size:A4;margin:18mm 17mm 20mm 17mm}
+@page:first{margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;font-family:D,sans-serif;color:var(--ink);font-size:10.4pt;line-height:1.95;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+h1,h2,h3,h4{font-family:V;font-weight:900;color:var(--navy);line-height:1.45;margin:0}
+h2{font-size:19pt;margin:0 0 4mm;padding-top:1mm}
+h3{font-size:13pt;margin:6mm 0 2mm;color:var(--blue)}
+h4{font-size:11pt;font-weight:800;margin:4mm 0 1mm}
+p{margin:0 0 2.6mm}
+ul,ol{margin:1mm 0 3mm;padding-right:6mm}
+li{margin-bottom:1.2mm}
+b,strong{font-weight:700}
+.chap{page-break-before:always}
+.kicker{font-family:V;font-weight:800;font-size:9pt;color:var(--amber);letter-spacing:.02em;display:flex;align-items:center;gap:2mm;margin-bottom:1mm}
+.kicker::before{content:"";display:inline-block;width:8mm;height:.8mm;background:var(--amber);border-radius:1mm}
+.lead{font-size:11pt;color:var(--mute);margin-bottom:5mm}
+/* boxes */
+.box{border-radius:3.5mm;padding:3.5mm 4.5mm;margin:3.5mm 0;border:.3mm solid var(--line);background:var(--soft);page-break-inside:avoid}
+.box .t{font-family:V;font-weight:800;font-size:10.5pt;margin-bottom:1mm;display:flex;align-items:center;gap:2mm}
+.tip{background:#EEF7FF;border-color:#CFE4F7}.tip .t{color:var(--blue)}
+.warn{background:#FFF6E6;border-color:#F6DDA8}.warn .t{color:#A55D00}
+.danger{background:#FDECEC;border-color:#F3C1C1}.danger .t{color:var(--red)}
+.ok{background:#ECF8F0;border-color:#BFE5CC}.ok .t{color:var(--green)}
+.ic{display:inline-grid;place-items:center;width:5.5mm;height:5.5mm;border-radius:50%;color:#fff;font-size:8pt;font-family:D;font-weight:700}
+.tip .ic{background:var(--blue)}.warn .ic{background:#D98B00}.danger .ic{background:var(--red)}.ok .ic{background:var(--green)}
+/* code */
+.code{direction:ltr;text-align:left;font-family:"DejaVu Sans Mono",monospace;font-size:8.8pt;line-height:1.6;background:#0F1C2A;color:#E6EDF3;border-radius:3mm;padding:3mm 4mm;margin:2.5mm 0 3.5mm;white-space:pre-wrap;word-break:break-all;page-break-inside:avoid;position:relative}
+.code .c{color:#7FA2BF}
+.code .y{color:#FFCF6E}
+code,.m{font-family:"DejaVu Sans Mono",monospace;font-size:8.8pt;direction:ltr;unicode-bidi:isolate;background:#EEF2F6;border-radius:1.2mm;padding:.2mm 1.4mm;color:#0B3A5C}
+.cap{font-family:V;font-weight:800;font-size:8pt;color:var(--mute);margin:3mm 0 -1.5mm}
+/* steps */
+.step{display:flex;gap:4mm;margin:4mm 0;page-break-inside:avoid}
+.step .n{flex:none;width:9mm;height:9mm;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-family:V;font-weight:900;font-size:11pt;margin-top:.6mm}
+.step .b{flex:1}
+.step .b h4{margin-top:0}
+/* tables */
+table{width:100%;border-collapse:separate;border-spacing:0;margin:3mm 0 4mm;font-size:9.4pt;page-break-inside:avoid;border:.3mm solid var(--line);border-radius:3mm;overflow:hidden}
+th{background:var(--navy);color:#fff;font-family:V;font-weight:800;text-align:right;padding:2.2mm 3mm;font-size:9pt}
+td{padding:2.2mm 3mm;border-top:.3mm solid var(--line);vertical-align:top}
+tr:nth-child(even) td{background:#FAFBFD}
+/* checklist */
+.chk{list-style:none;padding-right:0}
+.chk li{position:relative;padding-right:7.5mm}
+.chk li::before{content:"";position:absolute;right:0;top:1.6mm;width:4.2mm;height:4.2mm;border:.4mm solid var(--blue);border-radius:1mm}
+/* flow diagram */
+.flow{display:flex;align-items:stretch;gap:2mm;margin:4mm 0;page-break-inside:avoid}
+.flow .s{flex:1;background:var(--soft);border:.3mm solid var(--line);border-radius:3mm;padding:2.5mm;text-align:center;font-size:8.6pt;line-height:1.6}
+.flow .s b{display:block;font-family:V;font-weight:800;color:var(--navy);font-size:9.4pt;margin-bottom:.6mm}
+.flow .a{flex:none;display:grid;place-items:center;color:var(--amber);font-size:14pt;font-weight:700}
+/* toc */
+.toc{list-style:none;padding:0;margin:4mm 0}
+.toc li{display:flex;gap:3mm;align-items:baseline;padding:2mm 0;border-bottom:.3mm dashed var(--line);font-size:10.6pt}
+.toc .no{flex:none;width:9mm;font-family:V;font-weight:900;color:var(--amber)}
+.toc .d{color:var(--mute);font-size:9pt;margin-right:auto}
+/* fill-in sheet */
+.fill td:last-child{width:58%;height:9mm}
+/* cover */
+.cover{height:297mm;width:210mm;position:relative;overflow:hidden;color:#fff;
+  background:radial-gradient(140mm 140mm at 20% 80%,rgba(11,95,135,.65),transparent 70%),radial-gradient(110mm 110mm at 95% 5%,rgba(252,163,17,.16),transparent 70%),linear-gradient(165deg,#061A2B,#0B2A43 60%,#0A3553)}
+.cover .grid{position:absolute;inset:0;opacity:.09;background-image:linear-gradient(rgba(202,240,248,.9) .25mm,transparent .25mm),linear-gradient(90deg,rgba(202,240,248,.9) .25mm,transparent .25mm);background-size:10mm 10mm}
+.cover .in{position:absolute;inset:26mm 22mm}
+.cover h1{color:#fff;font-size:30pt;line-height:1.35;margin-top:14mm}
+.cover h1 span{color:var(--amber)}
+.cover .sub{font-family:V;font-weight:800;font-size:13pt;color:rgba(255,255,255,.85);margin-top:5mm}
+.cover .chips{margin-top:9mm;display:flex;flex-wrap:wrap;gap:2.5mm}
+.cover .chips span{border:.3mm solid rgba(255,255,255,.3);border-radius:10mm;padding:1.2mm 4mm;font-family:V;font-weight:800;font-size:9pt}
+.cover .foot{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:flex-end;font-size:9pt;color:rgba(255,255,255,.7)}
+.cover .card{margin-top:12mm;background:rgba(255,255,255,.06);border:.3mm solid rgba(255,255,255,.14);border-radius:4mm;padding:5mm 6mm;max-width:130mm}
+.cover .card .row{display:flex;gap:3mm;align-items:center;margin:1.6mm 0;font-size:10pt}
+.cover .card .row b{display:inline-grid;place-items:center;width:7mm;height:7mm;border-radius:50%;background:var(--amber);color:#1b1300;font-family:V;font-weight:900;font-size:10pt;flex:none}
+.small{font-size:8.8pt;color:var(--mute)}
+.two{display:flex;gap:4mm}.two>div{flex:1}
+.pill{display:inline-block;padding:.2mm 2.4mm;border-radius:10mm;background:#E7F0F8;color:var(--blue);font-family:V;font-weight:800;font-size:8.2pt}
+.pill.r{background:#FCE8E8;color:var(--red)}.pill.g{background:#E3F4E8;color:var(--green)}
+.keys{display:inline-block;font-family:"DejaVu Sans Mono",monospace;font-size:8.4pt;border:.3mm solid #C9D3DD;border-bottom-width:.8mm;border-radius:1.2mm;padding:0 1.4mm;background:#fff;direction:ltr}
+</style>
+</head>
+<body>
+
+<!-- ===================== COVER ===================== -->
+<section class="cover">
+  <div class="grid"></div>
+  <div class="in">
+    <img src="appicon.svg" style="width:24mm;height:24mm;border-radius:6mm;box-shadow:0 4mm 10mm rgba(0,0,0,.4)">
+    <h1>راهنمای قدم‌به‌قدم<br>راه‌اندازی <span>اپ هوشمند زمین پدل</span><br>روی سرور ویندوز</h1>
+    <div class="sub">از خرید سرور و دامنه تا سایتِ آماده با https — بدون نیاز به دانش فنی</div>
+    <div class="chips"><span>خرید سرور</span><span>خرید دامنه</span><span>ورود به سرور</span><span>نصب برنامه</span><span>SSL</span><span>پیامک و درگاه</span><span>نگهداری</span></div>
+    <div class="card">
+      <div style="font-family:V;font-weight:800;font-size:11pt;margin-bottom:2mm">کل مسیر در یک نگاه</div>
+      <div class="row"><b>۱</b>یک «سرور مجازی ویندوز» و یک «دامنه» بخرید</div>
+      <div class="row"><b>۲</b>دامنه را به سرور وصل کنید (یک تنظیم ساده)</div>
+      <div class="row"><b>۳</b>با Remote Desktop وارد سرور شوید</div>
+      <div class="row"><b>۴</b>چهار برنامه‌ی پیش‌نیاز را نصب کنید</div>
+      <div class="row"><b>۵</b>بسته‌ی آماده را کپی و با یک دستور نصب کنید</div>
+      <div class="row"><b>۶</b>با یک دستور دیگر https بگیرید — تمام!</div>
+    </div>
+    <div class="foot">
+      <div>زمان تقریبی: یک روز کاری (بیشترش انتظار برای تحویل سرور و دامنه است)</div>
+      <div>شرکت آماریا · ۰۹۰۵ ۸۲۳ ۵۷۵۹</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TOC ===================== -->
+<section class="chap" style="page-break-before:always">
+  <div class="kicker">فهرست</div>
+  <h2>این راهنما چه چیزهایی دارد</h2>
+  <ul class="toc">
+    <li><span class="no">۰</span>پیش از شروع: کلمه‌هایی که باید بدانید<span class="d">۲ دقیقه</span></li>
+    <li><span class="no">۱</span>چه چیزی بخرم؟ (هاست یا سرور؟ ویندوز یا لینوکس؟)<span class="d">مهم‌ترین تصمیم</span></li>
+    <li><span class="no">۲</span>خرید سرور مجازی ویندوز — قدم‌به‌قدم (ایران‌هاست، هاست‌ایران و…)<span class="d">۳۰ دقیقه</span></li>
+    <li><span class="no">۳</span>خرید دامنه و وصل‌کردنش به سرور<span class="d">۲۰ دقیقه + انتظار</span></li>
+    <li><span class="no">۴</span>ورود به سرور با Remote Desktop (ویندوز، مک، موبایل)<span class="d">۱۰ دقیقه</span></li>
+    <li><span class="no">۵</span>آماده‌کردن سرور و نصب پیش‌نیازها<span class="d">۳۰ دقیقه</span></li>
+    <li><span class="no">۶</span>نصب اپ با بسته‌ی آماده<span class="d">۱۵ دقیقه</span></li>
+    <li><span class="no">۷</span>گرفتن SSL (قفل سبز و https)<span class="d">۱۰ دقیقه</span></li>
+    <li><span class="no">۸</span>اولین ورود به پنل و تنظیم باشگاه<span class="d">۲۰ دقیقه</span></li>
+    <li><span class="no">۹</span>وصل‌کردن پیامک (برای ثبت‌نام بازیکن‌ها)<span class="d">۱ تا ۲ روز (تأیید الگو)</span></li>
+    <li><span class="no">۱۰</span>وصل‌کردن درگاه پرداخت (زرین‌پال، زیبال، نکست‌پی)<span class="d">۱ تا ۳ روز (تأیید درگاه)</span></li>
+    <li><span class="no">۱۱</span>پشتیبان‌گیری و نگهداری روزمره<span class="d">۵ دقیقه</span></li>
+    <li><span class="no">۱۲</span>اگر چیزی کار نکرد (رفع اشکال)<span class="d">—</span></li>
+    <li><span class="no">پ</span>پیوست‌ها: چک‌لیست نهایی، برگه‌ی یادداشت رمزها، فهرست هزینه‌ها<span class="d">—</span></li>
+  </ul>
+  <div class="box tip"><div class="t"><span class="ic">i</span>چطور از این راهنما استفاده کنم؟</div>
+    فصل‌ها را <b>به ترتیب</b> جلو بروید. هر جا جعبه‌ی تیره‌ی دستور دیدید، متنش را <b>دقیقاً همان‌طور</b> کپی کنید و فقط کلمه‌هایی را که با رنگ زرد مشخص شده‌اند (مثل <code>mypadel.ir</code>) با اطلاعات خودتان عوض کنید. اگر وسط کار گیر کردید، فصل ۱۲ را ببینید.
+  </div>
+</section>
+
+<!-- ===================== 0 ===================== -->
+<section class="chap">
+  <div class="kicker">فصل ۰</div>
+  <h2>پیش از شروع: کلمه‌هایی که باید بدانید</h2>
+  <p class="lead">لازم نیست برنامه‌نویس باشید. فقط این چند کلمه را بشناسید؛ در ادامه زیاد تکرار می‌شوند.</p>
+  <table>
+    <tr><th style="width:27%">کلمه</th><th>یعنی چه؟ (به زبان ساده)</th></tr>
+    <tr><td><b>سرور</b></td><td>یک کامپیوتر که ۲۴ ساعته در یک دیتاسنتر روشن است و سایت شما روی آن اجرا می‌شود. شما آن را «اجاره» می‌کنید.</td></tr>
+    <tr><td><b>سرور مجازی (VPS)</b></td><td>یک کامپیوتر مستقل (ولی مجازی) که فقط مال شماست و کنترل کاملش دست شماست. <b>این همان چیزی است که لازم داریم.</b></td></tr>
+    <tr><td><b>هاست اشتراکی</b></td><td>یک فضای کوچک روی سروری که بین صدها نفر مشترک است و فقط سایت‌های ساده (وردپرس و PHP) را اجرا می‌کند. <span class="pill r">برای این اپ مناسب نیست</span></td></tr>
+    <tr><td><b>دامنه</b></td><td>نشانی سایت، مثل <code>mypadel.ir</code>. سالانه تمدید می‌شود.</td></tr>
+    <tr><td><b>IP</b></td><td>شماره‌ی سرور در اینترنت، مثل <code>185.10.20.30</code>. بعد از خرید سرور به شما داده می‌شود.</td></tr>
+    <tr><td><b>DNS / رکورد A</b></td><td>«دفترچه تلفن» اینترنت. با یک رکورد A می‌گوییم «دامنه‌ی من = این IP».</td></tr>
+    <tr><td><b>Remote Desktop (RDP)</b></td><td>برنامه‌ای که صفحه‌ی سرور را روی کامپیوتر شما نشان می‌دهد تا مثل یک کامپیوتر معمولی با موس کارش کنید.</td></tr>
+    <tr><td><b>Administrator</b></td><td>نام کاربری مدیر کامل سرور ویندوز.</td></tr>
+    <tr><td><b>SSL / https</b></td><td>همان قفل کنار نشانی سایت. بدون آن مرورگر هشدار «ناامن» می‌دهد و <b>درگاه پرداخت هم وصل نمی‌شود</b>.</td></tr>
+    <tr><td><b>PowerShell</b></td><td>پنجره‌ی دستور ویندوز. ما فقط چند دستور آماده در آن کپی می‌کنیم.</td></tr>
+    <tr><td><b>بسته‌ی نصب</b></td><td>فایل <code>persian-padel-windows.zip</code> که همه‌چیزِ اپ و اسکریپت‌های نصب داخلش است.</td></tr>
+  </table>
+  <div class="flow">
+    <div class="s"><b>بازیکن</b>نشانی سایت را باز می‌کند</div><div class="a">←</div>
+    <div class="s"><b>دامنه</b>به IP سرور اشاره می‌کند</div><div class="a">←</div>
+    <div class="s"><b>سرور ویندوز</b>IIS درخواست را می‌گیرد</div><div class="a">←</div>
+    <div class="s"><b>اپ</b>صفحه را می‌سازد</div><div class="a">←</div>
+    <div class="s"><b>پایگاه داده</b>رزروها و کاربران</div>
+  </div>
+  <p class="small" style="text-align:center">(جهت فلش‌ها از راست به چپ خوانده می‌شود)</p>
+</section>
+
+<!-- ===================== 1 ===================== -->
+<section class="chap">
+  <div class="kicker">فصل ۱</div>
+  <h2>چه چیزی بخرم؟</h2>
+  <p class="lead">مهم‌ترین تصمیم کل مسیر همین است. اگر اشتباه بخرید، اپ اصلاً اجرا نمی‌شود.</p>
+
+  <div class="box danger"><div class="t"><span class="ic">!</span>«هاست» نخرید — «سرور مجازی» بخرید</div>
+    این اپ با <b>Node.js</b> و پایگاه داده‌ی <b>PostgreSQL</b> کار می‌کند. هاست‌های اشتراکی (چه ویندوزی، چه لینوکسی/سی‌پنل) اجازه‌ی نصب این‌ها را نمی‌دهند. در سایت شرکت‌های هاستینگ، دنبال عبارت <b>«سرور مجازی ویندوز»</b> یا <b>«VPS ویندوز»</b> بگردید، نه «هاست ویندوز».
+  </div>
+
+  <h3>مشخصات سروری که باید بخرید</h3>
+  <table>
+    <tr><th>مورد</th><th>حداقل (کار می‌کند)</th><th>پیشنهاد من</th></tr>
+    <tr><td>پردازنده (CPU)</td><td>۲ هسته</td><td><b>۴ هسته</b></td></tr>
+    <tr><td>حافظه (RAM)</td><td>۴ گیگابایت</td><td><b>۸ گیگابایت</b></td></tr>
+    <tr><td>فضا (دیسک)</td><td>۴۰ گیگابایت SSD</td><td><b>۸۰ گیگابایت SSD یا NVMe</b></td></tr>
+    <tr><td>سیستم‌عامل</td><td>Windows Server 2019</td><td><b>Windows Server 2022</b></td></tr>
+    <tr><td>IP</td><td colspan="2">یک IP اختصاصی (IPv4) — معمولاً همراه سرور است</td></tr>
+    <tr><td>محل دیتاسنتر</td><td colspan="2"><b>ایران</b> (برای سرعت بهتر بازیکن‌ها و کار بی‌دردسر درگاه پرداخت و پیامک ایرانی)</td></tr>
+    <tr><td>ترافیک</td><td colspan="2">نامحدود یا حداقل ماهانه ۵۰۰ گیگابایت</td></tr>
+  </table>
+  <div class="box tip"><div class="t"><span class="ic">i</span>چرا ۴ گیگ رم کمترین مقدار است؟</div>
+    خودِ ویندوز سرور حدود ۲ گیگ رم مصرف می‌کند، پایگاه داده نیم گیگ و اپ تا یک گیگ. با رم کمتر، سرور کُند می‌شود. اگر بودجه اجازه می‌دهد ۸ گیگ بگیرید تا با زیاد شدن بازیکن‌ها خیالتان راحت باشد.
+  </div>
+
+  <h3>ویندوز یا لینوکس؟</h3>
+  <div class="two">
+    <div class="box"><div class="t">ویندوز <span class="pill g">پیشنهاد برای شما</span></div>
+      با موس و صفحه‌ی گرافیکی کار می‌کنید، شبیه کامپیوتر خودتان. بسته‌ی نصب آماده‌ی این اپ برای ویندوز ساخته شده و همه‌چیز با چند دستور کپی‌پیست انجام می‌شود. کمی گران‌تر است (هزینه‌ی لایسنس ویندوز).</div>
+    <div class="box"><div class="t">لینوکس</div>
+      ارزان‌تر و سبک‌تر است، ولی همه‌چیز با دستورهای متنی انجام می‌شود. اگر فرد فنی کنارتان نیست، <b>ویندوز را انتخاب کنید</b>. (راهنمای لینوکس هم در مخزن پروژه هست: <code>DEPLOY-IRAN.md</code>)</div>
+  </div>
+
+  <h3>از کدام شرکت بخرم؟</h3>
+  <p>شرکت‌های ایرانی زیادی سرور مجازی ویندوز می‌فروشند؛ مثلاً <b>ایران‌هاست</b> (iranhost.com)، <b>هاست‌ایران</b> (hostiran.net)، <b>پارس‌پک</b>، <b>ایران‌سرور</b> و <b>ابرآروان</b>. قیمت‌ها و پلن‌ها مرتب عوض می‌شوند، پس به‌جای اسم شرکت، این معیارها را مقایسه کنید:</p>
+  <table>
+    <tr><th style="width:38%">معیار</th><th>چرا مهم است؟</th></tr>
+    <tr><td>دسترسی کامل Administrator با RDP</td><td>بدون آن نمی‌توانید نرم‌افزار نصب کنید. <b>شرط حتمی.</b></td></tr>
+    <tr><td>لایسنس ویندوز در قیمت هست؟</td><td>بعضی‌ها جدا حساب می‌کنند.</td></tr>
+    <tr><td>پشتیبانی ۲۴ ساعته (تیکت/تلفن)</td><td>برای وقتی که سرور قطع شد یا رمز را گم کردید.</td></tr>
+    <tr><td>اسنپ‌شات یا بکاپ خودکار</td><td>«عکس» از کل سرور؛ اگر چیزی خراب شد با یک کلیک برمی‌گردید.</td></tr>
+    <tr><td>پرداخت ماهانه</td><td>ماه اول را ماهانه بخرید؛ اگر راضی بودید سالانه تمدید کنید (معمولاً تخفیف دارد).</td></tr>
+    <tr><td>دسترسی به اینترنت بین‌الملل</td><td>برای دانلود چند ابزار و گرفتن SSL رایگان مفید است (اگر نبود هم راه دارد؛ فصل ۵ و ۷).</td></tr>
+    <tr><td>فروش دامنه در همان شرکت</td><td>خرید سرور و دامنه از یک جا کار را خیلی ساده‌تر می‌کند.</td></tr>
+  </table>
+  <div class="box ok"><div class="t"><span class="ic">✓</span>پیشنهاد من در یک خط</div>
+    <b>سرور مجازی ویندوز ۴ هسته، ۸ گیگ رم، ۸۰ گیگ SSD، Windows Server 2022، دیتاسنتر ایران، پرداخت ماهانه</b> — از شرکتی که پشتیبانی پاسخ‌گو دارد و دامنه هم می‌فروشد.
+  </div>
+</section>
+
+<!-- ===================== 2 ===================== -->
+<section class="chap">
+  <div class="kicker">فصل ۲</div>
+  <h2>خرید سرور مجازی ویندوز — قدم‌به‌قدم</h2>
+  <p class="lead">مراحل در همه‌ی شرکت‌های ایرانی (ایران‌هاست، هاست‌ایران و…) تقریباً یکی است. اسم دکمه‌ها ممکن است کمی فرق کند.</p>
+
+  <h3>پیش از خرید، از پشتیبانی بپرسید</h3>
+  <p>این متن را کپی کنید و از بخش «تیکت» یا «چت آنلاین» سایت شرکت بفرستید:</p>
+  <div class="box" style="background:#fff;border-style:dashed">
+    سلام، می‌خواهم سرور مجازی ویندوز برای اجرای یک اپلیکیشن Node.js با پایگاه داده‌ی PostgreSQL بخرم. لطفاً بفرمایید:<br>
+    ۱. دسترسی کامل Administrator با Remote Desktop دارم و می‌توانم نرم‌افزار دلخواه نصب کنم؟<br>
+    ۲. سرور IP اختصاصی دارد و پورت‌های ۸۰ و ۴۴۳ باز است؟<br>
+    ۳. لایسنس Windows Server 2022 در قیمت هست؟<br>
+    ۴. سرور به اینترنت بین‌الملل دسترسی دارد؟<br>
+    ۵. اسنپ‌شات یا بکاپ خودکار دارید؟<br>
+    ممنون.
+  </div>
+  <p>اگر جواب سؤال ۱ و ۲ «بله» نبود، از آن شرکت نخرید.</p>
+
+  <h3>مراحل خرید</h3>
+  <div class="step"><div class="n">۱</div><div class="b"><h4>ثبت‌نام در سایت شرکت</h4>با موبایل و ایمیل ثبت‌نام کنید. بیشتر شرکت‌ها برای سرویس‌های سرور <b>احراز هویت</b> می‌خواهند: کد ملی، گاهی عکس کارت ملی. این را از قبل آماده داشته باشید.</div></div>
+  <div class="step"><div class="n">۲</div><div class="b"><h4>رفتن به بخش سرور مجازی ویندوز</h4>از منوی بالای سایت: <b>سرور ← سرور مجازی ← ویندوز</b> (یا «VPS ویندوز»). پلنی را انتخاب کنید که مشخصات فصل ۱ را دارد.</div></div>
+  <div class="step"><div class="n">۳</div><div class="b"><h4>تنظیمات سفارش</h4>
+    <ul>
+      <li><b>سیستم‌عامل:</b> Windows Server 2022 (اگر نبود 2019)</li>
+      <li><b>دیتاسنتر/لوکیشن:</b> ایران (مثلاً تهران)</li>
+      <li><b>دوره‌ی پرداخت:</b> ماهانه</li>
+      <li><b>نام سرور (Hostname):</b> هر اسمی، مثلاً <code>padel-server</code></li>
+      <li>اگر گزینه‌ی «کنترل پنل» یا «لایسنس اضافه» پیشنهاد داد، <b>لازم نیست</b>.</li>
+    </ul></div></div>
+  <div class="step"><div class="n">۴</div><div class="b"><h4>پرداخت</h4>با کارت بانکی از درگاه پرداخت کنید و فاکتور را نگه دارید.</div></div>
+  <div class="step"><div class="n">۵</div><div class="b"><h4>دریافت اطلاعات سرور</h4>معمولاً بین چند دقیقه تا چند ساعت بعد، ایمیلی (یا پیامی در پنل کاربری) با این سه مورد می‌گیرید. <b>همین حالا در برگه‌ی پیوست ب یادداشتشان کنید:</b>
+    <table style="margin-top:2mm"><tr><th>مورد</th><th>نمونه</th></tr>
+      <tr><td>IP سرور</td><td><code>185.10.20.30</code></td></tr>
+      <tr><td>نام کاربری</td><td><code>Administrator</code></td></tr>
+      <tr><td>رمز عبور</td><td><code>a8#Kx...</code></td></tr>
+    </table>
+    گاهی پورت Remote Desktop هم جدا نوشته شده (مثلاً <code>3389</code> یا عددی دیگر). اگر بود، آن را هم یادداشت کنید.</div></div>
+
+  <div class="box warn"><div class="t"><span class="ic">!</span>رمز سرور را به کسی ندهید</div>
+    هر کس این سه مورد را داشته باشد، کنترل کامل سرور و همه‌ی اطلاعات بازیکن‌ها را دارد. در فصل ۴ یاد می‌گیرید رمز را عوض کنید.
+  </div>
+</section>
+
+<!-- ===================== 3 ===================== -->
+<section class="chap">
+  <div class="kicker">فصل ۳</div>
+  <h2>خرید دامنه و وصل‌کردنش به سرور</h2>
+  <p class="lead">دامنه نشانی‌ای است که بازیکن‌ها در مرورگر می‌زنند. ساده‌ترین راه: از همان شرکتی بخرید که سرور را خریدید.</p>
+
+  <h3><code>.ir</code> یا <code>.com</code>؟</h3>
+  <table>
+    <tr><th></th><th>دامنه‌ی ‎.ir</th><th>دامنه‌ی ‎.com</th></tr>
+    <tr><td>قیمت</td><td>ارزان</td><td>گران‌تر</td></tr>
+    <tr><td>ثبت</td><td>از طریق ایرنیک (nic.ir)؛ شرکت فروشنده انجامش می‌دهد</td><td>شرکت‌های ایرانی به‌صورت نمایندگی می‌فروشند</td></tr>
+    <tr><td>مناسب برای</td><td><b>باشگاه ایرانی — پیشنهاد من</b></td><td>اگر مخاطب خارجی هم دارید</td></tr>
+  </table>
+  <div class="box tip"><div class="t"><span class="ic">i</span>«شناسه‌ی ایرنیک» چیست؟</div>
+    برای دامنه‌ی <code>.ir</code> صاحب دامنه باید در سایت ایرنیک (nic.ir) یک شناسه داشته باشد. معمولاً شرکت فروشنده هنگام خرید با کد ملی شما خودش این شناسه را می‌سازد؛ فقط ایمیل و پیامکی که ایرنیک می‌فرستد را تأیید کنید. ثبت دامنه‌ی ‎.ir ممکن است از چند ساعت تا یکی دو روز طول بکشد.
+  </div>
+
+  <h3>مراحل خرید دامنه</h3>
+  <div class="step"><div class="n">۱</div><div class="b"><h4>جست‌وجوی نام</h4>در سایت شرکت به بخش <b>«ثبت دامنه»</b> بروید و نام دلخواه را جست‌وجو کنید (مثلاً <code>mypadel</code>). اگر آزاد بود، به سبد اضافه کنید. نام کوتاه، بدون خط تیره و آسان برای گفتن تلفنی انتخاب کنید.</div></div>
+  <div class="step"><div class="n">۲</div><div class="b"><h4>تکمیل اطلاعات و پرداخت</h4>اطلاعات مالک را <b>به نام خودتان یا باشگاه</b> وارد کنید (برای گرفتن درگاه پرداخت و اینماد، دامنه باید به نام خودتان باشد). مدت را حداقل ۱ سال بگذارید و پرداخت کنید.</div></div>
+  <div class="step"><div class="n">۳</div><div class="b"><h4>تأیید ایمیل/پیامک ایرنیک</h4>برای ‎.ir پیامی از ایرنیک می‌آید؛ تأییدش کنید تا دامنه فعال شود.</div></div>
+
+  <h3>وصل‌کردن دامنه به سرور (رکورد A)</h3>
+  <p>حالا به اینترنت می‌گوییم دامنه‌ی شما روی کدام سرور است. در پنل شرکت: <b>دامنه‌های من ← مدیریت DNS</b> (یا «ویرایش رکوردها»). دو رکورد بسازید:</p>
+  <table>
+    <tr><th>نوع (Type)</th><th>نام (Name / Host)</th><th>مقدار (Value / Points to)</th><th>TTL</th></tr>
+    <tr><td><code>A</code></td><td><code>@</code></td><td>IP سرور شما، مثلاً <code>185.10.20.30</code></td><td>پیش‌فرض</td></tr>
+    <tr><td><code>A</code></td><td><code>www</code></td><td>همان IP</td><td>پیش‌فرض</td></tr>
+  </table>
+  <div class="box tip"><div class="t"><span class="ic">i</span>اگر بخش DNS را پیدا نکردید</div>
+    به پشتیبانی تیکت بزنید: «لطفاً برای دامنه‌ی mypadel.ir دو رکورد A با نام‌های @ و www به IP سرورم (185.10.20.30) بسازید.» این کار برای پشتیبانی دو دقیقه طول می‌کشد.
+  </div>
+  <p>بعد از ثبت رکوردها، <b>بین ۱۰ دقیقه تا ۲۴ ساعت</b> طول می‌کشد تا همه‌جا اعمال شود. در این فاصله فصل‌های ۴ تا ۶ را انجام دهید. برای بررسی، در کامپیوتر خودتان کلید <span class="keys">Win</span> را بزنید، <b>cmd</b> را تایپ و باز کنید و بنویسید:</p>
+  <div class="code">ping <span class="y">mypadel.ir</span></div>
+  <p>اگر در جواب، IP سرور شما را نشان داد (حتی اگر جوابِ پینگ نیاید)، دامنه وصل شده است.</p>
+</section>
+
+<!-- ===================== 4 ===================== -->
+<section class="chap">
+  <div class="kicker">فصل ۴</div>
+  <h2>ورود به سرور با Remote Desktop</h2>
+  <p class="lead">با این کار صفحه‌ی سرور را روی کامپیوتر خودتان می‌بینید و با موس کار می‌کنید.</p>
+
+  <h3>از کامپیوتر ویندوزی</h3>
+  <div class="step"><div class="n">۱</div><div class="b">کلیدهای <span class="keys">Win</span> + <span class="keys">R</span> را با هم بزنید، بنویسید <code>mstsc</code> و Enter بزنید.</div></div>
+  <div class="step"><div class="n">۲</div><div class="b">در کادر <b>Computer</b> آی‌پی سرور را بنویسید. اگر پورت جدا داشت، این‌طور: <code>185.10.20.30:3390</code></div></div>
+  <div class="step"><div class="n">۳</div><div class="b"><b>Show Options</b> را بزنید، در زبانه‌ی <b>Local Resources</b> مطمئن شوید <b>Clipboard</b> تیک دارد (برای کپی‌پیست فایل و متن بین کامپیوتر شما و سرور). بعد <b>Connect</b>.</div></div>
+  <div class="step"><div class="n">۴</div><div class="b">نام کاربری <code>Administrator</code> و رمز سرور را وارد کنید. اگر هشدار «certificate» داد، تیک <b>Don't ask me again</b> را بزنید و <b>Yes</b>.</div></div>
+  <div class="step"><div class="n">۵</div><div class="b">صفحه‌ی ویندوز سرور باز می‌شود. اولین بار ممکن است پنجره‌ی <b>Server Manager</b> خودکار باز شود؛ فعلاً می‌توانید ببندیدش.</div></div>
+
+  <h3>از مک یا موبایل</h3>
+  <p>از App Store (مک و آیفون) یا Google Play (اندروید) برنامه‌ی رایگان <b>Windows App</b> شرکت مایکروسافت را نصب کنید (نام قدیمی‌اش Microsoft Remote Desktop است). روی <b>+</b> بزنید، <b>Add PC</b> را انتخاب کنید، IP را بدهید و با Administrator وارد شوید.</p>
+
+  <h3>اولین کار: عوض‌کردن رمز سرور</h3>
+  <p>داخل سرور، کلیدهای <span class="keys">Ctrl</span> + <span class="keys">Alt</span> + <span class="keys">End</span> را بزنید (در Remote Desktop به‌جای Delete از End استفاده می‌شود) و <b>Change a password</b> را انتخاب کنید. رمز جدید باید حداقل ۱۲ نویسه و ترکیبی از حرف بزرگ، کوچک، عدد و علامت باشد. <b>در برگه‌ی پیوست ب یادداشتش کنید.</b></p>
+
+  <h3>کپی‌کردن فایل به سرور</h3>
+  <p>ساده‌ترین راه: فایل را در کامپیوتر خودتان <b>Copy</b> کنید (<span class="keys">Ctrl</span>+<span class="keys">C</span>)، داخل پنجره‌ی سرور روی <b>Desktop</b> کلیک کنید و <b>Paste</b> (<span class="keys">Ctrl</span>+<span class="keys">V</span>). برای فایل‌های بزرگ (مثل بسته‌ی ۹۰ مگابایتی اپ) چند دقیقه صبر کنید تا کپی تمام شود.</p>
+  <div class="box tip"><div class="t"><span class="ic">i</span>اگر کپی‌پیست کار نکرد</div>
+    در mstsc قبل از Connect: <b>Show Options ← Local Resources ← More…</b> و تیک <b>Drives</b> را بزنید. بعد از ورود، در سرور «This PC» را باز کنید؛ درایوهای کامپیوتر خودتان آن‌جا هستند و می‌توانید از آن‌جا کپی کنید.
+  </div>
+</section>
+
+<!-- ===================== 5 ===================== -->
+<section class="chap">
+  <div class="kicker">فصل ۵</div>
+  <h2>آماده‌کردن سرور و نصب پیش‌نیازها</h2>
+  <p class="lead">چهار برنامه‌ی رایگان باید روی سرور نصب شود. همه‌شان مثل نصب یک برنامه‌ی معمولی (Next، Next، Finish) هستند.</p>
+
+  <div class="box warn"><div class="t"><span class="ic">!</span>سرورهای ایرانی و اینترنت بین‌الملل</div>
+    بعضی سرورهای ایرانی به سایت‌های خارجی دسترسی ندارند. پیشنهاد من: <b>همه‌ی فایل‌های این فصل را روی کامپیوتر خودتان دانلود کنید</b> و با کپی‌پیست به Desktop سرور بفرستید (فصل ۴). این‌طوری مطمئن‌ترین راه است.
+  </div>
+
+  <h3>فایل‌هایی که باید دانلود کنید</h3>
+  <table>
+    <tr><th>#</th><th>برنامه</th><th>از کجا</th><th>کدام فایل</th></tr>
+    <tr><td>۱</td><td><b>Node.js</b> (موتور اجرای اپ)</td><td><code>nodejs.org/en/download</code></td><td>نسخه‌ی <b>LTS</b>، گزینه‌ی <b>Windows Installer (.msi)</b>، ۶۴ بیتی</td></tr>
+    <tr><td>۲</td><td><b>PostgreSQL 16</b> (پایگاه داده)</td><td><code>postgresql.org/download/windows</code></td><td>Download the installer ← نسخه‌ی <b>16</b> برای Windows x86-64</td></tr>
+    <tr><td>۳</td><td><b>URL Rewrite 2.1</b></td><td><code>iis.net/downloads/microsoft/url-rewrite</code></td><td>نسخه‌ی <b>x64</b> (فایل ‎.msi)</td></tr>
+    <tr><td>۴</td><td><b>ARR 3.0</b></td><td><code>iis.net/downloads/microsoft/application-request-routing</code></td><td>نسخه‌ی <b>x64</b> (فایل ‎.msi)</td></tr>
+    <tr><td>۵</td><td>NSSM 2.24 <span class="pill">فقط اگر سرور اینترنت خارجی ندارد</span></td><td><code>nssm.cc/download</code></td><td><code>nssm-2.24.zip</code></td></tr>
+  </table>
+  <p class="small">(موارد ۳ و ۴ دو افزونه‌ی وب‌سرور ویندوز (IIS) هستند تا دامنه به اپ برسد. خودِ IIS را نصب‌کننده‌ی اپ خودکار روشن می‌کند.)</p>
+
+  <h3>نصب به ترتیب</h3>
+  <div class="step"><div class="n">۱</div><div class="b"><h4>Node.js</h4>فایل ‎.msi را اجرا کنید و Next بزنید. در صفحه‌ی <b>Custom Setup</b> مطمئن شوید <b>Add to PATH</b> انتخاب شده است. در صفحه‌ی «Tools for Native Modules» تیک را <b>نزنید</b>. در پایان Finish.</div></div>
+  <div class="step"><div class="n">۲</div><div class="b"><h4>PostgreSQL 16</h4>فایل را اجرا کنید و Next بزنید تا به صفحه‌ی <b>Password</b> برسید.
+    <div class="box danger" style="margin:2mm 0"><div class="t"><span class="ic">!</span>این رمز را حتماً یادداشت کنید</div>رمزی که این‌جا برای کاربر «postgres» می‌گذارید، چند دقیقه‌ی دیگر لازم است. فقط از حروف انگلیسی و عدد استفاده کنید (بدون فاصله). در برگه‌ی پیوست ب بنویسیدش.</div>
+    پورت را روی <code>5432</code> بگذارید، Locale را روی <b>Default locale</b>، و Next تا پایان. در صفحه‌ی آخر تیک <b>Stack Builder</b> را <b>بردارید</b> و Finish.</div></div>
+  <div class="step"><div class="n">۳</div><div class="b"><h4>URL Rewrite و ARR</h4>اول URL Rewrite و بعد ARR را اجرا کنید؛ هر دو را با پذیرفتن شرایط (I accept) و Install نصب کنید.
+    <p class="small" style="margin-top:1mm">اگر خطا داد که IIS نصب نیست، نگران نباشید: نصب‌کننده‌ی اپ در فصل ۶ IIS را روشن می‌کند و به شما می‌گوید این دو را دوباره نصب کنید و اسکریپت را یک بار دیگر اجرا کنید.</p></div></div>
+  <div class="step"><div class="n">۴</div><div class="b"><h4>تنظیم ساعت و به‌روزرسانی</h4>روی دکمه‌ی Start راست‌کلیک کنید، <b>Windows PowerShell (Admin)</b> یا <b>Terminal (Admin)</b> را بزنید و این را کپی و Enter کنید:
+    <div class="code">Set-TimeZone -Id 'Iran Standard Time'</div>
+    سپس از <b>Settings ← Windows Update</b> به‌روزرسانی‌ها را نصب و سرور را یک بار Restart کنید.</div></div>
+
+  <div class="box ok"><div class="t"><span class="ic">✓</span>بررسی</div>
+    در PowerShell بنویسید <code>node --version</code>. اگر عددی مثل <code>v22.x.x</code> نشان داد، Node درست نصب شده است. (اگر خطا داد، PowerShell را ببندید و دوباره باز کنید.)
+  </div>
+</section>
+
+<!-- ===================== 6 ===================== -->
+<section class="chap">
+  <div class="kicker">فصل ۶</div>
+  <h2>نصب اپ با بسته‌ی آماده</h2>
+  <p class="lead">همه‌ی کارهای سخت (ساخت پایگاه داده، تنظیمات، رمزها، سرویس ویندوز، IIS و فایروال) را یک اسکریپت انجام می‌دهد. شما فقط سه دستور کپی می‌کنید.</p>
+
+  <div class="step"><div class="n">۱</div><div class="b"><h4>بسته‌ی نصب را بگیرید</h4>فایل <code>persian-padel-windows.zip</code> (حدود ۹۰ مگابایت) را از لینکی که برایتان فرستاده شده دانلود کنید و به <b>Desktop سرور</b> کپی کنید (فصل ۴).</div></div>
+  <div class="step"><div class="n">۲</div><div class="b"><h4>باز کردن فایل zip</h4>روی فایل راست‌کلیک کنید، <b>Extract All…</b> و بعد <b>Extract</b>. پوشه‌ای به نام <code>persian-padel-windows</code> روی Desktop ساخته می‌شود.</div></div>
+  <div class="step"><div class="n">۳</div><div class="b"><h4>باز کردن PowerShell به‌عنوان مدیر</h4>روی Start راست‌کلیک ← <b>Windows PowerShell (Admin)</b> یا <b>Terminal (Admin)</b>. اگر پرسید «اجازه‌ی تغییر می‌دهید؟»، Yes.</div></div>
+  <div class="step"><div class="n">۴</div><div class="b"><h4>رفتن به پوشه‌ی بسته</h4>این دستور پوشه‌ی درست را خودش روی Desktop پیدا می‌کند (هر جا Extract کرده باشید):
+    <div class="code">cd (Get-ChildItem $HOME\Desktop -Recurse -Filter Install.ps1 | Select-Object -First 1).DirectoryName</div></div></div>
+  <div class="step"><div class="n">۵</div><div class="b"><h4>اجازه‌ی اجرای اسکریپت (فقط همین پنجره)</h4>
+    <div class="code">Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force</div></div></div>
+  <div class="step"><div class="n">۶</div><div class="b"><h4>نصب — یکی از این دو را انتخاب کنید</h4>
+    <div class="cap">الف) نصب واقعی برای باشگاه (بدون زمین و بازیکن نمونه) ← پیشنهاد من</div>
+    <div class="code">.\Install.ps1 -Domain <span class="y">mypadel.ir</span> -NoSeed</div>
+    <div class="cap">ب) نصب نمایشی با داده‌ی نمونه (برای دیدن و تست)</div>
+    <div class="code">.\Install.ps1 -Domain <span class="y">mypadel.ir</span></div>
+    به‌جای <code>mypadel.ir</code> دامنه‌ی خودتان را بنویسید (بدون www و بدون https).</div></div>
+  <div class="step"><div class="n">۷</div><div class="b"><h4>رمز postgres را بدهید</h4>اسکریپت می‌پرسد «رمز postgres». همان رمزی را که در فصل ۵ برای PostgreSQL گذاشتید تایپ کنید و Enter بزنید (هنگام تایپ چیزی نشان داده نمی‌شود؛ عادی است).</div></div>
+  <div class="step"><div class="n">۸</div><div class="b"><h4>صبر کنید و نتیجه را یادداشت کنید</h4>نصب چند دقیقه طول می‌کشد. در پایان، پیام سبز <b>«نصب با موفقیت تمام شد»</b> و این اطلاعات را می‌بینید:
+    <div class="code"><span class="c">   رمز پایگاه داده (یادداشت کنید):</span>
+     Xk29fPq...
+<span class="c">   ورود به پنل مدیریت (یادداشت کنید):</span>
+     نام کاربری : admin
+     رمز عبور   : <span class="y">Rt8mWq3...</span></div>
+    <div class="box danger" style="margin-top:2mm"><div class="t"><span class="ic">!</span>همین الان هر دو رمز را در برگه‌ی پیوست ب بنویسید</div>رمز پنل مدیریت فقط همین یک بار نشان داده می‌شود. برای امنیت، رمز تصادفی ساخته شده و رمز پیش‌فرض هرگز روی سرور استفاده نمی‌شود.</div></div></div>
+
+  <div class="box tip"><div class="t"><span class="ic">i</span>اگر وسط کار خطا داد یا قطع شد</div>
+    مشکل را طبق پیام قرمز رفع کنید (مثلاً «Node.js پیدا نشد» یعنی فصل ۵ قدم ۱) و <b>همان دستور قدم ۶ را دوباره اجرا کنید</b>. اسکریپت هر مرحله‌ای را که قبلاً انجام داده رد می‌کند و تنظیمات و رمزها را خراب نمی‌کند.
+  </div>
+  <div class="box warn"><div class="t"><span class="ic">!</span>اگر سرور اینترنت خارجی ندارد</div>
+    ممکن است در مرحله‌ی «سرویس ویندوز» خطای دانلود <b>NSSM</b> ببینید. فایل <code>nssm-2.24.zip</code> را که در فصل ۵ دانلود کردید باز کنید و فایل <code>win64\nssm.exe</code> را در پوشه‌ی <code>C:\PersianPadel\tools</code> کپی کنید، سپس دستور نصب را دوباره اجرا کنید.
+  </div>
+
+  <h3>بررسی: آیا اپ بالا آمده؟</h3>
+  <p>داخل سرور، مرورگر (Edge) را باز کنید و بزنید: <code>http://127.0.0.1:3000</code> — اگر صفحه‌ی ورود اپ را دیدید، نصب درست است. اگر دامنه هم وصل شده باشد، <code>http://mypadel.ir</code> را در گوشی خودتان باز کنید.</p>
+</section>
+
+<!-- ===================== 7 ===================== -->
+<section class="chap">
+  <div class="kicker">فصل ۷</div>
+  <h2>گرفتن SSL (قفل و https)</h2>
+  <p class="lead">بدون https مرورگر هشدار می‌دهد و درگاه پرداخت قبول نمی‌کند. پس این مرحله اختیاری نیست.</p>
+  <div class="box warn"><div class="t"><span class="ic">!</span>اول مطمئن شوید دامنه به سرور رسیده</div>
+    تست فصل ۳ (<code>ping mypadel.ir</code>) باید IP سرور را نشان دهد. اگر زودتر اقدام کنید، صدور گواهی شکست می‌خورد و تعداد تلاش‌های ناموفق محدود است.
+  </div>
+
+  <h3>راه الف — SSL رایگان (Let's Encrypt) ← پیشنهاد اول</h3>
+  <p>PowerShell را به‌عنوان مدیر باز کنید و این سه خط را (یکی‌یکی یا با هم) بزنید؛ دامنه و ایمیل خودتان را بگذارید:</p>
+  <div class="code">Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+cd C:\PersianPadel\deploy\windows
+.\Setup-SSL.ps1 -Domain <span class="y">mypadel.ir</span> -Email <span class="y">you@gmail.com</span></div>
+  <p>اسکریپت گواهی را می‌گیرد، روی سایت نصب می‌کند، بعد از آزمایش موفق، هدایت خودکار http به https را روشن می‌کند و <b>تمدید خودکار هر ۶۰ روز</b> را هم تنظیم می‌کند. لازم نیست دیگر کاری کنید.</p>
+
+  <h3>راه ب — SSL خریداری‌شده (اگر راه الف نشد)</h3>
+  <p>Let's Encrypt برای صدور گواهی باید از خارج از ایران به سرور شما وصل شود. اگر شرکت هاستینگ این دسترسی را بسته باشد یا سرور اینترنت خارجی نداشته باشد، راه الف خطا می‌دهد. در این صورت:</p>
+  <ol>
+    <li>از همان شرکت هاستینگ یک <b>گواهی SSL ساده (DV)</b> برای دامنه‌تان بخرید.</li>
+    <li>از پشتیبانی بخواهید فایل گواهی را با فرمت <b>‎.pfx (همراه رمز)</b> به شما بدهند.</li>
+    <li>فایل را در سرور، مثلاً در <code>C:\certs\mypadel.pfx</code> بگذارید و بزنید:</li>
+  </ol>
+  <div class="code">Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+cd C:\PersianPadel\deploy\windows
+.\Setup-SSL.ps1 -Domain <span class="y">mypadel.ir</span> -PfxPath <span class="y">C:\certs\mypadel.pfx</span></div>
+  <p>رمز فایل pfx را می‌پرسد؛ واردش کنید. گواهی خریداری‌شده معمولاً یک‌ساله است؛ سال بعد همین کار را با فایل جدید تکرار کنید.</p>
+  <div class="box ok"><div class="t"><span class="ic">✓</span>بررسی</div>
+    در گوشی <code>https://mypadel.ir</code> را باز کنید. اگر قفل کنار نشانی دیدید، تمام است.
+  </div>
+</section>
+
+<!-- ===================== 8 ===================== -->
+<section class="chap">
+  <div class="kicker">فصل ۸</div>
+  <h2>اولین ورود به پنل و تنظیم باشگاه</h2>
+  <div class="step"><div class="n">۱</div><div class="b"><h4>ورود</h4>نشانی <code>https://mypadel.ir/login</code> را باز کنید و با نام کاربری <code>admin</code> و رمزی که نصب‌کننده داد وارد شوید. پنل مدیریت در <code>https://mypadel.ir/admin</code> است.</div></div>
+  <div class="step"><div class="n">۲</div><div class="b"><h4>ظاهر اپ (برند باشگاه)</h4>در پنل: <b>ظاهر اپ</b> — لوگو و پوستر صفحه‌ی ورود باشگاه خودتان را بگذارید.</div></div>
+  <div class="step"><div class="n">۳</div><div class="b"><h4>زمین‌ها و قیمت‌ها</h4><b>زمین‌ها ← زمین جدید</b>: نام، ساعت باز و بسته، مدت هر سانس، قیمت پایه. در صفحه‌ی هر زمین می‌توانید برای ساعت‌های پرتقاضا یا آخر هفته قیمت جدا تعریف کنید.</div></div>
+  <div class="step"><div class="n">۴</div><div class="b"><h4>قوانین لغو</h4><b>تنظیمات</b>: پله‌های جریمه‌ی لغو (مثلاً لغو کمتر از ۲ ساعت مانده، ۲۵٪ کسر). مبلغ باقی خودکار به کیف پول بازیکن برمی‌گردد.</div></div>
+  <div class="step"><div class="n">۵</div><div class="b"><h4>فروشگاه، بنرها و اخبار</h4>از منوهای <b>فروشگاه</b>، <b>بنرها</b> و <b>اخبار</b> محتوای باشگاه را اضافه کنید.</div></div>
+  <div class="step"><div class="n">۶</div><div class="b"><h4>(اختیاری) عوض‌کردن رمز مدیر</h4>از <b>پروفایل ← تنظیمات ← تغییر رمز</b> می‌توانید رمز را به رمز دلخواه و قوی عوض کنید.</div></div>
+  <div class="box warn"><div class="t"><span class="ic">!</span>بازیکن‌ها هنوز نمی‌توانند ثبت‌نام کنند</div>
+    ثبت‌نام بازیکن با کد تأیید پیامکی است. تا پیامک را وصل نکنید (فصل ۹)، کد ارسال نمی‌شود. پرداخت آنلاین هم تا وصل‌کردن درگاه (فصل ۱۰) عمداً غیرفعال است تا کسی نتواند بدون پرداخت واقعی کیف پولش را شارژ کند.
+  </div>
+</section>
+
+<!-- ===================== 9 ===================== -->
+<section class="chap">
+  <div class="kicker">فصل ۹</div>
+  <h2>وصل‌کردن پیامک</h2>
+  <p class="lead">اپ از سه سرویس پیامک ایرانی پشتیبانی می‌کند: <b>کاوه‌نگار</b>، <b>sms.ir</b> و <b>قاصدک</b>. مراحل هر سه شبیه است؛ نمونه با کاوه‌نگار:</p>
+  <div class="step"><div class="n">۱</div><div class="b"><h4>ساخت حساب</h4>در سایت سرویس پیامک ثبت‌نام و احراز هویت کنید و حساب را شارژ کنید (پیامک‌های کد تأیید هزینه‌ی کمی دارند).</div></div>
+  <div class="step"><div class="n">۲</div><div class="b"><h4>ساخت «الگو» برای کد تأیید</h4>در پنل کاوه‌نگار بخش <b>«اعتبارسنجی / الگوها»</b> یک الگو با نام <code>verify</code> بسازید با متنی مثل:<div class="box" style="background:#fff;margin:2mm 0">کد تأیید شما در باشگاه پدل: %token</div>عبارت <code>%token</code> حتماً باید در متن باشد. تأیید الگو توسط سرویس پیامک ممکن است چند ساعت تا یک روز طول بکشد.</div></div>
+  <div class="step"><div class="n">۳</div><div class="b"><h4>گرفتن کلید (API Key)</h4>از بخش <b>تنظیمات حساب</b> کلید API را کپی کنید.</div></div>
+  <div class="step"><div class="n">۴</div><div class="b"><h4>قرار دادن در تنظیمات اپ</h4>در سرور، پوشه‌ی <code>C:\PersianPadel</code> را باز کنید. روی فایل <code>.env</code> راست‌کلیک ← <b>Open with ← Notepad</b>. خط <code>OTP_PROVIDER=console</code> را پیدا کنید و این‌طور تغییر دهید:
+    <div class="code">OTP_PROVIDER=kavenegar
+KAVENEGAR_API_KEY="<span class="y">کلید-شما</span>"
+KAVENEGAR_TEMPLATE="verify"</div>
+    اگر جلوی دو خط آخر علامت <code>#</code> بود، آن را پاک کنید. فایل را ذخیره کنید (<span class="keys">Ctrl</span>+<span class="keys">S</span>).</div></div>
+  <div class="step"><div class="n">۵</div><div class="b"><h4>ری‌استارت اپ</h4>در PowerShell مدیر:<div class="code">Restart-Service PersianPadel</div>حالا با گوشی خودتان در سایت ثبت‌نام کنید؛ باید کد پیامک شود.</div></div>
+  <table>
+    <tr><th>سرویس</th><th>مقدار OTP_PROVIDER</th><th>متغیرهای لازم در ‎.env</th></tr>
+    <tr><td>کاوه‌نگار</td><td><code>kavenegar</code></td><td><code>KAVENEGAR_API_KEY</code> و <code>KAVENEGAR_TEMPLATE</code></td></tr>
+    <tr><td>sms.ir</td><td><code>smsir</code></td><td><code>SMSIR_API_KEY</code> و <code>SMSIR_TEMPLATE_ID</code></td></tr>
+    <tr><td>قاصدک</td><td><code>ghasedak</code></td><td><code>GHASEDAK_API_KEY</code> و <code>GHASEDAK_TEMPLATE</code></td></tr>
+  </table>
+</section>
+
+<!-- ===================== 10 ===================== -->
+<section class="chap">
+  <div class="kicker">فصل ۱۰</div>
+  <h2>وصل‌کردن درگاه پرداخت</h2>
+  <p class="lead">برای شارژ کیف پول و پرداخت رزرو. ساده‌ترین راه، «درگاه واسط» است: <b>زرین‌پال</b>، <b>زیبال</b> یا <b>نکست‌پی</b>. هر سه در اپ آماده‌اند.</p>
+  <h3>پیش‌نیازها (قبل از ثبت‌نام در درگاه)</h3>
+  <ul class="chk">
+    <li>سایت بالا و با <b>https</b> باز می‌شود (فصل ۷)</li>
+    <li>کد ملی (یا شناسه‌ی ملی شرکت) و شماره موبایل به نام خودتان</li>
+    <li>شماره <b>شبا</b> برای واریز پول</li>
+    <li>دامنه به نام خودتان (فصل ۳)</li>
+    <li>بعضی درگاه‌ها ممکن است <b>اینماد</b> (نماد اعتماد الکترونیکی از enamad.ir) بخواهند؛ اگر خواستند، با همان دامنه درخواست بدهید.</li>
+  </ul>
+  <div class="box warn"><div class="t"><span class="ic">!</span>اول سایت را کامل کنید، بعد درخواست درگاه بدهید</div>
+    کارشناس درگاه سایت شما را باز می‌کند. اگر سایت باز نشود، https نداشته باشد یا خالی باشد، درخواست رد می‌شود. پس فصل‌های ۷ و ۸ را کامل کنید.
+  </div>
+  <h3>مراحل (نمونه: زرین‌پال)</h3>
+  <div class="step"><div class="n">۱</div><div class="b">در zarinpal.com ثبت‌نام و احراز هویت کنید (کد ملی + شبا).</div></div>
+  <div class="step"><div class="n">۲</div><div class="b">از پنل: <b>درگاه پرداخت ← درگاه جدید</b>. آدرس سایت: <code>https://mypadel.ir</code> — دسته‌بندی: ورزشی/خدمات.</div></div>
+  <div class="step"><div class="n">۳</div><div class="b">اگر «آدرس بازگشت» (Callback) خواست، دقیقاً این را بدهید:<div class="code">https://<span class="y">mypadel.ir</span>/api/payments/callback</div></div></div>
+  <div class="step"><div class="n">۴</div><div class="b">بعد از تأیید (چند ساعت تا چند روز) یک <b>کد مرچنت</b> ۳۶ نویسه‌ای می‌گیرید.</div></div>
+  <div class="step"><div class="n">۵</div><div class="b">در سرور، PowerShell مدیر را باز کنید و بزنید:
+    <div class="code">Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+cd C:\PersianPadel\deploy\windows
+.\Set-Gateway.ps1 -Provider <span class="y">zarinpal</span> -Key "<span class="y">کد-مرچنت</span>"</div>
+    به‌جای <code>zarinpal</code> می‌توانید <code>zibal</code> یا <code>nextpay</code> بنویسید. اسکریپت تنظیمات را می‌نویسد، اپ را ری‌استارت و سلامتش را بررسی می‌کند.</div></div>
+  <div class="box ok"><div class="t"><span class="ic">✓</span>تست نهایی</div>
+    با حساب یک بازیکن، کیف پول را با کمترین مبلغ (مثلاً ۲۰۰ هزار تومان) شارژ کنید. باید به صفحه‌ی بانک بروید و بعد از پرداخت، موجودی اضافه شود.
+  </div>
+</section>
+
+<!-- ===================== 11 ===================== -->
+<section class="chap">
+  <div class="kicker">فصل ۱۱</div>
+  <h2>پشتیبان‌گیری و نگهداری روزمره</h2>
+  <h3>پشتیبان‌گیری خودکار (یک بار برای همیشه)</h3>
+  <div class="code">Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+cd C:\PersianPadel\deploy\windows
+.\Backup-Database.ps1 -InstallSchedule -KeepDays 30</div>
+  <p>از این به بعد هر شب ساعت ۳ بامداد از همه‌ی اطلاعات (کاربران، رزروها، تراکنش‌ها) پشتیبان گرفته می‌شود و ۳۰ روز نگه داشته می‌شود؛ در پوشه‌ی <code>C:\PersianPadel\backups</code>.</p>
+  <div class="box warn"><div class="t"><span class="ic">!</span>هفته‌ای یک بار یک نسخه را بیرون از سرور نگه دارید</div>
+    اگر خود سرور خراب شود، پشتیبان‌های داخلش هم از بین می‌روند. هفته‌ای یک بار آخرین فایل پوشه‌ی backups را (با کپی‌پیست Remote Desktop) روی کامپیوتر یا فلش خودتان کپی کنید. اگر شرکت هاستینگ «اسنپ‌شات» دارد، ماهی یک بار هم از کل سرور اسنپ‌شات بگیرید.
+  </div>
+  <h3>دستورهای پرکاربرد (در PowerShell مدیر)</h3>
+  <table>
+    <tr><th style="width:42%">کار</th><th>دستور</th></tr>
+    <tr><td>وضعیت اپ</td><td><code>Get-Service PersianPadel</code></td></tr>
+    <tr><td>ری‌استارت اپ (بعد از هر تغییر در ‎.env)</td><td><code>Restart-Service PersianPadel</code></td></tr>
+    <tr><td>دیدن خطاهای اخیر</td><td><code>Get-Content C:\PersianPadel\logs\app-error.log -Tail 50</code></td></tr>
+    <tr><td>پشتیبان‌گیری دستی</td><td><code>powershell -ExecutionPolicy Bypass -File C:\PersianPadel\deploy\windows\Backup-Database.ps1</code></td></tr>
+  </table>
+  <h3>به‌روزرسانی اپ به نسخه‌ی جدید</h3>
+  <p>وقتی بسته‌ی جدید برایتان فرستاده شد: اول پوشه‌ی بسته‌ی قبلی را از Desktop سرور پاک کنید، بسته‌ی جدید را کپی و Extract کنید، بعد در PowerShell مدیر:</p>
+  <div class="code">Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+$pkg = (Get-ChildItem $HOME\Desktop -Recurse -Filter Install.ps1 | Select-Object -First 1).DirectoryName
+cd C:\PersianPadel\deploy\windows
+.\Update-App.ps1 -NewPackage $pkg</div>
+  <p>اسکریپت اول پشتیبان می‌گیرد، بعد نسخه‌ی جدید را جایگزین می‌کند و تنظیمات و رمزها (فایل ‎.env) را دست نمی‌زند. نسخه‌ی قبلی در <code>C:\PersianPadel\rollback</code> می‌ماند.</p>
+  <h3>تمدیدها را فراموش نکنید</h3>
+  <ul class="chk">
+    <li>تمدید سرور (ماهانه یا سالانه) — اگر تمدید نشود، سرور و اطلاعات ممکن است حذف شود</li>
+    <li>تمدید دامنه (سالانه) — برای اطمینان «تمدید خودکار» را در پنل شرکت روشن کنید</li>
+    <li>شارژ حساب پیامک</li>
+    <li>SSL خریداری‌شده (سالانه) — اگر از راه الف (رایگان) استفاده کرده‌اید، خودکار تمدید می‌شود</li>
+  </ul>
+</section>
+
+<!-- ===================== 12 ===================== -->
+<section class="chap">
+  <div class="kicker">فصل ۱۲</div>
+  <h2>اگر چیزی کار نکرد</h2>
+  <table>
+    <tr><th style="width:30%">مشکل</th><th style="width:33%">علت احتمالی</th><th>راه‌حل</th></tr>
+    <tr><td>Remote Desktop وصل نمی‌شود</td><td>IP/پورت یا رمز اشتباه، یا سرور هنوز آماده نیست</td><td>اطلاعات ایمیل شرکت را دوباره چک کنید. از پنل شرکت سرور را Reboot کنید. اگر رمز را گم کردید، از پنل «Reset Password» بزنید یا تیکت بدهید.</td></tr>
+    <tr><td>نصب‌کننده می‌گوید Node.js یا PostgreSQL پیدا نشد</td><td>پیش‌نیاز نصب نشده یا PowerShell قدیمی باز است</td><td>فصل ۵ را انجام دهید، PowerShell را ببندید و دوباره به‌عنوان Admin باز کنید و دستور نصب را تکرار کنید.</td></tr>
+    <tr><td>رمز postgres را رد می‌کند</td><td>رمز اشتباه</td><td>همان رمزی که هنگام نصب PostgreSQL گذاشتید. اگر فراموش کرده‌اید، PostgreSQL را از Control Panel حذف و دوباره نصب کنید.</td></tr>
+    <tr><td><code>http://127.0.0.1:3000</code> در سرور باز نمی‌شود</td><td>اپ اجرا نشده</td><td><code>Restart-Service PersianPadel</code> و بعد فایل <code>logs\app-error.log</code> را ببینید.</td></tr>
+    <tr><td>در سرور باز می‌شود ولی با دامنه نه</td><td>DNS هنوز نرسیده، یا URL Rewrite/ARR نصب نیست</td><td>تست <code>ping</code> فصل ۳. اگر IP درست بود، URL Rewrite و ARR را نصب کنید و <code>Install.ps1</code> را دوباره اجرا کنید.</td></tr>
+    <tr><td>Setup-SSL خطا می‌دهد</td><td>دامنه نرسیده یا دسترسی از خارج بسته است</td><td>چند ساعت صبر و تکرار کنید. اگر نشد، فصل ۷ راه ب (SSL خریداری‌شده).</td></tr>
+    <tr><td>کد پیامکی نمی‌آید</td><td>الگو تأیید نشده، کلید اشتباه یا حساب پیامک شارژ ندارد</td><td>پنل سرویس پیامک را چک کنید، ‎.env را بازبینی و <code>Restart-Service PersianPadel</code>.</td></tr>
+    <tr><td>پرداخت خطا می‌دهد</td><td>درگاه وصل نشده یا کد مرچنت اشتباه است</td><td>فصل ۱۰ قدم ۵ را تکرار کنید. در پنل مدیریت، صفحه‌ی <b>تنظیمات</b> وضعیت درگاه و پیامک را نشان می‌دهد.</td></tr>
+    <tr><td>سایت کند است</td><td>رم کم یا ترافیک زیاد</td><td>از پنل شرکت، رم سرور را به ۸ گیگ ارتقا دهید (معمولاً بدون نصب دوباره).</td></tr>
+  </table>
+  <div class="box tip"><div class="t"><span class="ic">i</span>وقتی از کسی کمک می‌خواهید</div>
+    این سه چیز را بفرستید: ۱) عکس صفحه از پیام خطا، ۲) ۵۰ خط آخر فایل <code>C:\PersianPadel\logs\app-error.log</code>، ۳) این‌که در کدام فصل و قدم بودید. <b>هرگز</b> محتوای فایل ‎.env یا رمزها را برای کسی نفرستید.
+  </div>
+  <div class="box ok"><div class="t"><span class="ic">✓</span>پشتیبانی نصب</div>
+    اگر ترجیح می‌دهید نصب را به ما بسپارید: شرکت آماریا — اشکان ضیایی — <b>۰۹۰۵ ۸۲۳ ۵۷۵۹</b>
+  </div>
+</section>
+
+<!-- ===================== APPENDIX ===================== -->
+<section class="chap">
+  <div class="kicker">پیوست الف</div>
+  <h2>چک‌لیست نهایی</h2>
+  <ul class="chk">
+    <li>سرور مجازی ویندوز با دسترسی Administrator خریدم (فصل ۲)</li>
+    <li>دامنه خریدم و دو رکورد A (@ و www) به IP سرور ساختم (فصل ۳)</li>
+    <li>با Remote Desktop وارد شدم و رمز سرور را عوض کردم (فصل ۴)</li>
+    <li>Node.js، PostgreSQL، URL Rewrite و ARR را نصب کردم (فصل ۵)</li>
+    <li>Install.ps1 را اجرا کردم و رمزهای پایان نصب را یادداشت کردم (فصل ۶)</li>
+    <li>Setup-SSL.ps1 را اجرا کردم و سایت با https باز می‌شود (فصل ۷)</li>
+    <li>وارد پنل شدم، لوگو، زمین‌ها، قیمت‌ها و قوانین لغو را تنظیم کردم (فصل ۸)</li>
+    <li>پیامک را وصل کردم و ثبت‌نام آزمایشی موفق بود (فصل ۹)</li>
+    <li>درگاه پرداخت را وصل کردم و شارژ آزمایشی موفق بود (فصل ۱۰)</li>
+    <li>پشتیبان‌گیری خودکار را روشن کردم (فصل ۱۱)</li>
+    <li>تمدید خودکار دامنه را روشن کردم و تاریخ تمدید سرور را یادداشت کردم</li>
+  </ul>
+
+</section>
+
+<section class="chap">
+  <div class="kicker">پیوست ب</div>
+  <h2>برگه‌ی یادداشت (چاپ کنید و جای امن نگه دارید)</h2>
+  <table class="fill">
+    <tr><th>مورد</th><th>مقدار</th></tr>
+    <tr><td>شرکت هاستینگ و نام کاربری پنل</td><td></td></tr>
+    <tr><td>IP سرور (و پورت RDP اگر جدا بود)</td><td></td></tr>
+    <tr><td>رمز Administrator سرور</td><td></td></tr>
+    <tr><td>دامنه</td><td></td></tr>
+    <tr><td>رمز کاربر postgres (فصل ۵)</td><td></td></tr>
+    <tr><td>رمز پایگاه داده (پایان فصل ۶)</td><td></td></tr>
+    <tr><td>رمز پنل مدیریت admin (پایان فصل ۶)</td><td></td></tr>
+    <tr><td>سرویس پیامک و نام کاربری</td><td></td></tr>
+    <tr><td>درگاه پرداخت و کد مرچنت</td><td></td></tr>
+    <tr><td>تاریخ تمدید سرور / دامنه</td><td></td></tr>
+  </table>
+  <p class="small">این برگه را جایی ذخیره نکنید که دیگران دسترسی دارند (مثلاً گروه واتس‌اپ یا ایمیل مشترک).</p>
+</section>
+
+<section class="chap">
+  <div class="kicker">پیوست ج</div>
+  <h2>فهرست هزینه‌ها</h2>
+  <p class="lead">قیمت‌ها در ایران مرتب تغییر می‌کنند؛ مبلغ دقیق را هنگام خرید از سایت هر شرکت ببینید. این جدول فقط نشان می‌دهد برای چه چیزهایی و هر چند وقت یک بار باید پول بدهید.</p>
+  <table>
+    <tr><th>مورد</th><th>دوره‌ی پرداخت</th><th>اجباری؟</th><th>نکته</th></tr>
+    <tr><td>سرور مجازی ویندوز</td><td>ماهانه یا سالانه</td><td><span class="pill g">بله</span></td><td>بیشترین هزینه؛ سالانه معمولاً تخفیف دارد.</td></tr>
+    <tr><td>دامنه</td><td>سالانه</td><td><span class="pill g">بله</span></td><td>‎.ir ارزان‌تر از ‎.com است.</td></tr>
+    <tr><td>SSL</td><td>—</td><td><span class="pill g">بله</span></td><td>Let's Encrypt رایگان است. اگر نشد، گواهی ساده‌ی سالانه بخرید.</td></tr>
+    <tr><td>شارژ پیامک</td><td>بر اساس مصرف</td><td><span class="pill g">بله</span></td><td>هر ثبت‌نام و ورود با کد، یک پیامک.</td></tr>
+    <tr><td>کارمزد درگاه پرداخت</td><td>درصدی از هر تراکنش</td><td><span class="pill g">بله</span></td><td>درگاه‌های واسط معمولاً حدود ۱٪ با سقف مشخص می‌گیرند.</td></tr>
+    <tr><td>اینماد</td><td>—</td><td><span class="pill">در صورت نیاز</span></td><td>صدورش هزینه ندارد ولی چند روز زمان می‌برد.</td></tr>
+    <tr><td>Node.js، PostgreSQL، IIS و ابزارها</td><td>—</td><td>—</td><td><b>همه رایگان‌اند.</b></td></tr>
+  </table>
+  <div class="box tip"><div class="t"><span class="ic">i</span>صرفه‌جویی هوشمندانه</div>
+    ماه اول سرور را ماهانه بخرید. اگر سرعت و پشتیبانی شرکت خوب بود، بعد سالانه تمدید کنید. اگر بازیکن‌هایتان زیاد شدند، فقط رم را ارتقا دهید؛ نصب دوباره لازم نیست.
+  </div>
+  <div style="margin-top:14mm;text-align:center">
+    <img src="appicon.svg" style="width:14mm;height:14mm;border-radius:3.5mm">
+    <div style="font-family:V;font-weight:900;font-size:13pt;color:var(--navy);margin-top:2mm">اپ هوشمند زمین پدل</div>
+    <div class="small">طراحی و توسعه: شرکت آماریا · اشکان ضیایی · ۰۹۰۵ ۸۲۳ ۵۷۵۹</div>
+  </div>
+</section>
+</body>
+</html>
