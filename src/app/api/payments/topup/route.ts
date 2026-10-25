@@ -7,6 +7,7 @@ import { AppError, fail, handleApiError, ok } from '@/lib/api';
 import { topupSchema } from '@/lib/validation';
 import { tomanToRial } from '@/lib/utils';
 import { toFaDigits } from '@/lib/datetime';
+import { appUrl } from '@/lib/app-url';
 
 export const runtime = 'nodejs';
 
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const base = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
+    const base = appUrl() || new URL(req.url).origin;
     const callbackUrl = `${base}/api/payments/callback?paymentId=${payment.id}`;
 
     try {

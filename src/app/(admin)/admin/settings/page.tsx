@@ -8,6 +8,7 @@ import { availableGateways } from '@/lib/payments';
 import { availableSmsProviders } from '@/lib/sms';
 import { APP_TIMEZONE } from '@/lib/datetime';
 import { getPointEconomy } from '@/lib/point-economy';
+import { appUrl } from '@/lib/app-url';
 
 export const metadata: Metadata = { title: 'تنظیمات باشگاه' };
 export const dynamic = 'force-dynamic';
@@ -79,9 +80,9 @@ export default async function AdminSettingsPage() {
 
           <ConfigRow
             label="نشانی عمومی اپلیکیشن"
-            value={process.env.NEXT_PUBLIC_APP_URL || '—'}
+            value={appUrl() || '—'}
             env="NEXT_PUBLIC_APP_URL"
-            warn={!process.env.NEXT_PUBLIC_APP_URL}
+            warn={!appUrl()}
             warnText="بدون این مقدار، بازگشت از درگاه پرداخت درست کار نمی‌کند."
           />
 

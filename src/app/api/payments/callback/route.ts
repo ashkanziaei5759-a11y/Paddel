@@ -4,6 +4,7 @@ import { getGateway } from '@/lib/payments';
 import { mutateWallet } from '@/lib/wallet';
 import { notify } from '@/lib/notifications';
 import { formatToman } from '@/lib/utils';
+import { appUrl } from '@/lib/app-url';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,7 +16,7 @@ export const dynamic = 'force-dynamic';
  */
 async function handle(req: NextRequest) {
   const url = new URL(req.url);
-  const base = process.env.NEXT_PUBLIC_APP_URL || url.origin;
+  const base = appUrl() || url.origin;
 
   const params: Record<string, string> = {};
   url.searchParams.forEach((value, key) => { params[key] = value; });

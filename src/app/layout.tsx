@@ -5,13 +5,13 @@ import { ServiceWorkerRegistrar } from "@/components/pwa/ServiceWorkerRegistrar"
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { ThemeScript } from "@/components/theme/ThemeScript";
 import { getBranding } from "@/lib/branding";
+import { appUrl } from "@/lib/app-url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { iconUrl } = await getBranding();
   return {
-    metadataBase: new URL(APP_URL),
+    metadataBase: new URL(appUrl() || "http://localhost:3000"),
     title: {
       default: "پرشین پدل | Persian Padel",
       template: "%s | پرشین پدل",
