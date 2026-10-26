@@ -34,7 +34,7 @@ export function TeamCard({
   rankLabel?: string;
 }) {
   return (
-    <div className={cn('card p-4', highlight && 'ring-1 ring-accent/40')}>
+    <div className={cn('card p-4', highlight && 'ring-1 ring-electric-500/40')}>
       <div className="flex items-center gap-3">
         {/* دایره‌های عکس پروفایل، کنار هم و با هم‌پوشانی */}
         <div className="flex shrink-0 items-center">

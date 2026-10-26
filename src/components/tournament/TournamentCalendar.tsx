@@ -152,7 +152,7 @@ export function TournamentCalendar({
                     : dayEvents.length > 0
                       ? 'cursor-pointer bg-brand-50 text-brand-800 hover:bg-brand-100'
                       : 'text-brand-200',
-                  isToday && !isSelected && 'ring-1 ring-accent/50',
+                  isToday && !isSelected && 'ring-1 ring-electric-500/50',
                 )}
               >
                 {toFaDigits(cell.jd)}

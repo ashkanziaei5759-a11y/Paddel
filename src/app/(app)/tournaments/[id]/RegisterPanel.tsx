@@ -74,7 +74,7 @@ export function RegisterPanel({
     return (
       <section className="card bg-accent-50/70 p-4 ring-1 ring-accent/25">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-xl">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-xl">
             ⏳
           </span>
           <div className="min-w-0 flex-1">

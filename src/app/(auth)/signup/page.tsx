@@ -13,7 +13,7 @@ export default function SignupPage() {
       footer={
         <p className="mt-6 text-center text-sm font-semibold text-sky-light/70">
           قبلاً ثبت‌نام کرده‌اید؟{' '}
-          <Link href="/login" className="font-black text-accent hover:underline">
+          <Link href="/login" className="font-black text-electric-300 hover:underline">
             وارد شوید
           </Link>
         </p>

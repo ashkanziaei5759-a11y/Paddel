@@ -46,7 +46,7 @@ export function StandingsTable({ title, rows }: { title?: string; rows: Standing
                   'text-xs font-bold text-brand-700',
                   /* تهِ رنگ از خود accent با شفافیت — accent-50 هگز ثابت است و
                      در تم تیره زیر متنِ روشن، کرم می‌ماند */
-                  row.highlight && 'bg-accent/10',
+                  row.highlight && 'bg-brand-50',
                   index < 2 && 'font-black',
                 )}
               >

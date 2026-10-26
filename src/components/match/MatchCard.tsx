@@ -87,7 +87,7 @@ export function MatchCard({
   }
 
   return (
-    <div className={cn('card overflow-hidden p-0', seat && 'ring-1 ring-accent/40')}>
+    <div className={cn('card overflow-hidden p-0', seat && 'ring-1 ring-electric-500/40')}>
       {/* ---- سربرگ: زمان و زمین ---- */}
       <div className="flex items-center gap-3 border-b border-brand-50 p-4">
         <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl bg-brand-gradient text-white">

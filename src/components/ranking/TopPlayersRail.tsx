@@ -46,8 +46,8 @@ function PlayerCard({ player }: { player: TopPlayer }) {
         className={cn(
           'absolute inset-0 overflow-hidden rounded-3xl',
           women
-            ? 'bg-[linear-gradient(135deg,#3B1461_0%,#5B21A6_55%,#7C3AED_100%)]'
-            : 'bg-[linear-gradient(135deg,#0A2A4A_0%,#0047A3_55%,#007FFF_100%)]',
+            ? 'bg-[linear-gradient(135deg,#24369F_0%,#3A52D0_55%,#6A80E8_100%)]'
+            : 'bg-[linear-gradient(135deg,#111A52_0%,#1C2D7D_55%,#2F45C8_100%)]',
         )}
       >
         <span className="absolute inset-0 bg-court-lines opacity-30" />

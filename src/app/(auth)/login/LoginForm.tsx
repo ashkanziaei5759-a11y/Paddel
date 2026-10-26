@@ -122,8 +122,9 @@ export function LoginForm() {
           type="submit"
           variant="accent"
           disabled={loading}
-          className="group mt-1 h-[60px] w-full rounded-[20px] text-[15px] font-black tracking-tight
-                   shadow-[0_14px_34px_-12px_rgba(252,163,17,.75)]
+          /* روی پوستر تیره، دکمه‌ی سفید با متن سرمه‌ای — دو رنگ اصلی برند */
+          className="group mt-1 h-[60px] w-full rounded-[20px] bg-white bg-none text-[15px] font-black tracking-tight text-[#1C2D7D]
+                   shadow-[0_14px_34px_-12px_rgba(255,255,255,.45)] hover:bg-white/90
                    transition-transform active:scale-[.985] disabled:opacity-70"
         >
           {loading ? (

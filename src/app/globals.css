@@ -34,7 +34,7 @@
 
 /* ------------------------------------------------------------------------ */
 /*  PERSIAN PADEL — Design System                                            */
-/*  Brand: #003049 · Light: #CAF0F8 · White: #FFFFFF · Accent: #FCA311       */
+/*  Brand: #1C2D7D (navy) · White: #FFFFFF · Accent (small): #D8DB36 lime     */
 /* ------------------------------------------------------------------------ */
 
 @layer base {
@@ -49,39 +49,43 @@
   /*  مقادیر «R G B» هستند تا text-brand-800/60 و مانند آن کار کند.          */
   /* ---------------------------------------------------------------------- */
   :root {
-    --c-brand: 0 48 73;
-    --c-brand-50: 233 243 248;
-    --c-brand-100: 202 240 248;
-    --c-brand-200: 155 216 232;
-    --c-brand-300: 99 181 207;
-    --c-brand-400: 47 138 174;
-    --c-brand-500: 11 95 135;
-    --c-brand-600: 0 69 106;
-    --c-brand-700: 0 48 73;
-    --c-brand-800: 0 36 56;
-    --c-brand-900: 0 24 36;
-    --c-brand-950: 0 15 23;
-    --c-sky-light: 202 240 248;
+    /* سرمه‌ای لوگوی پرشین پدل — rgb(28 45 125) */
+    --c-brand: 28 45 125;
+    --c-brand-50: 242 244 251;
+    --c-brand-100: 225 230 246;
+    --c-brand-200: 195 204 236;
+    --c-brand-300: 142 155 211;
+    --c-brand-400: 91 107 187;
+    --c-brand-500: 52 70 159;
+    --c-brand-600: 38 56 143;
+    --c-brand-700: 28 45 125;
+    --c-brand-800: 22 34 99;
+    --c-brand-900: 16 24 74;
+    --c-brand-950: 10 15 48;
+    --c-sky-light: 220 226 246;
 
-    --c-app: 245 249 252;
+    --c-app: 246 247 252;
     --c-card: 255 255 255;
-    --c-inset: 245 249 252;
-    --c-sunken: 237 244 248;
+    --c-inset: 243 245 251;
+    --c-sunken: 235 238 248;
 
     /* پرده‌ی تیره روی عکس — در هر دو تم تیره است، چون کارش خوانا کردن متنِ
        سفید روی تصویر است نه پیروی از تم. بدون تعریف اینجا، در تم روشن
        مقدارش تعریف‌نشده می‌ماند و هر rgb(var(--c-scrim)/…) بی‌اثر می‌شود. */
-    --c-scrim: 0 8 14;
+    --c-scrim: 7 11 38;
 
     --c-success: 18 143 99;
     --c-danger: 211 63 63;
     --c-warning: 224 140 5;
-    /* رنگ نارنجی برند در هر دو تم یکی است، پس متن روی آن هم ثابت می‌ماند */
-    --c-on-accent: 0 24 36;
+    /* روی لیمویی همیشه سرمه‌ای نوشته می‌شود */
+    --c-on-accent: 22 34 99;
+    /* دکمه‌ها و حالت انتخاب: سرمه‌ای با متن سفید */
+    --c-primary: 28 45 125;
+    --c-on-primary: 255 255 255;
 
-    --brand: #003049;
-    --brand-soft: #caf0f8;
-    --accent: #fca311;
+    --brand: #1c2d7d;
+    --brand-soft: #dce2f6;
+    --accent: #d8db36;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
     --nav-height: 4.5rem;
@@ -93,30 +97,31 @@
       زمینه‌ی صفحه از کارت‌ها تیره‌تر است و «inset» از کارت روشن‌تر، تا سه
       لایه‌ی صفحه ← کارت ← تراشه در تاریکی هم از هم تفکیک شوند. */
   :root[data-theme='dark'] {
-    --c-brand-50: 28 33 40;
-    --c-brand-100: 40 47 57;
-    --c-brand-200: 55 64 77;
-    --c-brand-300: 110 122 136;
-    --c-brand-400: 139 152 166;
-    --c-brand-500: 169 181 194;
-    --c-brand-600: 195 205 216;
-    --c-brand-700: 220 228 236;
-    --c-brand-800: 237 242 247;
-    --c-brand-900: 245 248 251;
+    --c-brand-50: 27 32 58;
+    --c-brand-100: 38 45 78;
+    --c-brand-200: 54 63 102;
+    --c-brand-300: 112 124 170;
+    --c-brand-400: 143 155 199;
+    --c-brand-500: 172 182 222;
+    --c-brand-600: 198 206 236;
+    --c-brand-700: 222 228 247;
+    --c-brand-800: 238 241 251;
+    --c-brand-900: 246 248 253;
     --c-brand-950: 255 255 255;
-    --c-sky-light: 202 240 248;
+    --c-sky-light: 220 226 246;
 
-    --c-app: 9 11 15;
-    --c-card: 23 26 32;
-    --c-inset: 33 38 46;
-    --c-sunken: 15 18 23;
+    --c-app: 8 11 28;
+    --c-card: 19 24 50;
+    --c-inset: 29 35 66;
+    --c-sunken: 13 17 38;
 
     --c-success: 63 199 148;
     --c-danger: 255 120 105;
     --c-warning: 252 163 17;
-    --c-on-accent: 0 24 36;
-    --c-scrim: 0 8 14;
-    --c-primary: 0 127 255;
+    --c-on-accent: 22 34 99;
+    --c-scrim: 5 8 26;
+    /* در تم تیره سرمه‌ای روی زمینه‌ی تیره دیده نمی‌شود؛ آبی روشن‌تر همان خانواده */
+    --c-primary: 76 96 214;
     --c-on-primary: 255 255 255;
 
     color-scheme: dark;
@@ -224,7 +229,7 @@
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-accent/60 ring-offset-2 ring-offset-white;
+    @apply outline-none ring-2 ring-electric-500/60 ring-offset-2 ring-offset-white;
   }
 }
 
@@ -289,7 +294,7 @@
   .card-night::after {
     content: '';
     @apply pointer-events-none absolute -right-16 -top-24 h-56 w-56 rounded-full opacity-45;
-    background: radial-gradient(circle, rgba(0, 127, 255, 0.55) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(47, 69, 200, 0.55) 0%, transparent 70%);
   }
 
   .card-night > * {
@@ -356,8 +361,9 @@
     @apply btn bg-primary text-on-primary shadow-card hover:opacity-90 hover:shadow-card-hover;
   }
 
+  /* دکمه‌ی اصلی: سرمه‌ای و سفید (طبق برند، زرد فقط برای جزئیات) */
   .btn-accent {
-    @apply btn bg-accent-gradient text-on-accent shadow-card hover:shadow-glow;
+    @apply btn bg-brand-gradient text-white shadow-card hover:shadow-glow;
   }
 
   .btn-outline {

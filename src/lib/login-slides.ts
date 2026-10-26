@@ -18,7 +18,7 @@ export const LOGIN_SLIDES = [
 ] as const;
 
 /** تصویر پوستری است (متن روی آن نوشته نشود) */
-export const HAS_OWN_ARTWORK = true;
+export const HAS_OWN_ARTWORK = false;
 
 /** اگر فایل بالا موجود نباشد، این تصویر موقت نمایش داده می‌شود */
 export const FALLBACK_SLIDE = '/images/login/court-1.jpg';

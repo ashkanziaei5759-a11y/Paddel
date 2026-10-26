@@ -5,7 +5,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        /* ---- Persian Padel brand ---- */
+        /* ---- Persian Padel brand: سرمه‌ای + سفید، لیمویی کم ---- */
         /* پالت از متغیرهای CSS خوانده می‌شود تا با تعویض تم، همه‌ی کامپوننت‌ها
            بدون تغییر کلاس‌هایشان عوض شوند. مقادیر به‌صورت «R G B» هستند تا
            پیراینده‌های شفافیت (مثل text-brand-800/60) کار کنند. */
@@ -26,28 +26,31 @@ const config: Config = {
         sky: {
           light: 'rgb(var(--c-sky-light) / <alpha-value>)',
         },
-        /* آبی الکتریک — نمونه‌برداری‌شده از لوگو و پوستر باشگاه.
-           رنگ «انرژی» است: حالت فعال، درخشش و تأکیدهای پرشتاب. */
+        /* آبی روشن‌ترِ همان خانواده‌ی سرمه‌ای لوگو — حالت فعال و درخشش */
         electric: {
-          DEFAULT: '#007FFF',
-          300: '#66B2FF',
-          400: '#3399FF',
-          500: '#007FFF',
-          600: '#0064CC',
-          700: '#0047A3',
-          900: '#000E2A',
-          950: '#00071A',
+          DEFAULT: '#2F45C8',
+          300: '#9AA8F0',
+          400: '#5C70DE',
+          500: '#2F45C8',
+          600: '#24369F',
+          700: '#1C2D7D',
+          900: '#0C1240',
+          950: '#070B26',
         },
+        /* رنگ تأکید طبق راهنمای برند پرشین پدل: سفید و آبی رنگ اصلی‌اند و
+           زرد لیمویی (رنگ توپ) فقط در جزئیات کوچک. پس فقط DEFAULT/300/400/500
+           لیمویی‌اند (نقطه‌ی اعلان، نوار پیشرفت، نشان‌ها)؛ پله‌های کم‌رنگ و
+           متنی (۵۰ تا ۲۰۰ و ۶۰۰/۷۰۰) آبی‌اند تا کارت‌ها و برچسب‌ها زرد نشوند. */
         accent: {
-          DEFAULT: '#FCA311',
-          50: '#FFF7E8',
-          100: '#FFEBC4',
-          200: '#FEDA8E',
-          300: '#FDC451',
-          400: '#FCA311',
-          500: '#E08C05',
-          600: '#B36E04',
-          700: '#8A5403',
+          DEFAULT: '#D8DB36',
+          50: '#EEF1FB',
+          100: '#DCE2F6',
+          200: '#BCC6EE',
+          300: '#E6E86E',
+          400: '#D8DB36',
+          500: '#BFC21F',
+          600: '#2F45C8',
+          700: '#1C2D7D',
         },
         surface: {
           DEFAULT: 'rgb(var(--c-card) / <alpha-value>)',
@@ -76,24 +79,26 @@ const config: Config = {
         '4xl': '2.25rem',
       },
       boxShadow: {
-        card: '0 1px 2px rgba(0,48,73,.04), 0 8px 24px -12px rgba(0,48,73,.18)',
-        'card-hover': '0 2px 6px rgba(0,48,73,.06), 0 18px 40px -16px rgba(0,48,73,.28)',
-        premium: '0 24px 60px -28px rgba(0,48,73,.55)',
-        glow: '0 0 0 4px rgba(252,163,17,.18)',
-        'glow-electric': '0 0 0 4px rgba(0,127,255,.20)',
-        'lift-electric': '0 18px 40px -20px rgba(0,127,255,.65)',
+        card: '0 1px 2px rgba(28,45,125,.05), 0 8px 24px -12px rgba(28,45,125,.20)',
+        'card-hover': '0 2px 6px rgba(28,45,125,.07), 0 18px 40px -16px rgba(28,45,125,.30)',
+        premium: '0 24px 60px -28px rgba(28,45,125,.55)',
+        glow: '0 0 0 4px rgba(47,69,200,.16)',
+        'glow-electric': '0 0 0 4px rgba(47,69,200,.20)',
+        'lift-electric': '0 18px 40px -20px rgba(47,69,200,.65)',
         inset: 'inset 0 1px 0 rgba(255,255,255,.08)',
       },
       backgroundImage: {
-        'brand-gradient': 'linear-gradient(135deg,#003049 0%,#00456A 48%,#0B5F87 100%)',
-        'brand-gradient-soft': 'linear-gradient(135deg,#002438 0%,#003049 55%,#014A6E 100%)',
-        'accent-gradient': 'linear-gradient(135deg,#FCA311 0%,#E08C05 100%)',
-        'electric-gradient': 'linear-gradient(135deg,#0047A3 0%,#007FFF 55%,#3399FF 100%)',
-        /* زمینه‌ی تیره‌ی کارت‌های شاخص — هم‌رنگ پوستر باشگاه */
-        'night-gradient': 'linear-gradient(150deg,#00071A 0%,#000E2A 45%,#002A55 100%)',
-        'sky-gradient': 'linear-gradient(160deg,#FFFFFF 0%,#EDF7FB 60%,#CAF0F8 100%)',
+        /* سرمه‌ای برند پرشین پدل (C100 M100 Y10 K15) */
+        'brand-gradient': 'linear-gradient(135deg,#17236A 0%,#1C2D7D 50%,#2A3FA8 100%)',
+        'brand-gradient-soft': 'linear-gradient(135deg,#111A52 0%,#1C2D7D 55%,#26389A 100%)',
+        /* لیمویی توپ — فقط برای نشان‌ها و نوارهای کوچک */
+        'accent-gradient': 'linear-gradient(135deg,#E6E86E 0%,#D8DB36 55%,#C3C622 100%)',
+        'electric-gradient': 'linear-gradient(135deg,#1C2D7D 0%,#2F45C8 60%,#4A60DA 100%)',
+        /* زمینه‌ی تیره‌ی کارت‌های شاخص — مثل پس‌زمینه‌ی کاتالوگ برند */
+        'night-gradient': 'linear-gradient(150deg,#070B26 0%,#111A52 50%,#1C2D7D 100%)',
+        'sky-gradient': 'linear-gradient(160deg,#FFFFFF 0%,#F2F4FB 60%,#DCE2F6 100%)',
         'court-lines':
-          'repeating-linear-gradient(90deg, rgba(202,240,248,.08) 0 1px, transparent 1px 64px), repeating-linear-gradient(0deg, rgba(202,240,248,.08) 0 1px, transparent 1px 64px)',
+          'repeating-linear-gradient(90deg, rgba(220,226,246,.08) 0 1px, transparent 1px 64px), repeating-linear-gradient(0deg, rgba(220,226,246,.08) 0 1px, transparent 1px 64px)',
       },
       keyframes: {
         'fade-up': {
@@ -116,9 +121,9 @@ const config: Config = {
           '100%': { transform: 'translateX(-100%)' },
         },
         'pulse-ring': {
-          '0%': { boxShadow: '0 0 0 0 rgba(252,163,17,.45)' },
-          '70%': { boxShadow: '0 0 0 12px rgba(252,163,17,0)' },
-          '100%': { boxShadow: '0 0 0 0 rgba(252,163,17,0)' },
+          '0%': { boxShadow: '0 0 0 0 rgba(216,219,54,.5)' },
+          '70%': { boxShadow: '0 0 0 12px rgba(216,219,54,0)' },
+          '100%': { boxShadow: '0 0 0 0 rgba(216,219,54,0)' },
         },
       },
       animation: {

@@ -27,7 +27,7 @@ export interface Branding {
 export const DEFAULT_BRANDING: Branding = {
   logoUrl: "/icons/logo-256.png",
   loginPosterUrl: "/images/login/poster.jpg",
-  loginPosterWideUrl: "/images/login/poster.jpg",
+  loginPosterWideUrl: "/images/login/poster-wide.jpg",
   iconUrl: "/icons/icon-512.png",
   maskableIconUrl: "/icons/maskable-512.png",
 };

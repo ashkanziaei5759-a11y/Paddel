@@ -284,29 +284,36 @@ export async function runSeed(
     await prisma.banner.createMany({
       data: [
         {
-          title: 'جام تابستانه پرشین پدل',
-          subtitle: 'ثبت‌نام باز است — تیم خود را بسازید و برای قهرمانی بجنگید.',
-          imageUrl: '/images/login/court-1.jpg',
-          linkUrl: '/tournaments',
+          title: 'به پرشین پدل خوش آمدید',
+          subtitle: 'زمین موردعلاقه‌تان را آنلاین و در چند ثانیه رزرو کنید.',
+          imageUrl: '/images/banners/banner-club.jpg',
+          linkUrl: '/booking',
           sortOrder: 0,
         },
         {
-          title: 'فروشگاه باشگاه راه‌اندازی شد',
-          subtitle: 'راکت، توپ و لوازم ورزشی را با امتیاز یا از کیف پول بخرید.',
-          imageUrl: '/images/login/court-3.jpg',
-          linkUrl: '/market',
+          title: 'جام پرشین پدل',
+          subtitle: 'ثبت‌نام باز است — تیم خود را بسازید و برای قهرمانی بجنگید.',
+          imageUrl: '/images/banners/banner-tournament.jpg',
+          linkUrl: '/tournaments',
           sortOrder: 1,
         },
         {
-          title: 'ساعات پرتقاضا رزرو کنید',
-          subtitle: 'زمین‌های عصر زودتر تکمیل می‌شوند — همین حالا رزرو کنید.',
-          imageUrl: '/images/login/court-2.jpg',
-          linkUrl: '/booking',
+          title: 'بازی‌های باز را ببینید',
+          subtitle: 'هم‌بازی پیدا کنید و به بازی‌های امروز بپیوندید.',
+          imageUrl: '/images/banners/banner-matches.jpg',
+          linkUrl: '/matches',
           sortOrder: 2,
+        },
+        {
+          title: 'فروشگاه باشگاه',
+          subtitle: 'راکت، توپ و لوازم ورزشی را با امتیاز یا از کیف پول بخرید.',
+          imageUrl: '/images/banners/banner-store.jpg',
+          linkUrl: '/market',
+          sortOrder: 3,
         },
       ],
     });
-    log('✅ ۳ بنر نمونه ساخته شد');
+    log('✅ ۴ بنر نمونه ساخته شد');
   }
 
   // ---- ۸. کالاهای فروشگاه ----

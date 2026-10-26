@@ -183,7 +183,7 @@ function RankRowItem({ row, isViewer }: { row: RankRow; isViewer: boolean }) {
         /* accent-50 یک هگز ثابت کرم است و در تم تیره برنمی‌گردد، در حالی که
            متن ردیف سفید می‌شود؛ پس تهِ رنگ را از خود accent با شفافیت
            می‌سازیم تا روی هر دو تم زیر متن بنشیند. */
-        isViewer && 'bg-accent/10',
+        isViewer && 'bg-brand-50',
       )}
     >
       <span className="num w-8 shrink-0 text-center text-sm font-black text-brand-400">

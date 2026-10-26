@@ -45,7 +45,7 @@ export default async function NotificationsPage() {
                 <div
                   className={cn(
                     'card flex items-start gap-3 p-4 transition',
-                    !n.readAt && 'ring-1 ring-accent/30',
+                    !n.readAt && 'ring-1 ring-electric-500/30',
                   )}
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
