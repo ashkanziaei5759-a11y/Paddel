@@ -2,14 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowLeftRight, BellRing, CalendarDays, ChartColumn, ImagePlay, Images, LandPlot, LayoutDashboard, Newspaper, Palette, Settings, ShoppingBag, TrendingUp, Trophy, Users, type LucideIcon } from 'lucide-react';
+import { ArrowLeftRight, BellRing, PhoneCall, ShieldCheck, CalendarDays, ChartColumn, ImagePlay, Images, LandPlot, LayoutDashboard, Newspaper, Palette, Settings, ShoppingBag, TrendingUp, Trophy, Users, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const ITEMS: { href: string; label: string; Icon: LucideIcon; exact?: boolean }[] = [
+type NavItem = { href: string; label: string; Icon: LucideIcon; exact?: boolean };
+
+const ITEMS: NavItem[] = [
   { href: '/admin', label: 'داشبورد', Icon: LayoutDashboard, exact: true },
+  { href: '/admin/bookings/new', label: 'رزرو تلفنی', Icon: PhoneCall },
+  { href: '/admin/bookings', label: 'رزروها', Icon: CalendarDays, exact: true },
   { href: '/admin/users', label: 'کاربران', Icon: Users },
+  { href: '/admin/staff', label: 'ادمین‌ها', Icon: ShieldCheck },
   { href: '/admin/courts', label: 'زمین‌ها', Icon: LandPlot },
-  { href: '/admin/bookings', label: 'رزروها', Icon: CalendarDays },
   { href: '/admin/tournaments', label: 'تورنومنت‌ها', Icon: Trophy },
   { href: '/admin/store', label: 'فروشگاه', Icon: ShoppingBag },
   { href: '/admin/banners', label: 'بنرها', Icon: ImagePlay },
@@ -22,17 +26,23 @@ const ITEMS: { href: string; label: string; Icon: LucideIcon; exact?: boolean }[
   { href: '/admin/settings', label: 'تنظیمات', Icon: Settings },
 ];
 
+/** ادمین پذیرش فقط رزرو تلفنی و فهرست رزروها را می‌بیند */
+const STAFF_ITEMS = ITEMS.filter((i) => i.href.startsWith('/admin/bookings'));
+
 export function AdminNav({
   fullName,
   username,
   logoUrl,
+  role,
 }: {
   fullName: string;
   username: string;
   logoUrl: string;
+  role: 'ADMIN' | 'STAFF';
 }) {
   const pathname = usePathname();
-  const isActive = (item: (typeof ITEMS)[number]) =>
+  const items = role === 'ADMIN' ? ITEMS : STAFF_ITEMS;
+  const isActive = (item: NavItem) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
   return (
@@ -43,13 +53,13 @@ export function AdminNav({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoUrl} alt="" width={44} height={44} className="h-11 w-11 rounded-2xl object-cover" />
           <div>
-            <p className="text-sm font-black text-white">پنل مدیریت</p>
+            <p className="text-sm font-black text-white">{role === 'ADMIN' ? 'پنل مدیریت' : 'پیشخوان پذیرش'}</p>
             <p className="text-[10px] font-bold tracking-widest text-sky-light/60">PERSIAN PADEL</p>
           </div>
         </div>
 
         <nav className="flex-1 space-y-1">
-          {ITEMS.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -89,7 +99,7 @@ export function AdminNav({
         style={{ paddingBottom: 'var(--safe-bottom)' }}
       >
         <div className="no-scrollbar flex items-stretch overflow-x-auto px-1">
-          {ITEMS.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}

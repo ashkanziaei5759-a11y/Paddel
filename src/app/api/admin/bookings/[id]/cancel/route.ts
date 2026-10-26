@@ -11,6 +11,7 @@ const schema = z.object({
   reason: z.string().trim().max(240).optional(),
   overrideRefundToman: z.coerce.number().int().min(0).optional(),
   adjustmentNote: z.string().trim().max(240).optional(),
+  message: z.string().trim().max(500).optional(),
 });
 
 /** لغو رزرو توسط مدیر — با امکان تعیین دستی مبلغ بازگشتی */
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       overrideRefundAmount:
         input.overrideRefundToman !== undefined ? tomanToRial(input.overrideRefundToman) : undefined,
       adjustmentNote: input.adjustmentNote,
+      playerMessage: input.message,
     });
 
     return ok({

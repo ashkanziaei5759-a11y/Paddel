@@ -184,6 +184,7 @@ export const NOTIFICATION_ICON: Record<NotificationType, string> = {
   BOOKING_REMINDER: 'booking',
   TOURNAMENT_ANNOUNCED: 'tournament',
   ADMIN_MESSAGE: 'admin',
+  CLUB_NEWS: 'notification',
   VOUCHER_GIFT_RECEIVED: 'points',
   VOUCHER_EXPIRING: 'points',
   GENERAL: 'notification',

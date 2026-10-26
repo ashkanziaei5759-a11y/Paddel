@@ -141,6 +141,10 @@ export interface CreateBookingInput {
   performedBy?: string;
   /** رزرو ادمین بدون کسر از کیف پول */
   skipPayment?: boolean;
+  /** ادمینی که رزرو را ثبت کرد (رزرو تلفنی) */
+  createdById?: string;
+  /** بدون اعلان — رزروی که مدیر برای خود باشگاه می‌گیرد */
+  silent?: boolean;
   /** کد بن رزروی که با امتیاز خریده شده و روی این رزرو خرج می‌شود */
   voucherCode?: string;
   /** باقی‌مانده‌ی هزینه به‌جای کیف پول، با امتیاز پرداخت شود */
@@ -247,6 +251,7 @@ export async function createBooking(input: CreateBookingInput) {
           slotCount: starts.length,
           status: 'CONFIRMED',
           source: input.source ?? 'PLAYER',
+          createdById: input.createdById,
           totalPrice: input.skipPayment ? 0n : totalPrice,
           notes: input.notes,
           priceBreakdown: priced.map((p) => ({
@@ -364,11 +369,18 @@ export async function createBooking(input: CreateBookingInput) {
     { isolationLevel: 'ReadCommitted', timeout: 20_000 },
   );
 
+  if (input.silent) return booking;
+
+  const byDesk = input.createdById && input.createdById !== input.userId;
   await notify({
     userId: input.userId,
     type: 'BOOKING_CONFIRMED',
-    title: 'رزرو شما ثبت شد 🎾',
-    body: `${court.name} — ${formatDateTime(booking.startsAt)} · ${formatToman(booking.totalPrice)}`,
+    title: byDesk ? 'پذیرش باشگاه برایتان زمین رزرو کرد 🎾' : 'رزرو شما ثبت شد 🎾',
+    body:
+      `${court.name} — ${formatDateTime(booking.startsAt)} · ` +
+      (booking.totalPrice > 0n
+        ? `${formatToman(booking.totalPrice)}${byDesk ? ' از کیف پول شما کسر شد' : ''}`
+        : 'رایگان'),
     actionUrl: `/bookings/${booking.id}`,
     data: { bookingId: booking.id, code: booking.code },
   });

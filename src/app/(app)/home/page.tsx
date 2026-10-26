@@ -16,6 +16,7 @@ import { DesignerCredit } from '@/components/ui/DesignerCredit';
 import { TopPlayersRail } from '@/components/ranking/TopPlayersRail';
 import { withAlphaFlags } from '@/lib/top-players';
 import { Dot } from '@/components/ui/Dot';
+import { PushSettings } from '@/components/pwa/PushSettings';
 
 export const metadata: Metadata = { title: 'خانه' };
 export const dynamic = 'force-dynamic';
@@ -135,7 +136,7 @@ export default async function HomePage() {
                 <div>
                   <p className="text-[11px] font-bold text-sky-light/60">سطح بازیکن</p>
                   <p className="text-xs font-black text-white">
-                    {user.role === 'ADMIN' ? 'مدیر باشگاه' : 'بازیکن باشگاه'}
+                    {user.role === 'ADMIN' ? 'مدیر باشگاه' : user.role === 'STAFF' ? 'ادمین پذیرش' : 'بازیکن باشگاه'}
                   </p>
                 </div>
               </div>
@@ -149,9 +150,14 @@ export default async function HomePage() {
           </div>
 
           <div className="relative mt-5 grid grid-cols-2 gap-3">
+            {/* مدیر و ادمین پذیرش کیف پول ندارند؛ رزرو مدیر رایگان است */}
             <div className="rounded-2xl bg-white/10 p-3 backdrop-blur-sm">
-              <p className="text-[10px] font-bold text-sky-light/60">موجودی کیف پول</p>
-              <p className="num mt-1 text-sm font-black text-white">{formatToman(balance)}</p>
+              <p className="text-[10px] font-bold text-sky-light/60">
+                {user.role === 'PLAYER' ? 'موجودی کیف پول' : 'پرداخت رزرو'}
+              </p>
+              <p className="num mt-1 text-sm font-black text-white">
+                {user.role === 'PLAYER' ? formatToman(balance) : 'بدون کیف پول'}
+              </p>
             </div>
             <div className="rounded-2xl bg-white/10 p-3 backdrop-blur-sm">
               <p className="text-[10px] font-bold text-sky-light/60">تعداد رزروها</p>
@@ -164,13 +170,16 @@ export default async function HomePage() {
               رزرو زمین
             </Link>
             <Link
-              href="/wallet"
+              href={user.role === 'PLAYER' ? '/wallet' : user.role === 'ADMIN' ? '/admin' : '/admin/bookings/new'}
               className="btn btn-sm flex-1 border border-white/20 bg-white/10 text-white hover:bg-white/15"
             >
-              شارژ کیف پول
+              {user.role === 'PLAYER' ? 'شارژ کیف پول' : user.role === 'ADMIN' ? 'پنل مدیریت' : 'پیشخوان پذیرش'}
             </Link>
           </div>
         </section>
+
+        {/* ---- پیشنهاد روشن کردن اعلان گوشی (فقط اگر خاموش است) ---- */}
+        <PushSettings variant="prompt" />
 
         {/* ---- درخواست پارتنر در انتظار ---- */}
         {pendingRequests > 0 && (
@@ -450,10 +459,21 @@ export default async function HomePage() {
             <QuickAction href="/matches" icon="users" title="بازی‌های باز" subtitle="هم‌بازی پیدا کنید" />
             <QuickAction href="/booking" icon="booking" title="رزرو زمین" subtitle="انتخاب تاریخ و ساعت" />
             <QuickAction href="/market" icon="ticket" title="فروشگاه" subtitle="خرید با امتیاز" />
-            <QuickAction href="/wallet" icon="wallet" title="کیف پول" subtitle="شارژ و تراکنش‌ها" />
+            {user.role === 'PLAYER' && (
+              <QuickAction href="/wallet" icon="wallet" title="کیف پول" subtitle="شارژ و تراکنش‌ها" />
+            )}
             <QuickAction href="/tournaments" icon="tournament" title="تورنومنت‌ها" subtitle="ثبت‌نام و نتایج" />
             <QuickAction href="/news" icon="notification" title="اخبار باشگاه" subtitle="گزارش و آموزش" />
             <QuickAction href="/ranking" icon="rank" title="رنکینگ" subtitle="جدول امتیازها" />
+            {user.role === 'STAFF' && (
+              <QuickAction
+                href="/admin/bookings/new"
+                icon="admin"
+                title="پیشخوان پذیرش"
+                subtitle="رزرو تلفنی برای بازیکن"
+                className="col-span-2 bg-brand-gradient text-white"
+              />
+            )}
             {user.role === 'ADMIN' && (
               <QuickAction
                 href="/admin"

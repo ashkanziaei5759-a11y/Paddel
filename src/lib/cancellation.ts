@@ -65,6 +65,12 @@ export async function quoteRefund(
   };
 }
 
+/** پیام مدیر زیر متن اعلان لغو */
+function withMessage(body: string, message?: string): string {
+  const text = message?.trim();
+  return text ? `${body}\nپیام باشگاه: ${text}` : body;
+}
+
 export interface CancelBookingInput {
   bookingId: string;
   cancelledBy: string;
@@ -73,6 +79,8 @@ export interface CancelBookingInput {
   /** ادمین می‌تواند مبلغ بازگشتی را دستی تعیین کند */
   overrideRefundAmount?: bigint;
   adjustmentNote?: string;
+  /** پیام مدیر به بازیکن — در اعلان لغو (و روی گوشی) نمایش داده می‌شود */
+  playerMessage?: string;
 }
 
 /**
@@ -220,13 +228,15 @@ export async function cancelBooking(input: CancelBookingInput) {
     await notify({
       userId: result.booking.userId,
       type: 'BOOKING_CANCELLED',
-      title: 'رزرو شما لغو شد',
-      body:
+      title: input.cancelledRole === 'ADMIN' ? 'باشگاه رزرو شما را لغو کرد' : 'رزرو شما لغو شد',
+      body: withMessage(
         result.restoredVoucher !== null
           ? `${result.booking.court.name} — ${formatDateTime(result.booking.startsAt)}. بن ${result.restoredVoucher} دوباره قابل استفاده شد.`
           : result.refundAmount > 0n
             ? `${result.booking.court.name} — ${formatDateTime(result.booking.startsAt)}. مبلغ ${formatToman(result.refundAmount)} به کیف پول شما بازگشت.`
             : `${result.booking.court.name} — ${formatDateTime(result.booking.startsAt)}.`,
+        input.playerMessage,
+      ),
       actionUrl: result.restoredVoucher !== null ? '/vouchers' : '/wallet',
       data: { bookingId: result.booking.id },
     });

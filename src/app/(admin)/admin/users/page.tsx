@@ -32,7 +32,7 @@ export default async function AdminUsersPage({
             ],
           }
         : {}),
-      ...(role === 'ADMIN' || role === 'PLAYER' ? { role } : {}),
+      ...(role === 'ADMIN' || role === 'PLAYER' || role === 'STAFF' ? { role } : {}),
       ...(level ? { profile: { level: level as never } } : {}),
     },
     orderBy: { createdAt: 'desc' },
@@ -75,6 +75,7 @@ export default async function AdminUsersPage({
                         {u.profile?.firstName} {u.profile?.lastName}
                       </p>
                       {u.role === 'ADMIN' && <span className="badge-brand shrink-0">مدیر</span>}
+                      {u.role === 'STAFF' && <span className="badge-brand shrink-0">پذیرش</span>}
                       {u.status === 'SUSPENDED' && (
                         <span className="badge-danger shrink-0">غیرفعال</span>
                       )}

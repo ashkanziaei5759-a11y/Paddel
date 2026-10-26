@@ -17,7 +17,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   // اتصال روزمره‌ی اپ — روی میزبان‌های بدون‌سرور معمولاً از استخر اتصال (pooler) می‌آید
   url       = env("DATABASE_URL")
   // مهاجرت‌ها به اتصال مستقیم نیاز دارند؛ pgBouncer آن را پشتیبانی نمی‌کند.
@@ -31,7 +31,10 @@ datasource db {
 
 enum Role {
   PLAYER
+  /// مدیر کل باشگاه — دسترسی کامل، بدون کیف پول، رزرو بدون محدودیت
   ADMIN
+  /// ادمین پذیرش که مدیر کل می‌سازد — فقط رزروها و رزرو تلفنی برای بازیکن
+  STAFF
 }
 
 /// سطح‌بندی بازیکنان — فقط توسط ادمین تغییر می‌کند
@@ -257,6 +260,8 @@ enum NotificationType {
   VOUCHER_GIFT_RECEIVED
   /// بن شما رو به انقضاست
   VOUCHER_EXPIRING
+  /// خبر، بنر یا اطلاعیه‌ی همگانی باشگاه
+  CLUB_NEWS
   GENERAL
 }
 
@@ -339,26 +344,28 @@ model User {
   wallet             Wallet?
   sessions           Session[]
   phoneVerifications PhoneVerification[]
-  bookings           Booking[]           @relation("BookingUser")
+  bookings           Booking[]                @relation("BookingUser")
   walletTxs          WalletTransaction[]
-  pointsTxs          PointsTransaction[] @relation("PointsOwner")
-  pointsTxsCreated   PointsTransaction[] @relation("PointsActor")
+  pointsTxs          PointsTransaction[]      @relation("PointsOwner")
+  pointsTxsCreated   PointsTransaction[]      @relation("PointsActor")
   payments           Payment[]
   notifications      Notification[]
-  sentRequests       PartnerRequest[]    @relation("RequestSender")
-  receivedRequests   PartnerRequest[]    @relation("RequestReceiver")
+  sentRequests       PartnerRequest[]         @relation("RequestSender")
+  receivedRequests   PartnerRequest[]         @relation("RequestReceiver")
   teamMemberships    TeamMember[]
   registrations      TournamentRegistration[] @relation("RegistrationCreator")
-  draftPicks         DraftPick[]         @relation("DraftPickedPlayer")
+  draftPicks         DraftPick[]              @relation("DraftPickedPlayer")
   auditLogs          AuditLog[]
   storeOrders        StoreOrder[]
-  hostedMatches      OpenMatch[]         @relation("OpenMatchHost")
-  articles           Article[]           @relation("ArticleAuthor")
-  media              MediaAsset[]        @relation("MediaUploader")
-  matchSeats         OpenMatchPlayer[]   @relation("OpenMatchPlayer")
-  vouchers           BookingVoucher[]    @relation("VoucherOwner")
-  giftedVouchers     BookingVoucher[]    @relation("VoucherGifter")
+  hostedMatches      OpenMatch[]              @relation("OpenMatchHost")
+  articles           Article[]                @relation("ArticleAuthor")
+  media              MediaAsset[]             @relation("MediaUploader")
+  matchSeats         OpenMatchPlayer[]        @relation("OpenMatchPlayer")
+  vouchers           BookingVoucher[]         @relation("VoucherOwner")
+  giftedVouchers     BookingVoucher[]         @relation("VoucherGifter")
   bankAccount        BankAccount?
+  pushSubscriptions  PushSubscription[]
+  bookingsCreated    Booking[]                @relation("BookingCreator")
 
   @@index([role])
   @@index([status])
@@ -380,7 +387,7 @@ model Profile {
   gender Gender?
 
   /// سطح بازیکن — فقط ادمین تغییر می‌دهد
-  level         PlayerLevel @default(D)
+  level          PlayerLevel @default(D)
   levelUpdatedAt DateTime?
   levelUpdatedBy String?
 
@@ -396,15 +403,15 @@ model Profile {
 }
 
 model Session {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tokenHash String   @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
   userAgent String?
   ip        String?
   expiresAt DateTime
   revokedAt DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([userId])
   @@index([expiresAt])
@@ -485,7 +492,7 @@ model WalletTransaction {
   balanceBefore BigInt
   balanceAfter  BigInt
 
-  description String?
+  description  String?
   /// کلید یکتا برای جلوگیری از ثبت دوباره (Idempotency)
   referenceKey String? @unique
 
@@ -529,11 +536,11 @@ model Payment {
   status PaymentStatus @default(INITIATED)
 
   /// شناسه‌ی تراکنش نزد درگاه (authority / trackId / ...)
-  providerRef String?
+  providerRef       String?
   /// شناسه‌ی نهایی تأیید پرداخت (refId)
   providerVerifyRef String?
   /// شماره کارت مبدأ در صورت وجود
-  cardPan String?
+  cardPan           String?
 
   callbackUrl String?
   description String?
@@ -568,7 +575,7 @@ model PointsTransaction {
   balanceBefore Int
   balanceAfter  Int
 
-  description String?
+  description  String?
   referenceKey String? @unique
 
   tournamentId String?
@@ -612,9 +619,9 @@ model Court {
   /// بیشترین تعداد سانس پشت‌سرهم در یک رزرو
   maxConsecutiveSlots Int @default(4)
   /// حداقل فاصله تا شروع سانس برای رزرو (دقیقه)
-  minLeadTimeMinutes Int @default(30)
+  minLeadTimeMinutes  Int @default(30)
   /// حداکثر تعداد روز آینده که قابل رزرو است
-  advanceBookingDays Int @default(30)
+  advanceBookingDays  Int @default(30)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -693,16 +700,19 @@ model Booking {
   courtId String
   court   Court  @relation(fields: [courtId], references: [id])
 
-  startsAt DateTime
-  endsAt   DateTime
+  startsAt  DateTime
+  endsAt    DateTime
   /// تعداد سانس‌های پشت‌سرهم
-  slotCount Int @default(1)
+  slotCount Int      @default(1)
 
-  status BookingStatus @default(CONFIRMED)
-  source BookingSource @default(PLAYER)
+  status      BookingStatus @default(CONFIRMED)
+  source      BookingSource @default(PLAYER)
+  /// ادمینی که رزرو را برای بازیکن ثبت کرد (رزرو تلفنی)
+  createdById String?
+  createdBy   User?         @relation("BookingCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
   /// مبلغ پرداخت‌شده (ریال)
-  totalPrice BigInt
+  totalPrice     BigInt
   /// ریز قیمت هر سانس برای شفافیت
   priceBreakdown Json?
 
@@ -753,11 +763,11 @@ model BookingCancellation {
   /// دقایق باقی‌مانده تا شروع رزرو در لحظه‌ی لغو
   minutesBeforeStart Int
   /// درصد کسر اعمال‌شده
-  penaltyPercent Int
-  penaltyAmount  BigInt
-  refundAmount   BigInt
+  penaltyPercent     Int
+  penaltyAmount      BigInt
+  refundAmount       BigInt
 
-  reason      String?
+  reason             String?
   isManualAdjustment Boolean @default(false)
   adjustmentNote     String?
 
@@ -770,7 +780,7 @@ model BookingCancellation {
 model CancellationPolicy {
   id String @id @default(cuid())
 
-  name     String
+  name             String
   /// از این دقیقه تا شروع رزرو (شامل)
   minMinutesBefore Int
   /// تا این دقیقه (null = بی‌نهایت)
@@ -810,19 +820,19 @@ model Tournament {
   minTeams Int @default(4)
 
   /// هزینه‌ی ثبت‌نام هر تیم (ریال) — از کیف پول سازنده‌ی تیم کسر می‌شود
-  entryFee BigInt @default(0)
+  entryFee                BigInt  @default(0)
   /// هزینه به‌ازای هر بازیکن تقسیم شود؟
   splitFeeBetweenPartners Boolean @default(false)
 
   partnerMode PartnerMode @default(PLAYER_CHOICE)
 
   /// تنظیمات مرحله‌ی گروهی (برای GROUP_KNOCKOUT)
-  groupCount            Int? // تعداد گروه‌ها
-  teamsPerGroup         Int?
-  advancingPerGroup     Int? @default(2)
-  hasThirdPlaceMatch    Boolean @default(false)
+  groupCount         Int? // تعداد گروه‌ها
+  teamsPerGroup      Int?
+  advancingPerGroup  Int?    @default(2)
+  hasThirdPlaceMatch Boolean @default(false)
   /// رفت و برگشت در لیگ
-  doubleRoundRobin      Boolean @default(false)
+  doubleRoundRobin   Boolean @default(false)
 
   /// امتیاز جدول لیگ/گروهی
   pointsForWin  Int @default(3)
@@ -833,20 +843,20 @@ model Tournament {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  levelRules    TournamentLevelRule[]
-  pointsRules   TournamentPointsRule[]
-  courts        TournamentCourt[]
-  registrations TournamentRegistration[]
-  teams         TournamentTeam[]
-  matches       TournamentMatch[]
-  groups        TournamentGroup[]
-  standings     TournamentStanding[]
-  results       TournamentResult[]
+  levelRules      TournamentLevelRule[]
+  pointsRules     TournamentPointsRule[]
+  courts          TournamentCourt[]
+  registrations   TournamentRegistration[]
+  teams           TournamentTeam[]
+  matches         TournamentMatch[]
+  groups          TournamentGroup[]
+  standings       TournamentStanding[]
+  results         TournamentResult[]
   partnerRequests PartnerRequest[]
-  draft         TournamentDraft?
-  pointsTxs     PointsTransaction[]
-  blackouts     CourtBlackout[]
-  bookings      Booking[]
+  draft           TournamentDraft?
+  pointsTxs       PointsTransaction[]
+  blackouts       CourtBlackout[]
+  bookings        Booking[]
 
   @@index([status, startsAt])
   @@map("tournaments")
@@ -899,10 +909,10 @@ model TournamentPointsRule {
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
   /// رتبه‌ی نهایی (۱ = قهرمان)
-  rank Int
+  rank            Int
   /// امتیاز هر بازیکنِ تیم
   pointsPerPlayer Int
-  label String?
+  label           String?
 
   @@unique([tournamentId, rank])
   @@map("tournament_points_rules")
@@ -946,11 +956,11 @@ model TournamentRegistration {
 
   status RegistrationStatus @default(PENDING_PARTNER)
 
-  teamId String? @unique
+  teamId String?         @unique
   team   TournamentTeam? @relation(fields: [teamId], references: [id])
 
-  feePaid  BigInt  @default(0)
-  notes    String?
+  feePaid         BigInt  @default(0)
+  notes           String?
   rejectionReason String?
 
   createdAt DateTime @default(now())
@@ -958,7 +968,7 @@ model TournamentRegistration {
 
   partnerRequests PartnerRequest[]
   walletTxs       WalletTransaction[]
-  voucher         BookingVoucher? @relation("RegistrationVoucherUse")
+  voucher         BookingVoucher?     @relation("RegistrationVoucherUse")
 
   @@index([tournamentId, status])
   @@map("tournament_registrations")
@@ -969,9 +979,9 @@ model TournamentTeam {
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
-  name      String
-  seed      Int?
-  isActive  Boolean @default(true)
+  name     String
+  seed     Int?
+  isActive Boolean @default(true)
 
   groupId String?
   group   TournamentGroup? @relation(fields: [groupId], references: [id])
@@ -983,9 +993,9 @@ model TournamentTeam {
   registration TournamentRegistration?
   standing     TournamentStanding?
   result       TournamentResult?
-  matchesAsA   TournamentMatch[] @relation("TeamA")
-  matchesAsB   TournamentMatch[] @relation("TeamB")
-  matchesWon   TournamentMatch[] @relation("WinnerTeam")
+  matchesAsA   TournamentMatch[]       @relation("TeamA")
+  matchesAsB   TournamentMatch[]       @relation("TeamB")
+  matchesWon   TournamentMatch[]       @relation("WinnerTeam")
   draftPicks   DraftPick[]
 
   @@index([tournamentId])
@@ -1001,8 +1011,8 @@ model TeamMember {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   /// جایگاه در تیم: ۱ یا ۲
-  slot     Int
-  isLeader Boolean @default(false)
+  slot                Int
+  isLeader            Boolean      @default(false)
   /// سطح بازیکن در لحظه‌ی ثبت‌نام (Snapshot)
   levelAtRegistration PlayerLevel?
 
@@ -1020,7 +1030,7 @@ model TournamentGroup {
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
   name  String
-  order Int   @default(0)
+  order Int    @default(0)
 
   teams     TournamentTeam[]
   matches   TournamentMatch[]
@@ -1035,11 +1045,11 @@ model TournamentMatch {
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
-  stage MatchStage
+  stage       MatchStage
   /// شماره‌ی دور (لیگ/گروهی) یا دور براکت
-  round Int @default(1)
+  round       Int        @default(1)
   /// جایگاه در دور — برای ساخت براکت
-  slotInRound Int @default(0)
+  slotInRound Int        @default(0)
 
   groupId String?
   group   TournamentGroup? @relation(fields: [groupId], references: [id])
@@ -1055,8 +1065,8 @@ model TournamentMatch {
 
   status MatchStatus @default(SCHEDULED)
 
-  scoreA Int?
-  scoreB Int?
+  scoreA    Int?
+  scoreB    Int?
   /// نتیجه‌ی ست‌به‌ست: [{"a":6,"b":3},{"a":4,"b":6}]
   setScores Json?
 
@@ -1097,7 +1107,7 @@ model TournamentStanding {
   gamesFor     Int @default(0)
   gamesAgainst Int @default(0)
 
-  points Int @default(0)
+  points Int  @default(0)
   rank   Int?
 
   updatedAt DateTime @updatedAt
@@ -1116,7 +1126,7 @@ model TournamentResult {
   team   TournamentTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
   finalRank       Int
-  pointsAwarded   Int      @default(0)
+  pointsAwarded   Int       @default(0)
   pointsAwardedAt DateTime?
 
   createdAt DateTime @default(now())
@@ -1133,14 +1143,14 @@ model TournamentDraft {
   tournamentId String     @unique
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
-  isActive     Boolean @default(false)
-  currentRound Int     @default(1)
+  isActive         Boolean  @default(false)
+  currentRound     Int      @default(1)
   /// اندیس لیدر فعلی در ترتیب انتخاب
-  currentPickIndex Int @default(0)
+  currentPickIndex Int      @default(0)
   /// ترتیب شناسه‌ی تیم‌های لیدر
-  pickOrder String[]
+  pickOrder        String[]
   /// مار پیچ (Snake): ترتیب در دورهای زوج برعکس شود
-  snakeOrder Boolean @default(true)
+  snakeOrder       Boolean  @default(true)
 
   startedAt  DateTime?
   finishedAt DateTime?
@@ -1183,11 +1193,13 @@ model Notification {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  type    NotificationType
-  title   String
-  body    String
+  type      NotificationType
+  title     String
+  body      String
   /// لینک مقصد در اپ
   actionUrl String?
+  /// تصویر بنر یا خبر — در اعلان گوشی هم بزرگ نمایش داده می‌شود
+  imageUrl  String?
   data      Json?
 
   /// کانال‌های ارسال — آماده‌ی افزودن Push و SMS
@@ -1232,9 +1244,9 @@ model BankAccount {
   /// شماره کارت، فقط ۱۶ رقم بدون خط تیره
   cardNumber String?
   /// شماره شبا بدون پیشوند IR — دقیقاً ۲۴ رقم
-  iban String?
+  iban       String?
   /// نام بانک؛ از روی شش رقم اول کارت تشخیص داده می‌شود
-  bankName String?
+  bankName   String?
 
   /// مدیر پس از تطبیق با کارت ملی، حساب را تأیید می‌کند
   verifiedAt DateTime?
@@ -1247,9 +1259,9 @@ model BankAccount {
 }
 
 model AuditLog {
-  id     String @id @default(cuid())
+  id     String  @id @default(cuid())
   userId String?
-  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   action     String
   entityType String
@@ -1271,7 +1283,7 @@ model AuditLog {
 // ===========================================================================
 
 model Banner {
-  id       String          @id @default(cuid())
+  id       String  @id @default(cuid())
   title    String
   subtitle String?
   imageUrl String
@@ -1312,7 +1324,7 @@ model BookingVoucher {
   kind VoucherKind
 
   /// درصد تخفیف؛ برای FREE_SESSION برابر ۱۰۰ است
-  percentOff Int @default(100)
+  percentOff      Int     @default(100)
   /// سقف تخفیف به ریال — اختیاری
   maxDiscountRial BigInt?
 
@@ -1364,7 +1376,7 @@ model StoreProduct {
   /// قیمت به امتیاز — اگر null باشد با امتیاز قابل خرید نیست
   pricePoints Int?
   /// قیمت به ریال — اگر null باشد با کیف پول قابل خرید نیست
-  priceRial BigInt?
+  priceRial   BigInt?
 
   /// بالای صفحه‌ی فروشگاه یا پایین، در بخش امتیازی
   section StoreSection @default(MARKET)
@@ -1439,7 +1451,6 @@ model StoreOrderItem {
   @@map("store_order_items")
 }
 
-
 // ===========================================================================
 // بازی باز — میزبان زمین را رزرو می‌کند و جای خالی را برای بقیه باز می‌گذارد
 // ===========================================================================
@@ -1477,7 +1488,7 @@ model OpenMatch {
   /// مجموع سهم‌هایی که از بازیکنان گرفته شده و هنوز به میزبان نرسیده است
   escrowBalance BigInt @default(0)
 
-  levelPolicy MatchLevelPolicy @default(ANY)
+  levelPolicy   MatchLevelPolicy @default(ANY)
   /// وقتی levelPolicy = RANGE است، سطح‌های مجاز
   allowedLevels PlayerLevel[]
 
@@ -1519,9 +1530,9 @@ model OpenMatchPlayer {
 
   /// اگر بازی «تأیید میزبان» بخواهد، بازیکن تا تأیید در حالت PENDING می‌ماند.
   /// جایش از همان لحظه رزرو است تا ظرفیت بیش از حد فروخته نشود.
-  status MatchPlayerStatus @default(APPROVED)
+  status     MatchPlayerStatus @default(APPROVED)
   /// مبلغی که این بازیکن پرداخته و در صورت خروج بازگردانده می‌شود (ریال)
-  paidAmount BigInt @default(0)
+  paidAmount BigInt            @default(0)
 
   joinedAt DateTime @default(now())
 
@@ -1529,7 +1540,6 @@ model OpenMatchPlayer {
   @@index([userId])
   @@map("open_match_players")
 }
-
 
 // ===========================================================================
 // اخبار و مطالب باشگاه
@@ -1564,7 +1574,6 @@ model Article {
   @@map("articles")
 }
 
-
 // ===========================================================================
 // تصاویر آپلودشده
 // ===========================================================================
@@ -1585,7 +1594,7 @@ model MediaAsset {
   width    Int
   height   Int
   /// تصویرِ پس‌زمینه‌حذف‌شده — روی کارت‌ها شناور نشان داده می‌شود، نه در قاب
-  hasAlpha Boolean @default(false)
+  hasAlpha Boolean   @default(false)
 
   uploadedById String?
   uploadedBy   User?   @relation("MediaUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
@@ -1595,4 +1604,84 @@ model MediaAsset {
   @@index([kind])
   @@index([uploadedById])
   @@map("media_assets")
+}
+
+/// اشتراک اعلان گوشی (Web Push) — هر مرورگر/گوشی یک ردیف
+model PushSubscription {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  endpoint  String  @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+/// شرطِ اعلان خودکار
+enum NotificationRuleTrigger {
+  /// چند دقیقه پیش از شروع رزرو
+  BEFORE_BOOKING
+  /// چند دقیقه پس از پایان رزرو
+  AFTER_BOOKING
+  /// بازیکنی که چند روز رزرو نکرده
+  INACTIVE_PLAYER
+  /// موجودی کیف پول کمتر از یک مبلغ
+  LOW_WALLET
+  /// یک بار، در زمان مشخص، برای همه‌ی بازیکنان
+  SCHEDULED
+}
+
+/// قانون اعلان خودکار که مدیر از پنل می‌سازد
+model NotificationRule {
+  id      String                  @id @default(cuid())
+  name    String
+  trigger NotificationRuleTrigger
+
+  /// دقیقه برای رزروها، روز برای بازیکن غیرفعال
+  offset          Int       @default(60)
+  /// ریال — فقط LOW_WALLET
+  thresholdAmount BigInt?
+  /// فقط SCHEDULED
+  runAt           DateTime?
+
+  title     String
+  body      String
+  actionUrl String?
+  imageUrl  String?
+
+  isActive    Boolean   @default(true)
+  lastRunAt   DateTime?
+  sentCount   Int       @default(0)
+  createdById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  deliveries NotificationRuleDelivery[]
+
+  @@index([isActive, trigger])
+  @@map("notification_rules")
+}
+
+/// هر قانون برای هر رویداد فقط یک بار به هر نفر ارسال می‌شود
+model NotificationRuleDelivery {
+  id     String           @id @default(cuid())
+  ruleId String
+  rule   NotificationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  userId String
+  /// شناسه‌ی رویداد — مثلاً شناسه‌ی رزرو یا دوره‌ی زمانی
+  refKey String
+
+  createdAt DateTime @default(now())
+
+  @@unique([ruleId, userId, refKey])
+  @@index([createdAt])
+  @@map("notification_rule_deliveries")
 }

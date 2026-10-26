@@ -40,7 +40,9 @@ export function LoginForm() {
       }
 
       toast.success("خوش آمدید!");
-      router.replace(json.data?.role === "ADMIN" ? "/admin" : "/home");
+      router.replace(
+        json.data?.role === "ADMIN" ? "/admin" : json.data?.role === "STAFF" ? "/admin/bookings/new" : "/home",
+      );
       router.refresh();
     } catch {
       setError("ارتباط با سرور برقرار نشد. اتصال اینترنت خود را بررسی کنید.");

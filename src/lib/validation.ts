@@ -433,3 +433,58 @@ export const articleSchema = z.object({
 // --- جنسیت ----------------------------------------------------------------
 
 export const genderSchema = z.enum(['MALE', 'FEMALE']).nullable().optional();
+
+/* ---------------- اعلان‌ها ---------------- */
+
+/** لینک داخل سایت (/…) یا آدرس کامل http(s) — خالی یعنی بدون لینک */
+const zLink = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((v) => v === '' || (v.startsWith('/') && !v.startsWith('//')) || /^https?:\/\//i.test(v), {
+    message: 'لینک باید با / (صفحه‌ای از همین سایت) یا https:// شروع شود.',
+  })
+  .transform((v) => v || null)
+  .optional()
+  .nullable();
+
+export const adminNotifySchema = z.object({
+  title: z.string().trim().min(2, 'عنوان کوتاه است.').max(120),
+  body: z.string().trim().min(2, 'متن پیام کوتاه است.').max(1000),
+  /* یا برای یک نفر، یا برای همه‌ی بازیکنان فعال */
+  audience: z.enum(['USER', 'ALL_PLAYERS']),
+  userId: z.string().min(1).optional(),
+  actionUrl: zLink,
+  imageUrl: zLink,
+  /** ارسال در زمان مشخص (فقط همگانی) — خالی یعنی همین حالا */
+  scheduleAt: z.string().datetime({ offset: true }).optional().nullable(),
+});
+
+export const notificationRuleSchema = z
+  .object({
+    name: z.string().trim().min(2, 'نام قانون کوتاه است.').max(80),
+    trigger: z.enum(['BEFORE_BOOKING', 'AFTER_BOOKING', 'INACTIVE_PLAYER', 'LOW_WALLET', 'SCHEDULED']),
+    /** دقیقه برای رزرو، روز برای بازیکن غیرفعال */
+    offset: z.coerce.number().int().min(0).max(60 * 24 * 14).default(60),
+    thresholdToman: z.coerce.number().int().min(1).max(1_000_000_000).optional().nullable(),
+    runAt: z.string().datetime({ offset: true }).optional().nullable(),
+    title: z.string().trim().min(2, 'عنوان کوتاه است.').max(120),
+    body: z.string().trim().min(2, 'متن پیام کوتاه است.').max(1000),
+    actionUrl: zLink,
+    imageUrl: zLink,
+    isActive: z.boolean().default(true),
+  })
+  .superRefine((v, ctx) => {
+    if ((v.trigger === 'BEFORE_BOOKING' || v.trigger === 'AFTER_BOOKING') && (v.offset < 5 || v.offset > 60 * 24 * 7)) {
+      ctx.addIssue({ code: 'custom', path: ['offset'], message: 'زمان باید بین ۵ دقیقه تا ۷ روز باشد.' });
+    }
+    if (v.trigger === 'INACTIVE_PLAYER' && (v.offset < 1 || v.offset > 365)) {
+      ctx.addIssue({ code: 'custom', path: ['offset'], message: 'تعداد روز باید بین ۱ تا ۳۶۵ باشد.' });
+    }
+    if (v.trigger === 'LOW_WALLET' && !v.thresholdToman) {
+      ctx.addIssue({ code: 'custom', path: ['thresholdToman'], message: 'مبلغ حد کیف پول را وارد کنید.' });
+    }
+    if (v.trigger === 'SCHEDULED' && !v.runAt) {
+      ctx.addIssue({ code: 'custom', path: ['runAt'], message: 'زمان ارسال را انتخاب کنید.' });
+    }
+  });

@@ -62,7 +62,8 @@ export async function POST(req: NextRequest) {
       return fail(GENERIC, 401);
     }
 
-    if (!user.phoneVerifiedAt) {
+    /* تأیید موبایل شرط ثبت‌نام بازیکن است؛ حساب ادمین پذیرش را مدیر می‌سازد */
+    if (!user.phoneVerifiedAt && user.role === 'PLAYER') {
       return fail('شماره موبایل شما تأیید نشده است. لطفاً دوباره ثبت‌نام کنید.', 403);
     }
 

@@ -99,8 +99,8 @@ export async function runSeed(
       phone: adminPhone,
       phoneVerifiedAt: new Date(),
       role: 'ADMIN',
+      /* مدیر کل کیف پول ندارد؛ رزروهایش رایگان ثبت می‌شود */
       profile: { create: { firstName: 'مدیر', lastName: 'باشگاه', level: 'A_PLUS' } },
-      wallet: { create: { balance: toman(5_000_000) } },
     },
   });
   log(`✅ حساب مدیر آماده است — نام کاربری: ${adminUsername}`);

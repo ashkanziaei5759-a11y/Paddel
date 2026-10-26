@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
+import { requireStaffPage } from '@/lib/auth/rbac';
+import { PhoneCall } from 'lucide-react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminBookingRow } from './AdminBookingRow';
 import { BookingFilters } from './BookingFilters';
@@ -15,7 +17,8 @@ export default async function AdminBookingsPage({
 }: {
   searchParams: Promise<{ date?: string; courtId?: string; status?: string; scope?: string }>;
 }) {
-  const sp = await searchParams;
+  const [sp, viewer] = await Promise.all([searchParams, requireStaffPage()]);
+  const isAdmin = viewer.role === 'ADMIN';
   const scope = sp.scope ?? 'upcoming';
   const now = new Date();
 
@@ -42,6 +45,7 @@ export default async function AdminBookingsPage({
       include: {
         court: { select: { name: true } },
         user: { include: { profile: true } },
+        createdBy: { select: { username: true, profile: { select: { firstName: true, lastName: true } } } },
         cancellation: true,
       },
     }),
@@ -62,6 +66,12 @@ export default async function AdminBookingsPage({
       <AdminHeader
         title="مدیریت رزروها"
         subtitle={`${iso(toFaDigits(bookings.length))} رزرو · ${iso(`مجموع ${formatToman(totals._sum.totalPrice ?? 0n)}`)}`}
+        action={
+          <Link href="/admin/bookings/new" className="btn-primary btn-sm">
+            <PhoneCall className="h-4 w-4" strokeWidth={2.2} aria-hidden="true" />
+            رزرو تلفنی
+          </Link>
+        }
       />
 
       <div className="space-y-4 px-4 py-5 sm:px-6 lg:px-8">
@@ -96,17 +106,24 @@ export default async function AdminBookingsPage({
                   username: b.user.username,
                   userId: b.userId,
                   refundAmount: b.cancellation?.refundAmount.toString() ?? null,
+                  createdBy:
+                    b.createdBy && b.createdById !== b.userId
+                      ? `${b.createdBy.profile?.firstName ?? ''} ${b.createdBy.profile?.lastName ?? ''}`.trim() || b.createdBy.username
+                      : null,
                 }}
+                isAdmin={isAdmin}
               />
             ))}
           </div>
         )}
 
-        <p className="text-center text-[11px] font-bold text-brand-300">
-          <Link href="/admin/finance" className="hover:text-brand-600">
-            مشاهده گزارش مالی کامل ←
-          </Link>
-        </p>
+        {isAdmin && (
+          <p className="text-center text-[11px] font-bold text-brand-300">
+            <Link href="/admin/finance" className="hover:text-brand-600">
+              مشاهده گزارش مالی کامل ←
+            </Link>
+          </p>
+        )}
       </div>
     </>
   );

@@ -25,6 +25,8 @@ interface BookingDto {
   username: string;
   userId: string;
   refundAmount: string | null;
+  /** ادمینی که رزرو تلفنی را ثبت کرد */
+  createdBy: string | null;
 }
 
 const STATUS_STYLE: Record<string, string> = {
@@ -35,14 +37,15 @@ const STATUS_STYLE: Record<string, string> = {
   NO_SHOW: 'badge-muted',
 };
 
-export function AdminBookingRow({ booking }: { booking: BookingDto }) {
+export function AdminBookingRow({ booking, isAdmin }: { booking: BookingDto; isAdmin: boolean }) {
   const router = useRouter();
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [manualRefund, setManualRefund] = useState('');
 
-  const canCancel = booking.status === 'CONFIRMED' || booking.status === 'PENDING';
+  /* لغو رزرو فقط با مدیر کل */
+  const canCancel = isAdmin && (booking.status === 'CONFIRMED' || booking.status === 'PENDING');
 
   async function cancel(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,6 +60,7 @@ export function AdminBookingRow({ booking }: { booking: BookingDto }) {
           reason: String(form.get('reason') || '') || undefined,
           overrideRefundToman: manualRefund ? Number(manualRefund) : undefined,
           adjustmentNote: String(form.get('note') || '') || undefined,
+          message: String(form.get('message') || '') || undefined,
         }),
       });
       const json = await res.json();
@@ -84,17 +88,24 @@ export function AdminBookingRow({ booking }: { booking: BookingDto }) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <Link
-            href={`/admin/users/${booking.userId}`}
-            className="truncate text-xs font-extrabold text-brand-800 hover:text-accent-600"
-          >
-            {booking.userName}
-          </Link>
+          {isAdmin ? (
+            <Link
+              href={`/admin/users/${booking.userId}`}
+              className="truncate text-xs font-extrabold text-brand-800 hover:text-accent-600"
+            >
+              {booking.userName}
+            </Link>
+          ) : (
+            <p className="truncate text-xs font-extrabold text-brand-800">{booking.userName}</p>
+          )}
           <p className="num truncate text-[10px] font-semibold text-brand-400">
             {booking.courtName} <Dot />
             {formatDateTime(new Date(booking.startsAt), { withWeekday: false })}
           </p>
-          <p className="num mt-0.5 text-[10px] font-bold text-brand-300">{booking.code}</p>
+          <p className="num mt-0.5 text-[10px] font-bold text-brand-300">
+            {booking.code}
+            {booking.createdBy && <span className="font-semibold"> · ثبت تلفنی: {booking.createdBy}</span>}
+          </p>
         </div>
 
         <div className="shrink-0 text-left">
@@ -132,7 +143,17 @@ export function AdminBookingRow({ booking }: { booking: BookingDto }) {
           </div>
 
           <div>
-            <label className="label" htmlFor={`reason-${booking.id}`}>دلیل لغو</label>
+            <label className="label" htmlFor={`message-${booking.id}`}>پیام برای بازیکن</label>
+            <textarea
+              id={`message-${booking.id}`} name="message" maxLength={500}
+              className="field min-h-[80px] resize-y py-2.5 leading-7"
+              placeholder="مثلاً: به دلیل تعمیرات زمین، رزرو شما لغو شد. مبلغ کامل به کیف پولتان برگشت. عذرخواهی می‌کنیم."
+            />
+            <p className="helper">در اعلان‌های بازیکن و روی گوشی‌اش نمایش داده می‌شود.</p>
+          </div>
+
+          <div>
+            <label className="label" htmlFor={`reason-${booking.id}`}>دلیل لغو (داخلی)</label>
             <input
               id={`reason-${booking.id}`} name="reason" className="field"
               placeholder="مثلاً: تعمیرات زمین"

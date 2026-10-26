@@ -82,7 +82,7 @@ export default async function AdminUserDetail({ params }: { params: Promise<{ id
               <Cell label="وضعیت" value={user.status === 'ACTIVE' ? 'فعال' : 'غیرفعال'} />
               <Cell label="امتیاز" value={formatNumber(user.profile.points)} />
               <Cell label="کیف پول" value={formatToman(user.wallet?.balance ?? 0n)} />
-              <Cell label="نقش" value={user.role === 'ADMIN' ? 'مدیر' : 'بازیکن'} />
+              <Cell label="نقش" value={user.role === 'ADMIN' ? 'مدیر کل' : user.role === 'STAFF' ? 'ادمین پذیرش' : 'بازیکن'} />
               <Cell label="عضویت" value={formatDateTime(user.createdAt, { withWeekday: false })} />
             </div>
           </section>

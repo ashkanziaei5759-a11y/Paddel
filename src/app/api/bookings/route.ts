@@ -52,14 +52,17 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const input = createBookingSchema.parse(body);
 
+    /* مدیر کل کیف پول ندارد: رزروش رایگان و بدون محدودیت‌های بازیکن است */
+    const isAdmin = user.role === 'ADMIN';
     const booking = await createBooking({
       userId: user.id,
       courtId: input.courtId,
       slotStarts: input.slots.map((s) => new Date(s)),
       notes: input.notes,
-      source: 'PLAYER',
-      voucherCode: input.voucherCode,
-      payWithPoints: input.payWithPoints,
+      source: isAdmin ? 'ADMIN' : 'PLAYER',
+      ...(isAdmin
+        ? { skipPayment: true, createdById: user.id, performedBy: user.id }
+        : { voucherCode: input.voucherCode, payWithPoints: input.payWithPoints }),
     });
 
     return ok({ id: booking.id, code: booking.code, totalPrice: booking.totalPrice }, { status: 201 });

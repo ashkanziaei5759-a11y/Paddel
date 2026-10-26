@@ -9,6 +9,7 @@ import { NOTIFICATION_ICON } from '@/lib/constants';
 import { formatRelative } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
 import { Icon, type IconName } from '@/components/ui/Icon';
+import { PushSettings } from '@/components/pwa/PushSettings';
 
 export const metadata: Metadata = { title: 'اعلان‌ها' };
 export const dynamic = 'force-dynamic';
@@ -29,7 +30,8 @@ export default async function NotificationsPage() {
     <>
       <TopBar title="اعلان‌ها" subtitle="پیام‌های باشگاه" back="/home" />
 
-      <div className="page-pad pt-2">
+      <div className="page-pad space-y-3 pt-2">
+        <PushSettings />
         {notifications.length === 0 ? (
           <EmptyState
             icon="notification"
@@ -56,7 +58,16 @@ export default async function NotificationsPage() {
                         <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-accent" />
                       )}
                     </div>
-                    <p className="mt-1 text-[11px] leading-6 text-brand-500">{n.body}</p>
+                    <p className="mt-1 whitespace-pre-line text-[11px] leading-6 text-brand-500">{n.body}</p>
+                    {n.imageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={n.imageUrl}
+                        alt=""
+                        loading="lazy"
+                        className="mt-2.5 aspect-[2/1] w-full rounded-2xl object-cover"
+                      />
+                    )}
                     <p className="mt-1.5 text-[10px] font-bold text-brand-300">
                       {formatRelative(n.createdAt)}
                     </p>
