@@ -14,10 +14,8 @@ export async function AuthShell({
   footer?: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-dvh overflow-hidden bg-brand-gradient-soft">
-      <div className="pointer-events-none absolute inset-0 bg-court-lines opacity-70" />
-      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-electric-500/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-sky-light/10 blur-3xl" />
+    /* پس‌زمینه‌ی سرمه‌ای یکدست برند — بدون خطوط و لکه‌های نور */
+    <div className="relative min-h-dvh overflow-hidden bg-[#1C2D7D]">
 
       <div className="relative mx-auto flex min-h-dvh w-full max-w-[460px] flex-col px-5 py-8 safe-top safe-bottom">
         <Link href="/" className="mb-8 flex flex-col items-center gap-2" aria-label="Persian Padel">

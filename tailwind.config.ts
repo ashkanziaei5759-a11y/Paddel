@@ -97,8 +97,8 @@ const config: Config = {
         /* زمینه‌ی تیره‌ی کارت‌های شاخص — مثل پس‌زمینه‌ی کاتالوگ برند */
         'night-gradient': 'linear-gradient(150deg,#070B26 0%,#111A52 50%,#1C2D7D 100%)',
         'sky-gradient': 'linear-gradient(160deg,#FFFFFF 0%,#F2F4FB 60%,#DCE2F6 100%)',
-        'court-lines':
-          'repeating-linear-gradient(90deg, rgba(220,226,246,.08) 0 1px, transparent 1px 64px), repeating-linear-gradient(0deg, rgba(220,226,246,.08) 0 1px, transparent 1px 64px)',
+        /* خطوط شطرنجیِ زمین حذف شد — طبق برند، سطح‌های آبی یکدست‌اند */
+        'court-lines': 'none',
       },
       keyframes: {
         'fade-up': {

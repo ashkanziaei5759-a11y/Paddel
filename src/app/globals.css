@@ -270,8 +270,9 @@
     }
   }
 
+  /* سرمه‌ای یکدست برند (در هر دو تم ثابت) */
   .card-dark {
-    @apply relative overflow-hidden rounded-3xl bg-brand-gradient text-white shadow-premium;
+    @apply relative overflow-hidden rounded-3xl bg-[#1C2D7D] text-white shadow-premium;
   }
 
   .card-dark::before {
