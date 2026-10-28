@@ -153,7 +153,7 @@ export function Composer({
               className={cn(
                 'flex items-center justify-center gap-2 rounded-2xl px-3 py-3 text-[11.5px] font-black transition',
                 audience === value
-                  ? 'bg-brand-800 text-white'
+                  ? 'bg-primary text-on-primary'
                   : 'bg-surface-muted text-brand-400 hover:text-brand-600',
               )}
             >
@@ -308,7 +308,7 @@ export function Composer({
                   onClick={() => setWhen(value)}
                   className={cn(
                     'rounded-2xl px-3 py-2.5 text-[11.5px] font-black transition',
-                    when === value ? 'bg-brand-800 text-white' : 'bg-surface-muted text-brand-400',
+                    when === value ? 'bg-primary text-on-primary' : 'bg-surface-muted text-brand-400',
                   )}
                 >
                   {label}

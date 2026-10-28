@@ -229,7 +229,8 @@
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-electric-500/60 ring-offset-2 ring-offset-white;
+    /* فاصله‌ی حلقه هم‌رنگ زمینه‌ی کارت است؛ با white در تم تیره هاله‌ی سفید دور دکمه می‌افتاد */
+    @apply outline-none ring-2 ring-electric-500/60 ring-offset-2 ring-offset-card;
   }
 }
 

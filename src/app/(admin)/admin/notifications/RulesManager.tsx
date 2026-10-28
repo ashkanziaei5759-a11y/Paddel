@@ -345,7 +345,7 @@ export function RulesManager({ rules }: { rules: RuleDto[] }) {
                     }
                     className={cn(
                       'flex items-start gap-2 rounded-2xl border p-2.5 text-right transition',
-                      editing.trigger === t.value ? 'border-brand-800 bg-brand-50' : 'border-brand-100 hover:border-brand-200',
+                      editing.trigger === t.value ? 'border-primary bg-primary/10' : 'border-brand-100 hover:border-brand-200',
                     )}
                   >
                     <t.Icon className="mt-0.5 h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" />

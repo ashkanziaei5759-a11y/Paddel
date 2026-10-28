@@ -180,8 +180,9 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
 
   const days = Array.from({ length: 7 }, (_, i) => shiftKey(stripStart, i));
 
+  /* minmax(0,…): ستون از عرض گوشی بیرون نزند — نوار روزها داخل خودش اسکرول می‌خورد */
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="space-y-4">
         {/* ---- ۱. بازیکن ---- */}
         <section className="card space-y-3 p-4">
@@ -204,7 +205,7 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
                     onClick={() => setMode(value === 'club' ? 'CLUB' : 'WALLET')}
                     className={cn(
                       'flex items-center justify-center gap-2 rounded-2xl px-3 py-3 text-[11.5px] font-black transition',
-                      active ? 'bg-brand-800 text-white' : 'bg-surface-muted text-brand-400 hover:text-brand-600',
+                      active ? 'bg-primary text-on-primary' : 'bg-surface-muted text-brand-400 hover:text-brand-600',
                     )}
                   >
                     <Icon className="h-4 w-4" strokeWidth={2.2} aria-hidden="true" />
@@ -307,7 +308,7 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
             >
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </button>
-            <div className="no-scrollbar flex flex-1 gap-1.5 overflow-x-auto">
+            <div className="no-scrollbar flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
               {days.map((key) => (
                 <button
                   key={key}
@@ -316,7 +317,7 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
                   aria-pressed={key === date}
                   className={cn(
                     'min-w-[64px] flex-1 rounded-2xl px-2 py-2 text-center transition',
-                    key === date ? 'bg-brand-800 text-white' : 'bg-surface-muted text-brand-500 hover:text-brand-700',
+                    key === date ? 'bg-primary text-on-primary' : 'bg-surface-muted text-brand-500 hover:text-brand-700',
                   )}
                 >
                   <span className="block text-[10px] font-bold opacity-80">
@@ -365,7 +366,7 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
                             className={cn(
                               'rounded-2xl border px-2 py-2 text-center transition',
                               isSelected
-                                ? 'border-brand-800 bg-brand-800 text-white'
+                                ? 'border-primary bg-primary text-on-primary'
                                 : s.selectable
                                   ? 'border-brand-100 bg-card text-brand-700 hover:border-brand-400'
                                   : 'cursor-not-allowed border-transparent bg-surface-muted text-brand-300',

@@ -408,7 +408,7 @@ export function BookingFlow({
                 <span className="h-2.5 w-2.5 rounded bg-card ring-1 ring-brand-100" /> آزاد
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded bg-brand-700" /> انتخاب شما
+                <span className="h-2.5 w-2.5 rounded bg-primary" /> انتخاب شما
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded bg-brand-100" /> رزرو شما
