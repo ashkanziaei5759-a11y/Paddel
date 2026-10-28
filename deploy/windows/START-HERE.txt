@@ -47,5 +47,5 @@
         .\Backup-Database.ps1 -InstallSchedule
 
 ===============================================================
-  Designed By Ashkan Ziaei  -  https://ashkanz.netlify.app/
+  Designed By Ashkan Ziaei  -  https://ashkanz.vercel.app/
 ===============================================================
