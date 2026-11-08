@@ -6,6 +6,9 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Avatar } from '@/components/ui/Avatar';
 import { LevelBadge } from '@/components/ui/LevelBadge';
 import { UserAdminPanel } from './UserAdminPanel';
+import { DeleteUserCard } from './DeleteUserCard';
+import { userDeletionSummary } from '@/lib/user-deletion';
+import { requireAdminPage } from '@/lib/auth/rbac';
 import { formatNumber, formatToman, maskPhone } from '@/lib/utils';
 import { formatDateTime, toFaDigits } from '@/lib/datetime';
 import { BOOKING_STATUS_LABEL, POINTS_TX_LABEL, WALLET_TX_LABEL } from '@/lib/constants';
@@ -16,7 +19,9 @@ export const metadata: Metadata = { title: 'پروفایل کاربر' };
 export const dynamic = 'force-dynamic';
 
 export default async function AdminUserDetail({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  const [{ id }, viewer] = await Promise.all([params, requireAdminPage()]);
+  /* خلاصه‌ی حذف هم‌زمان با بقیه‌ی داده‌ی صفحه خوانده می‌شود */
+  const deletionSummary = id !== viewer.id ? userDeletionSummary(id).catch(() => null) : Promise.resolve(null);
 
   const user = await prisma.user.findUnique({
     where: { id },
@@ -39,6 +44,7 @@ export default async function AdminUserDetail({ params }: { params: Promise<{ id
   });
 
   if (!user || !user.profile) notFound();
+  const summary = await deletionSummary;
 
   return (
     <>
@@ -97,6 +103,8 @@ export default async function AdminUserDetail({ params }: { params: Promise<{ id
             balance={(user.wallet?.balance ?? 0n).toString()}
             points={user.profile.points}
           />
+
+          {summary && <DeleteUserCard userId={user.id} summary={summary} />}
         </div>
 
         {/* ---- ستون چپ: سوابق ---- */}

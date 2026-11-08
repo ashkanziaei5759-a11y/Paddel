@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
 /** پنل کشویی از پایین صفحه — الگوی بومی موبایل */
@@ -28,9 +29,12 @@ export function Sheet({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || typeof document === 'undefined') return null;
 
-  return (
+  /* در body رندر می‌شود، نه سر جایش: والدی با backdrop-filter یا transform (مثل
+     سربرگ چسبان پنل) جای «fixed» را به خودش محدود می‌کند و پنجره بیرون از
+     صفحه می‌افتاد. */
+  return createPortal(
     <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center">
       <button
         type="button"
@@ -62,6 +66,7 @@ export function Sheet({
         )}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -124,7 +124,7 @@ tr:nth-child(even) td{background:#FAFBFD}
     <li><span class="no">۳</span>خرید دامنه و وصل‌کردنش به سرور<span class="d">۲۰ دقیقه + انتظار</span></li>
     <li><span class="no">۴</span>ورود به سرور با Remote Desktop (ویندوز، مک، موبایل)<span class="d">۱۰ دقیقه</span></li>
     <li><span class="no">۵</span>آماده‌کردن سرور و نصب پیش‌نیازها<span class="d">۳۰ دقیقه</span></li>
-    <li><span class="no">۶</span>نصب اپ با بسته‌ی آماده<span class="d">۱۵ دقیقه</span></li>
+    <li><span class="no">۶</span>نصب اپ با بسته‌ی آماده (یا مستقیم از GitHub)<span class="d">۱۵ دقیقه</span></li>
     <li><span class="no">۷</span>گرفتن SSL (قفل سبز و https)<span class="d">۱۰ دقیقه</span></li>
     <li><span class="no">۸</span>اولین ورود به پنل و تنظیم باشگاه<span class="d">۲۰ دقیقه</span></li>
     <li><span class="no">۹</span>وصل‌کردن پیامک (برای ثبت‌نام بازیکن‌ها)<span class="d">۱ تا ۲ روز (تأیید الگو)</span></li>
@@ -402,6 +402,20 @@ Expand-Archive persian-padel-windows.zip -DestinationPath . -Force</div>
     ممکن است در مرحله‌ی «سرویس ویندوز» خطای دانلود <b>NSSM</b> ببینید. فایل <code>nssm-2.24.zip</code> را که در فصل ۵ دانلود کردید باز کنید و فایل <code>win64\nssm.exe</code> را در پوشه‌ی <code>C:\PersianPadel\tools</code> کپی کنید، سپس دستور نصب را دوباره اجرا کنید.
   </div>
 
+  <h3>راه دوم: گرفتن بسته مستقیم از GitHub (بدون کپی فایل با RDP)</h3>
+  <p>اگر سرور به GitHub دسترسی دارد، لازم نیست سه فایل را از کامپیوتر خودتان کپی کنید؛ سرور خودش نسخه‌ی تازه را می‌گیرد. به‌روزرسانی‌های بعدی هم با دو دستور انجام می‌شود.</p>
+  <div class="step"><div class="n">۱</div><div class="b"><h4>نصب Git</h4>داخل سرور، از <code>git-scm.com/download/win</code> نسخه‌ی 64-bit را دانلود و نصب کنید (همه‌ی گزینه‌ها پیش‌فرض، فقط Next). بعد PowerShell را <b>ببندید و دوباره به‌عنوان مدیر باز کنید</b>.</div></div>
+  <div class="step"><div class="n">۲</div><div class="b"><h4>گرفتن بسته از GitHub و باز کردنش</h4>این خط‌ها را با هم کپی کنید. فقط آخرین نسخه دانلود می‌شود (حدود ۹۰ مگابایت):
+    <div class="code">git clone --depth 1 -b claude/vibrant-ramanujan-9ru5ps https://github.com/ashkanziaei5759-a11y/Paddel.git C:\PersianPadel-src
+cd $HOME\Desktop
+cmd /c copy /b C:\PersianPadel-src\release\persian-padel-windows.part1+C:\PersianPadel-src\release\persian-padel-windows.part2+C:\PersianPadel-src\release\persian-padel-windows.part3 persian-padel-windows.zip
+Expand-Archive persian-padel-windows.zip -DestinationPath . -Force</div>
+    اگر مخزن خصوصی باشد، Git یک پنجره‌ی ورود به GitHub باز می‌کند؛ با حسابی وارد شوید که به مخزن دسترسی دارد.</div></div>
+  <div class="step"><div class="n">۳</div><div class="b"><h4>ادامه مثل راه اول</h4>از قدم ۴ بالا (رفتن به پوشه‌ی بسته) ادامه دهید؛ همه‌چیز یکی است.</div></div>
+  <div class="box warn"><div class="t"><span class="ic">!</span>اگر دستور git clone خطای اتصال داد</div>
+    دسترسی به GitHub از بعضی سرورهای ایران کند یا قطع است. در این صورت همان راه اول (کپی سه فایل با Remote Desktop) را بروید.
+  </div>
+
   <h3>بررسی: آیا اپ بالا آمده؟</h3>
   <p>داخل سرور، مرورگر (Edge) را باز کنید و بزنید: <code>http://127.0.0.1:3000</code> — اگر صفحه‌ی ورود اپ را دیدید، نصب درست است. اگر دامنه هم وصل شده باشد، <code>http://mypadel.ir</code> را در گوشی خودتان باز کنید.</p>
 </section>
@@ -448,6 +462,8 @@ cd C:\PersianPadel\deploy\windows
   <div class="step"><div class="n">۴</div><div class="b"><h4>قوانین لغو</h4><b>تنظیمات</b>: پله‌های جریمه‌ی لغو (مثلاً لغو کمتر از ۲ ساعت مانده، ۲۵٪ کسر). مبلغ باقی خودکار به کیف پول بازیکن برمی‌گردد.</div></div>
   <div class="step"><div class="n">۵</div><div class="b"><h4>فروشگاه، بنرها و اخبار</h4>از منوهای <b>فروشگاه</b>، <b>بنرها</b> و <b>اخبار</b> محتوای باشگاه را اضافه کنید.</div></div>
   <div class="step"><div class="n">۶</div><div class="b"><h4>(اختیاری) عوض‌کردن رمز مدیر</h4>از <b>پروفایل ← تنظیمات ← تغییر رمز</b> می‌توانید رمز را به رمز دلخواه و قوی عوض کنید.</div></div>
+  <div class="step"><div class="n">۷</div><div class="b"><h4>ادمین‌های پذیرش</h4>اپ بعد از نصب <b>جز حساب مدیر هیچ کاربری ندارد</b>. برای کارکنان پذیرش از <b>ادمین‌ها ← ادمین جدید</b> حساب بسازید؛ آن‌ها فقط «رزرو تلفنی» و «رزروها» را می‌بینند و مبلغ رزرو از کیف پول بازیکن کم می‌شود.</div></div>
+  <div class="step"><div class="n">۸</div><div class="b"><h4>حذف کاربر</h4>در <b>کاربران</b>، صفحه‌ی هر کاربر پایینش دکمه‌ی «حذف این کاربر» دارد؛ برای پاک کردن چند حساب آزمایشی با هم، دکمه‌ی «حذف گروهی کاربران» بالای فهرست را بزنید. حذف برگشت ندارد و کیف پول و سوابق آن کاربر هم پاک می‌شود.</div></div>
   <div class="box warn"><div class="t"><span class="ic">!</span>بازیکن‌ها هنوز نمی‌توانند ثبت‌نام کنند</div>
     ثبت‌نام بازیکن با کد تأیید پیامکی است. تا پیامک را وصل نکنید (فصل ۹)، کد ارسال نمی‌شود. پرداخت آنلاین هم تا وصل‌کردن درگاه (فصل ۱۰) عمداً غیرفعال است تا کسی نتواند بدون پرداخت واقعی کیف پولش را شارژ کند.
   </div>
@@ -533,6 +549,17 @@ $pkg = (Get-ChildItem $HOME\Desktop -Recurse -Filter Install.ps1 | Select-Object
 cd C:\PersianPadel\deploy\windows
 .\Update-App.ps1 -NewPackage $pkg</div>
   <p>اسکریپت اول پشتیبان می‌گیرد، بعد نسخه‌ی جدید را جایگزین می‌کند و تنظیمات و رمزها (فایل ‎.env) را دست نمی‌زند. نسخه‌ی قبلی در <code>C:\PersianPadel\rollback</code> می‌ماند.</p>
+  <p><b>اگر با GitHub نصب کرده‌اید</b> (راه دوم فصل ۶)، به‌جای کپی فایل‌ها این را در PowerShell مدیر بزنید؛ آخرین نسخه را می‌گیرد، باز می‌کند و به‌روز می‌کند:</p>
+  <div class="code">Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+cd C:\PersianPadel-src
+git fetch --depth 1 origin claude/vibrant-ramanujan-9ru5ps
+git reset --hard FETCH_HEAD
+cd $HOME\Desktop
+Remove-Item persian-padel-windows, persian-padel-windows.zip -Recurse -Force -ErrorAction SilentlyContinue
+cmd /c copy /b C:\PersianPadel-src\release\persian-padel-windows.part1+C:\PersianPadel-src\release\persian-padel-windows.part2+C:\PersianPadel-src\release\persian-padel-windows.part3 persian-padel-windows.zip
+Expand-Archive persian-padel-windows.zip -DestinationPath . -Force
+cd C:\PersianPadel\deploy\windows
+.\Update-App.ps1 -NewPackage $HOME\Desktop\persian-padel-windows</div>
   <h3>تمدیدها را فراموش نکنید</h3>
   <ul class="chk">
     <li>تمدید سرور (ماهانه یا سالانه) — اگر تمدید نشود، سرور و اطلاعات ممکن است حذف شود</li>

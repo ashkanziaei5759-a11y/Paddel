@@ -60,7 +60,7 @@ export default async function HomePage() {
       take: 4,
     }),
     prisma.profile.findMany({
-      where: { user: { status: 'ACTIVE' }, points: { gt: 0 } },
+      where: { user: { status: 'ACTIVE', role: 'PLAYER' }, points: { gt: 0 } },
       orderBy: [{ points: 'desc' }, { firstName: 'asc' }],
       take: 5,
       select: {

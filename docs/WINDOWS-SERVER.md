@@ -176,9 +176,10 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 > 💡 اسکریپت **بارها قابل اجراست**. اگر وسط کار قطع شد، دوباره اجرایش کنید؛
 > هر مرحله‌ای که انجام شده رد می‌شود. فایل `.env` هرگز بازنویسی نمی‌شود.
 
-### تحویل واقعی بدون داده‌ی نمونه
+### نصب بدون زمین و کالای اولیه
 
-برای نصب روی محیط واقعی که نمی‌خواهید بازیکن و زمینِ آزمایشی داشته باشید:
+نصب معمولی جز حساب مدیر هیچ کاربری نمی‌سازد (بازیکن آزمایشی ندارد)، ولی ۳ زمین با
+قیمت پیش‌فرض و چند کالای فروشگاه می‌سازد تا اپ خالی نباشد. اگر این‌ها را هم نمی‌خواهید:
 
 ```powershell
 .\Install.ps1 -Domain persianpdl.ir -NoSeed
@@ -428,3 +429,44 @@ C:\PersianPadel\
 ├── tools\                 nssm و win-acme
 └── iis-site\web.config    تنظیمات ریورس‌پروکسی
 ```
+
+
+---
+
+## نصب و به‌روزرسانی مستقیم از GitHub
+
+اگر سرور به GitHub دسترسی دارد، لازم نیست بسته را با Remote Desktop کپی کنید.
+ابتدا [Git for Windows](https://git-scm.com/download/win) را نصب کنید و PowerShell
+را دوباره به‌عنوان مدیر باز کنید.
+
+**نصب اول** — فقط آخرین نسخه گرفته می‌شود (`--depth 1`)؛ تاریخچه‌ی مخزن بزرگ است:
+
+```powershell
+git clone --depth 1 -b claude/vibrant-ramanujan-9ru5ps https://github.com/ashkanziaei5759-a11y/Paddel.git C:\PersianPadel-src
+cd $HOME\Desktop
+cmd /c copy /b C:\PersianPadel-src\release\persian-padel-windows.part1+C:\PersianPadel-src\release\persian-padel-windows.part2+C:\PersianPadel-src\release\persian-padel-windows.part3 persian-padel-windows.zip
+Expand-Archive persian-padel-windows.zip -DestinationPath . -Force
+cd $HOME\Desktop\persian-padel-windows
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+.\Install.ps1 -Domain persianpdl.ir
+```
+
+مخزن در `C:\PersianPadel-src` است، نه روی Desktop، تا دستورهای راهنما که روی
+Desktop دنبال `Install.ps1` می‌گردند، نسخه‌ی کد را به‌جای بسته پیدا نکنند.
+
+**به‌روزرسانی:**
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
+cd C:\PersianPadel-src
+git fetch --depth 1 origin claude/vibrant-ramanujan-9ru5ps
+git reset --hard FETCH_HEAD
+cd $HOME\Desktop
+Remove-Item persian-padel-windows, persian-padel-windows.zip -Recurse -Force -ErrorAction SilentlyContinue
+cmd /c copy /b C:\PersianPadel-src\release\persian-padel-windows.part1+C:\PersianPadel-src\release\persian-padel-windows.part2+C:\PersianPadel-src\release\persian-padel-windows.part3 persian-padel-windows.zip
+Expand-Archive persian-padel-windows.zip -DestinationPath . -Force
+cd C:\PersianPadel\deploy\windows
+.\Update-App.ps1 -NewPackage $HOME\Desktop\persian-padel-windows
+```
+
+اگر مخزن خصوصی است، Git بار اول پنجره‌ی ورود به GitHub را باز می‌کند.

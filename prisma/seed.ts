@@ -12,8 +12,10 @@ console.info('🎾 شروع مقداردهی اولیه پایگاه داده…
 
 // SEED_ESSENTIALS_ONLY=1 → فقط حساب مدیر و تنظیمات پایه (نصب واقعی)
 const essentialsOnly = process.env.SEED_ESSENTIALS_ONLY === '1';
+// SEED_DEMO=1 → بازیکنان و محتوای ساختگی هم ساخته می‌شود (فقط برای آزمایش)
+const demoData = process.env.SEED_DEMO === '1';
 
-runSeed(prisma, (line) => console.info(line), { essentialsOnly })
+runSeed(prisma, (line) => console.info(line), { essentialsOnly, demoData })
   .then(() => console.info('\n🎉 مقداردهی اولیه با موفقیت انجام شد.\n'))
   .catch((error) => {
     console.error('❌ خطا در مقداردهی اولیه:', error);

@@ -78,6 +78,11 @@ const SAMPLE_PLAYERS: {
 export interface SeedOptions {
   /** فقط حساب مدیر و تنظیمات پایه — بدون زمین، بازیکن و محتوای نمونه */
   essentialsOnly?: boolean;
+  /**
+   * بازیکنان، تورنومنت و خبرهای ساختگی — فقط برای آزمایش و نمایش.
+   * نصب واقعی بدون این‌ها انجام می‌شود تا جز مدیر هیچ کاربری در اپ نباشد.
+   */
+  demoData?: boolean;
 }
 
 export async function runSeed(
@@ -177,106 +182,109 @@ export async function runSeed(
   }
   log(`✅ ${COURTS.length} زمین با قیمت‌گذاری ساعات پرتقاضا آماده شد`);
 
-  // ---- ۴. بازیکنان نمونه ----
-  const playerPassword = await hashPassword('Player@12345');
-  const players = [];
-
-  for (const p of SAMPLE_PLAYERS) {
-    const user = await prisma.user.upsert({
-      where: { username: p.username },
-      update: {},
-      create: {
-        username: p.username,
-        passwordHash: playerPassword,
-        phone: p.phone,
-        phoneVerifiedAt: new Date(),
-        role: 'PLAYER',
-        profile: {
-          create: { firstName: p.firstName, lastName: p.lastName, level: p.level, gender: p.gender },
-        },
-        wallet: { create: { balance: toman(2_000_000) } },
-      },
-      include: { profile: true },
-    });
-
-    // امتیاز اولیه از طریق دفتر کل تا موجودی و تاریخچه سازگار بماند
-    const existingPoints = await prisma.pointsTransaction.findUnique({
-      where: { referenceKey: `seed:points:${user.id}` },
-    });
-    if (!existingPoints && p.points > 0) {
-      await prisma.$transaction(async (tx) => {
-        await tx.pointsTransaction.create({
-          data: {
-            userId: user.id,
-            type: 'ADMIN_CREDIT',
-            amount: p.points,
-            balanceBefore: 0,
-            balanceAfter: p.points,
-            description: 'امتیاز اولیه‌ی جامعه‌ی باشگاه',
-            referenceKey: `seed:points:${user.id}`,
-            performedById: admin.id,
+  // بازیکنان و تورنومنت نمونه فقط در حالت نمایشی؛ نصب واقعی جز مدیر کاربری ندارد
+  const players: { id: string }[] = [];
+  if (options.demoData) {
+    // ---- ۴. بازیکنان نمونه ----
+    const playerPassword = await hashPassword('Player@12345');
+  
+    for (const p of SAMPLE_PLAYERS) {
+      const user = await prisma.user.upsert({
+        where: { username: p.username },
+        update: {},
+        create: {
+          username: p.username,
+          passwordHash: playerPassword,
+          phone: p.phone,
+          phoneVerifiedAt: new Date(),
+          role: 'PLAYER',
+          profile: {
+            create: { firstName: p.firstName, lastName: p.lastName, level: p.level, gender: p.gender },
           },
-        });
-        await tx.profile.update({ where: { userId: user.id }, data: { points: p.points } });
+          wallet: { create: { balance: toman(2_000_000) } },
+        },
+        include: { profile: true },
       });
+
+      // امتیاز اولیه از طریق دفتر کل تا موجودی و تاریخچه سازگار بماند
+      const existingPoints = await prisma.pointsTransaction.findUnique({
+        where: { referenceKey: `seed:points:${user.id}` },
+      });
+      if (!existingPoints && p.points > 0) {
+        await prisma.$transaction(async (tx) => {
+          await tx.pointsTransaction.create({
+            data: {
+              userId: user.id,
+              type: 'ADMIN_CREDIT',
+              amount: p.points,
+              balanceBefore: 0,
+              balanceAfter: p.points,
+              description: 'امتیاز اولیه‌ی جامعه‌ی باشگاه',
+              referenceKey: `seed:points:${user.id}`,
+              performedById: admin.id,
+            },
+          });
+          await tx.profile.update({ where: { userId: user.id }, data: { points: p.points } });
+        });
+      }
+
+      players.push(user);
     }
+    log(`✅ ${players.length} بازیکن نمونه ساخته شد (رمز عبور: Player@12345)`);
 
-    players.push(user);
-  }
-  log(`✅ ${players.length} بازیکن نمونه ساخته شد (رمز عبور: Player@12345)`);
+    // ---- ۵. تورنومنت نمونه ----
+    const existingTournament = await prisma.tournament.findUnique({
+      where: { slug: 'jam-tabestane-persian-padel' },
+    });
 
-  // ---- ۵. تورنومنت نمونه ----
-  const existingTournament = await prisma.tournament.findUnique({
-    where: { slug: 'jam-tabestane-persian-padel' },
-  });
+    if (!existingTournament) {
+      const start = new Date(Date.now() + 14 * 86_400_000);
+      const end = new Date(start.getTime() + 8 * 3_600_000);
+      const courts = await prisma.court.findMany({ select: { id: true } });
 
-  if (!existingTournament) {
-    const start = new Date(Date.now() + 14 * 86_400_000);
-    const end = new Date(start.getTime() + 8 * 3_600_000);
-    const courts = await prisma.court.findMany({ select: { id: true } });
-
-    const tournament = await prisma.tournament.create({
-      data: {
-        name: 'جام تابستانه پرشین پدل',
-        slug: 'jam-tabestane-persian-padel',
-        description:
-          'اولین دوره‌ی جام تابستانه باشگاه پرشین پدل. مرحله‌ی گروهی و سپس حذفی، با جوایز نقدی و امتیاز باشگاهی برای تیم‌های برتر.',
-        type: 'GROUP_KNOCKOUT',
-        status: 'REGISTRATION_OPEN',
-        startsAt: start,
-        endsAt: end,
-        registrationClosesAt: new Date(start.getTime() - 2 * 86_400_000),
-        maxTeams: 8,
-        minTeams: 4,
-        entryFee: toman(500_000),
-        splitFeeBetweenPartners: true,
-        partnerMode: 'PLAYER_CHOICE',
-        groupCount: 2,
-        advancingPerGroup: 2,
-        hasThirdPlaceMatch: true,
-        pointsForWin: 3,
-        pointsForDraw: 1,
-        createdById: admin.id,
-        courts: { create: courts.map((c) => ({ courtId: c.id })) },
-        levelRules: {
-          create: {
-            type: 'RANGE',
-            slot1Levels: ['A_PLUS', 'A', 'A_MINUS'],
-            slot2Levels: ['B_PLUS', 'B', 'B_MINUS'],
-            orderInsensitive: true,
-            description: 'هر تیم باید از یک بازیکن سطح A و یک بازیکن سطح B تشکیل شود.',
+      const tournament = await prisma.tournament.create({
+        data: {
+          name: 'جام تابستانه پرشین پدل',
+          slug: 'jam-tabestane-persian-padel',
+          description:
+            'اولین دوره‌ی جام تابستانه باشگاه پرشین پدل. مرحله‌ی گروهی و سپس حذفی، با جوایز نقدی و امتیاز باشگاهی برای تیم‌های برتر.',
+          type: 'GROUP_KNOCKOUT',
+          status: 'REGISTRATION_OPEN',
+          startsAt: start,
+          endsAt: end,
+          registrationClosesAt: new Date(start.getTime() - 2 * 86_400_000),
+          maxTeams: 8,
+          minTeams: 4,
+          entryFee: toman(500_000),
+          splitFeeBetweenPartners: true,
+          partnerMode: 'PLAYER_CHOICE',
+          groupCount: 2,
+          advancingPerGroup: 2,
+          hasThirdPlaceMatch: true,
+          pointsForWin: 3,
+          pointsForDraw: 1,
+          createdById: admin.id,
+          courts: { create: courts.map((c) => ({ courtId: c.id })) },
+          levelRules: {
+            create: {
+              type: 'RANGE',
+              slot1Levels: ['A_PLUS', 'A', 'A_MINUS'],
+              slot2Levels: ['B_PLUS', 'B', 'B_MINUS'],
+              orderInsensitive: true,
+              description: 'هر تیم باید از یک بازیکن سطح A و یک بازیکن سطح B تشکیل شود.',
+            },
+          },
+          pointsRules: {
+            create: [
+              { rank: 1, pointsPerPlayer: 100, label: 'قهرمان' },
+              { rank: 2, pointsPerPlayer: 50, label: 'نایب‌قهرمان' },
+              { rank: 3, pointsPerPlayer: 30, label: 'مقام سوم' },
+            ],
           },
         },
-        pointsRules: {
-          create: [
-            { rank: 1, pointsPerPlayer: 100, label: 'قهرمان' },
-            { rank: 2, pointsPerPlayer: 50, label: 'نایب‌قهرمان' },
-            { rank: 3, pointsPerPlayer: 30, label: 'مقام سوم' },
-          ],
-        },
-      },
-    });
-    log(`✅ تورنومنت نمونه ساخته شد: ${tournament.name}`);
+      });
+      log(`✅ تورنومنت نمونه ساخته شد: ${tournament.name}`);
+    }
   }
 
   // ---- ۷. بنرهای صفحه‌ی اصلی ----
@@ -372,6 +380,8 @@ export async function runSeed(
 ست سوم تا ۶–۶ پیش رفت و در تای‌بریک، دو امتیاز پیاپی روی اسمش، کار را تمام کرد. جام به تیم محمدی / رضایی رسید و ۱۰۰ امتیاز باشگاهی به هر بازیکن تعلق گرفت.`,
       coverUrl: '/images/login/court-1.jpg',
       isPinned: false,
+      /* گزارش ساختگی با نام بازیکنان نمونه */
+      demo: true,
     },
     {
       slug: 'چگونه-دیوار-را-درست-بازی-کنیم',
@@ -388,6 +398,7 @@ export async function runSeed(
 تمرین پیشنهادی: ده دقیقه فقط توپ را به دیوار بزنید و برگردانید، بدون اینکه امتیازی در کار باشد.`,
       coverUrl: '/images/login/court-2.jpg',
       isPinned: false,
+      demo: false,
     },
     {
       slug: 'افتتاح-زمین-شماره-سه',
@@ -400,8 +411,9 @@ export async function runSeed(
 تا پایان ماه، رزرو این زمین با ۲۰٪ تخفیف انجام می‌شود.`,
       coverUrl: '/images/login/court-4.jpg',
       isPinned: false,
+      demo: true,
     },
-  ];
+  ].filter((a) => options.demoData || !a.demo);
 
   for (const [index, a] of ARTICLES.entries()) {
     await prisma.article.upsert({
@@ -420,7 +432,7 @@ export async function runSeed(
       },
     });
   }
-  log(`✅ ${ARTICLES.length} مطلب نمونه منتشر شد`);
+  log(`✅ ${ARTICLES.length} مطلب منتشر شد`);
 
   return { adminUsername, players: players.length, courts: COURTS.length };
 }
