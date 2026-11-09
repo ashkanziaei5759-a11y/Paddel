@@ -96,7 +96,7 @@ tr:nth-child(even) td{background:#FAFBFD}
     <img src="appicon.svg" style="width:24mm;height:24mm;border-radius:6mm;box-shadow:0 4mm 10mm rgba(0,0,0,.4)">
     <h1>راهنمای قدم‌به‌قدم<br>راه‌اندازی <span>اپ هوشمند زمین پدل</span><br>روی سرور ویندوز</h1>
     <div class="sub">از خرید سرور و دامنه تا سایتِ آماده با https — بدون نیاز به دانش فنی</div>
-    <div class="chips"><span>خرید سرور</span><span>خرید دامنه</span><span>ورود به سرور</span><span>نصب برنامه</span><span>SSL</span><span>پیامک و درگاه</span><span>نگهداری</span></div>
+    <div class="chips"><span>خرید سرور</span><span>خرید دامنه</span><span>ورود به سرور</span><span>نصب برنامه</span><span>SSL</span><span>ثبت‌نام و درگاه</span><span>نگهداری</span></div>
     <div class="card">
       <div style="font-family:V;font-weight:800;font-size:11pt;margin-bottom:2mm">کل مسیر در یک نگاه</div>
       <div class="row"><b>۱</b>یک «سرور مجازی ویندوز» و یک «دامنه» بخرید</div>
@@ -127,7 +127,7 @@ tr:nth-child(even) td{background:#FAFBFD}
     <li><span class="no">۶</span>نصب اپ با بسته‌ی آماده (یا مستقیم از GitHub)<span class="d">۱۵ دقیقه</span></li>
     <li><span class="no">۷</span>گرفتن SSL (قفل سبز و https)<span class="d">۱۰ دقیقه</span></li>
     <li><span class="no">۸</span>اولین ورود به پنل و تنظیم باشگاه<span class="d">۲۰ دقیقه</span></li>
-    <li><span class="no">۹</span>وصل‌کردن پیامک (برای ثبت‌نام بازیکن‌ها)<span class="d">۱ تا ۲ روز (تأیید الگو)</span></li>
+    <li><span class="no">۹</span>آزمایش ثبت‌نام بازیکن (بدون پیامک)<span class="d">چند دقیقه</span></li>
     <li><span class="no">۱۰</span>وصل‌کردن درگاه پرداخت (زرین‌پال، زیبال، نکست‌پی)<span class="d">۱ تا ۳ روز (تأیید درگاه)</span></li>
     <li><span class="no">۱۱</span>پشتیبان‌گیری و نگهداری روزمره<span class="d">۵ دقیقه</span></li>
     <li><span class="no">۱۲</span>اگر چیزی کار نکرد (رفع اشکال)<span class="d">—</span></li>
@@ -185,7 +185,7 @@ tr:nth-child(even) td{background:#FAFBFD}
     <tr><td>فضا (دیسک)</td><td>۴۰ گیگابایت SSD</td><td><b>۸۰ گیگابایت SSD یا NVMe</b></td></tr>
     <tr><td>سیستم‌عامل</td><td>Windows Server 2019</td><td><b>Windows Server 2022</b></td></tr>
     <tr><td>IP</td><td colspan="2">یک IP اختصاصی (IPv4) — معمولاً همراه سرور است</td></tr>
-    <tr><td>محل دیتاسنتر</td><td colspan="2"><b>ایران</b> (برای سرعت بهتر بازیکن‌ها و کار بی‌دردسر درگاه پرداخت و پیامک ایرانی)</td></tr>
+    <tr><td>محل دیتاسنتر</td><td colspan="2"><b>ایران</b> (برای سرعت بهتر بازیکن‌ها و کار بی‌دردسر درگاه پرداخت ایرانی)</td></tr>
     <tr><td>ترافیک</td><td colspan="2">نامحدود یا حداقل ماهانه ۵۰۰ گیگابایت</td></tr>
   </table>
   <div class="box tip"><div class="t"><span class="ic">i</span>چرا ۴ گیگ رم کمترین مقدار است؟</div>
@@ -464,31 +464,21 @@ cd C:\PersianPadel\deploy\windows
   <div class="step"><div class="n">۶</div><div class="b"><h4>(اختیاری) عوض‌کردن رمز مدیر</h4>از <b>پروفایل ← تنظیمات ← تغییر رمز</b> می‌توانید رمز را به رمز دلخواه و قوی عوض کنید.</div></div>
   <div class="step"><div class="n">۷</div><div class="b"><h4>ادمین‌های پذیرش</h4>اپ بعد از نصب <b>جز حساب مدیر هیچ کاربری ندارد</b>. برای کارکنان پذیرش از <b>ادمین‌ها ← ادمین جدید</b> حساب بسازید؛ آن‌ها فقط «رزرو تلفنی» و «رزروها» را می‌بینند و مبلغ رزرو از کیف پول بازیکن کم می‌شود.</div></div>
   <div class="step"><div class="n">۸</div><div class="b"><h4>حذف کاربر</h4>در <b>کاربران</b>، صفحه‌ی هر کاربر پایینش دکمه‌ی «حذف این کاربر» دارد؛ برای پاک کردن چند حساب آزمایشی با هم، دکمه‌ی «حذف گروهی کاربران» بالای فهرست را بزنید. حذف برگشت ندارد و کیف پول و سوابق آن کاربر هم پاک می‌شود.</div></div>
-  <div class="box warn"><div class="t"><span class="ic">!</span>بازیکن‌ها هنوز نمی‌توانند ثبت‌نام کنند</div>
-    ثبت‌نام بازیکن با کد تأیید پیامکی است. تا پیامک را وصل نکنید (فصل ۹)، کد ارسال نمی‌شود. پرداخت آنلاین هم تا وصل‌کردن درگاه (فصل ۱۰) عمداً غیرفعال است تا کسی نتواند بدون پرداخت واقعی کیف پولش را شارژ کند.
+  <div class="box warn"><div class="t"><span class="ic">!</span>پرداخت آنلاین هنوز غیرفعال است</div>
+    ثبت‌نام بازیکن با نام کاربری و رمز است و آماده کار می‌کند. اما پرداخت آنلاین تا وصل‌کردن درگاه (فصل ۱۰) عمداً غیرفعال است تا کسی نتواند بدون پرداخت واقعی کیف پولش را شارژ کند.
   </div>
 </section>
 
 <!-- ===================== 9 ===================== -->
 <section class="chap">
   <div class="kicker">فصل ۹</div>
-  <h2>وصل‌کردن پیامک</h2>
-  <p class="lead">اپ از سه سرویس پیامک ایرانی پشتیبانی می‌کند: <b>کاوه‌نگار</b>، <b>sms.ir</b> و <b>قاصدک</b>. مراحل هر سه شبیه است؛ نمونه با کاوه‌نگار:</p>
-  <div class="step"><div class="n">۱</div><div class="b"><h4>ساخت حساب</h4>در سایت سرویس پیامک ثبت‌نام و احراز هویت کنید و حساب را شارژ کنید (پیامک‌های کد تأیید هزینه‌ی کمی دارند).</div></div>
-  <div class="step"><div class="n">۲</div><div class="b"><h4>ساخت «الگو» برای کد تأیید</h4>در پنل کاوه‌نگار بخش <b>«اعتبارسنجی / الگوها»</b> یک الگو با نام <code>verify</code> بسازید با متنی مثل:<div class="box" style="background:#fff;margin:2mm 0">کد تأیید شما در باشگاه پدل: %token</div>عبارت <code>%token</code> حتماً باید در متن باشد. تأیید الگو توسط سرویس پیامک ممکن است چند ساعت تا یک روز طول بکشد.</div></div>
-  <div class="step"><div class="n">۳</div><div class="b"><h4>گرفتن کلید (API Key)</h4>از بخش <b>تنظیمات حساب</b> کلید API را کپی کنید.</div></div>
-  <div class="step"><div class="n">۴</div><div class="b"><h4>قرار دادن در تنظیمات اپ</h4>در سرور، پوشه‌ی <code>C:\PersianPadel</code> را باز کنید. روی فایل <code>.env</code> راست‌کلیک ← <b>Open with ← Notepad</b>. خط <code>OTP_PROVIDER=console</code> را پیدا کنید و این‌طور تغییر دهید:
-    <div class="code">OTP_PROVIDER=kavenegar
-KAVENEGAR_API_KEY="<span class="y">کلید-شما</span>"
-KAVENEGAR_TEMPLATE="verify"</div>
-    اگر جلوی دو خط آخر علامت <code>#</code> بود، آن را پاک کنید. فایل را ذخیره کنید (<span class="keys">Ctrl</span>+<span class="keys">S</span>).</div></div>
-  <div class="step"><div class="n">۵</div><div class="b"><h4>ری‌استارت اپ</h4>در PowerShell مدیر:<div class="code">Restart-Service PersianPadel</div>حالا با گوشی خودتان در سایت ثبت‌نام کنید؛ باید کد پیامک شود.</div></div>
-  <table>
-    <tr><th>سرویس</th><th>مقدار OTP_PROVIDER</th><th>متغیرهای لازم در ‎.env</th></tr>
-    <tr><td>کاوه‌نگار</td><td><code>kavenegar</code></td><td><code>KAVENEGAR_API_KEY</code> و <code>KAVENEGAR_TEMPLATE</code></td></tr>
-    <tr><td>sms.ir</td><td><code>smsir</code></td><td><code>SMSIR_API_KEY</code> و <code>SMSIR_TEMPLATE_ID</code></td></tr>
-    <tr><td>قاصدک</td><td><code>ghasedak</code></td><td><code>GHASEDAK_API_KEY</code> و <code>GHASEDAK_TEMPLATE</code></td></tr>
-  </table>
+  <h2>ثبت‌نام بازیکن‌ها (بدون پیامک)</h2>
+  <p class="lead">اپ <b>هیچ سرویس پیامکی لازم ندارد</b>. بازیکن فقط با نام، نام کاربری و رمز عبور ثبت‌نام می‌کند و همان لحظه وارد می‌شود؛ شماره‌ی موبایل اختیاری است و کدی ارسال نمی‌شود.</p>
+  <div class="step"><div class="n">۱</div><div class="b"><h4>آزمایش ثبت‌نام</h4>در مرورگر گوشی به نشانی سایت بروید ← <b>ثبت‌نام</b> ← نام، نام‌خانوادگی، نام کاربری و رمز را وارد کنید ← <b>ساخت حساب</b>. باید مستقیم وارد صفحه‌ی خانه شوید.</div></div>
+  <div class="step"><div class="n">۲</div><div class="b"><h4>پاک کردن حساب آزمایشی</h4>با حساب مدیر وارد پنل شوید ← <b>کاربران</b> ← حساب آزمایشی ← <b>حذف این کاربر</b> (فصل ۸ قدم ۸).</div></div>
+  <div class="box"><div class="t"><span class="ic">i</span>اعلان‌ها پیامکی نیستند</div>
+    یادآوری بازی و اعلان‌ها به‌صورت اعلان روی گوشی (Push) و داخل اپ می‌رسند؛ هزینه‌ی پیامک ندارند.
+  </div>
 </section>
 
 <!-- ===================== 10 ===================== -->
@@ -564,7 +554,6 @@ cd C:\PersianPadel\deploy\windows
   <ul class="chk">
     <li>تمدید سرور (ماهانه یا سالانه) — اگر تمدید نشود، سرور و اطلاعات ممکن است حذف شود</li>
     <li>تمدید دامنه (سالانه) — برای اطمینان «تمدید خودکار» را در پنل شرکت روشن کنید</li>
-    <li>شارژ حساب پیامک</li>
     <li>SSL خریداری‌شده (سالانه) — اگر از راه الف (رایگان) استفاده کرده‌اید، خودکار تمدید می‌شود</li>
   </ul>
 </section>
@@ -581,8 +570,7 @@ cd C:\PersianPadel\deploy\windows
     <tr><td><code>http://127.0.0.1:3000</code> در سرور باز نمی‌شود</td><td>اپ اجرا نشده</td><td><code>Restart-Service PersianPadel</code> و بعد فایل <code>logs\app-error.log</code> را ببینید.</td></tr>
     <tr><td>در سرور باز می‌شود ولی با دامنه نه</td><td>DNS هنوز نرسیده، یا URL Rewrite/ARR نصب نیست</td><td>تست <code>ping</code> فصل ۳. اگر IP درست بود، URL Rewrite و ARR را نصب کنید و <code>Install.ps1</code> را دوباره اجرا کنید.</td></tr>
     <tr><td>Setup-SSL خطا می‌دهد</td><td>دامنه نرسیده یا دسترسی از خارج بسته است</td><td>چند ساعت صبر و تکرار کنید. اگر نشد، فصل ۷ راه ب (SSL خریداری‌شده).</td></tr>
-    <tr><td>کد پیامکی نمی‌آید</td><td>الگو تأیید نشده، کلید اشتباه یا حساب پیامک شارژ ندارد</td><td>پنل سرویس پیامک را چک کنید، ‎.env را بازبینی و <code>Restart-Service PersianPadel</code>.</td></tr>
-    <tr><td>پرداخت خطا می‌دهد</td><td>درگاه وصل نشده یا کد مرچنت اشتباه است</td><td>فصل ۱۰ قدم ۵ را تکرار کنید. در پنل مدیریت، صفحه‌ی <b>تنظیمات</b> وضعیت درگاه و پیامک را نشان می‌دهد.</td></tr>
+    <tr><td>پرداخت خطا می‌دهد</td><td>درگاه وصل نشده یا کد مرچنت اشتباه است</td><td>فصل ۱۰ قدم ۵ را تکرار کنید. در پنل مدیریت، صفحه‌ی <b>تنظیمات</b> وضعیت درگاه را نشان می‌دهد.</td></tr>
     <tr><td>سایت کند است</td><td>رم کم یا ترافیک زیاد</td><td>از پنل شرکت، رم سرور را به ۸ گیگ ارتقا دهید (معمولاً بدون نصب دوباره).</td></tr>
   </table>
   <div class="box tip"><div class="t"><span class="ic">i</span>وقتی از کسی کمک می‌خواهید</div>
@@ -605,7 +593,7 @@ cd C:\PersianPadel\deploy\windows
     <li>Install.ps1 را اجرا کردم و رمزهای پایان نصب را یادداشت کردم (فصل ۶)</li>
     <li>Setup-SSL.ps1 را اجرا کردم و سایت با https باز می‌شود (فصل ۷)</li>
     <li>وارد پنل شدم، لوگو، زمین‌ها، قیمت‌ها و قوانین لغو را تنظیم کردم (فصل ۸)</li>
-    <li>پیامک را وصل کردم و ثبت‌نام آزمایشی موفق بود (فصل ۹)</li>
+    <li>ثبت‌نام آزمایشی با نام کاربری و رمز موفق بود و حساب آزمایشی را حذف کردم (فصل ۹)</li>
     <li>درگاه پرداخت را وصل کردم و شارژ آزمایشی موفق بود (فصل ۱۰)</li>
     <li>پشتیبان‌گیری خودکار را روشن کردم (فصل ۱۱)</li>
     <li>تمدید خودکار دامنه را روشن کردم و تاریخ تمدید سرور را یادداشت کردم</li>
@@ -625,7 +613,6 @@ cd C:\PersianPadel\deploy\windows
     <tr><td>رمز کاربر postgres (فصل ۵)</td><td></td></tr>
     <tr><td>رمز پایگاه داده (پایان فصل ۶)</td><td></td></tr>
     <tr><td>رمز پنل مدیریت admin (پایان فصل ۶)</td><td></td></tr>
-    <tr><td>سرویس پیامک و نام کاربری</td><td></td></tr>
     <tr><td>درگاه پرداخت و کد مرچنت</td><td></td></tr>
     <tr><td>تاریخ تمدید سرور / دامنه</td><td></td></tr>
   </table>
@@ -641,7 +628,6 @@ cd C:\PersianPadel\deploy\windows
     <tr><td>سرور مجازی ویندوز</td><td>ماهانه یا سالانه</td><td><span class="pill g">بله</span></td><td>بیشترین هزینه؛ سالانه معمولاً تخفیف دارد.</td></tr>
     <tr><td>دامنه</td><td>سالانه</td><td><span class="pill g">بله</span></td><td>‎.ir ارزان‌تر از ‎.com است.</td></tr>
     <tr><td>SSL</td><td>—</td><td><span class="pill g">بله</span></td><td>Let's Encrypt رایگان است. اگر نشد، گواهی ساده‌ی سالانه بخرید.</td></tr>
-    <tr><td>شارژ پیامک</td><td>بر اساس مصرف</td><td><span class="pill g">بله</span></td><td>هر ثبت‌نام و ورود با کد، یک پیامک.</td></tr>
     <tr><td>کارمزد درگاه پرداخت</td><td>درصدی از هر تراکنش</td><td><span class="pill g">بله</span></td><td>درگاه‌های واسط معمولاً حدود ۱٪ با سقف مشخص می‌گیرند.</td></tr>
     <tr><td>اینماد</td><td>—</td><td><span class="pill">در صورت نیاز</span></td><td>صدورش هزینه ندارد ولی چند روز زمان می‌برد.</td></tr>
     <tr><td>Node.js، PostgreSQL، IIS و ابزارها</td><td>—</td><td>—</td><td><b>همه رایگان‌اند.</b></td></tr>

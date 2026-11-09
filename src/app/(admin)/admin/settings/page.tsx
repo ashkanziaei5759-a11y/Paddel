@@ -5,7 +5,6 @@ import { CancellationPolicyEditor } from './CancellationPolicyEditor';
 import { PointEconomyEditor } from './PointEconomyEditor';
 import { DEFAULT_CANCELLATION_POLICIES } from '@/lib/constants';
 import { availableGateways } from '@/lib/payments';
-import { availableSmsProviders } from '@/lib/sms';
 import { APP_TIMEZONE } from '@/lib/datetime';
 import { getPointEconomy } from '@/lib/point-economy';
 import { appUrl } from '@/lib/app-url';
@@ -37,7 +36,6 @@ export default async function AdminSettingsPage() {
   const economy = await getPointEconomy();
 
   const activeGateway = (process.env.PAYMENT_PROVIDER || 'mock').toLowerCase();
-  const activeSms = (process.env.OTP_PROVIDER || 'console').toLowerCase();
 
   return (
     <>
@@ -68,14 +66,6 @@ export default async function AdminSettingsPage() {
             warnText="درگاه آزمایشی فعال است — پیش از راه‌اندازی واقعی حتماً یک درگاه معتبر تنظیم کنید."
           />
 
-          <ConfigRow
-            label="سرویس پیامک فعال"
-            value={availableSmsProviders().find((s) => s.id === activeSms)?.title ?? activeSms}
-            env="OTP_PROVIDER"
-            warn={activeSms === 'console'}
-            warnText="کد تأیید فقط در کنسول سرور چاپ می‌شود و پیامکی ارسال نمی‌گردد."
-          />
-
           <ConfigRow label="منطقه‌ی زمانی باشگاه" value={APP_TIMEZONE} env="APP_TIMEZONE" />
 
           <ConfigRow
@@ -84,12 +74,6 @@ export default async function AdminSettingsPage() {
             env="NEXT_PUBLIC_APP_URL"
             warn={!appUrl()}
             warnText="بدون این مقدار، بازگشت از درگاه پرداخت درست کار نمی‌کند."
-          />
-
-          <ConfigRow
-            label="اعتبار کد تأیید"
-            value={`${process.env.OTP_TTL_SECONDS || '120'} ثانیه`}
-            env="OTP_TTL_SECONDS"
           />
         </section>
       </div>

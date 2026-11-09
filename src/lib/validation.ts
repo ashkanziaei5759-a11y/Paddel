@@ -34,11 +34,6 @@ export const zPersianName = z
   .min(2, 'حداقل ۲ کاراکتر وارد کنید.')
   .max(40, 'حداکثر ۴۰ کاراکتر مجاز است.');
 
-export const zOtpCode = z
-  .string({ required_error: 'کد تأیید الزامی است.' })
-  .transform((v) => toEnDigits(v).replace(/\D/g, ''))
-  .refine((v) => v.length >= 4 && v.length <= 8, { message: 'کد تأیید معتبر نیست.' });
-
 export const zLevel = z.enum(LEVELS, { errorMap: () => ({ message: 'سطح انتخابی معتبر نیست.' }) });
 
 /** مبلغ به تومان از سمت کاربر دریافت و به ریال تبدیل می‌شود */
@@ -49,29 +44,23 @@ export const zTomanAmount = z
 
 // --- Auth ------------------------------------------------------------------
 
-export const signupStartSchema = z.object({
+export const signupSchema = z.object({
   username: zUsername,
   password: zPassword,
   firstName: zPersianName,
   lastName: zPersianName,
-  phone: zPhone,
-});
-
-export const signupVerifySchema = z.object({
-  verificationId: z.string().min(1, 'شناسه‌ی تأیید نامعتبر است.'),
-  code: zOtpCode,
+  /** اختیاری و بدون تأیید پیامکی؛ خالی یعنی ثبت نشود */
+  phone: z
+    .string()
+    .optional()
+    .transform((v) => (v && v.trim() ? v : undefined))
+    .pipe(zPhone.optional()),
 });
 
 export const loginSchema = z.object({
   username: z.string().trim().min(1, 'نام کاربری را وارد کنید.').transform((v) => v.toLowerCase()),
   password: z.string().min(1, 'رمز عبور را وارد کنید.'),
 });
-
-export const resendOtpSchema = z.object({
-  verificationId: z.string().min(1),
-});
-
-export const changePhoneStartSchema = z.object({ phone: zPhone });
 
 // --- Profile ---------------------------------------------------------------
 

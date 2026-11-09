@@ -106,7 +106,6 @@ k3Jx9pQwZ2mNvB7tR4yH8sL1dF6gA0cE5uI3oP9nW2xK7jM4
    | `SEED_ADMIN_USERNAME` | `admin` |
    | `SEED_ADMIN_PASSWORD` | یک رمز قوی که خودتان انتخاب می‌کنید |
    | `SEED_ADMIN_PHONE` | شماره موبایل خودتان، مثلاً `09121234567` |
-   | `OTP_PROVIDER` | `console` |
    | `PAYMENT_PROVIDER` | `mock` |
    | `ALLOW_MOCK_PAYMENT` | `true` |
    | `APP_TIMEZONE` | `Asia/Tehran` |
@@ -233,14 +232,10 @@ Vercel را پیشنهاد می‌کنم چون سازنده‌ی خود Next.js
 
 | متغیر | الان چه می‌کند | برای راه‌اندازی واقعی |
 |---|---|---|
-| `OTP_PROVIDER=console` | کد تأیید پیامک نمی‌شود، فقط در لاگ سرور چاپ می‌شود | حساب کاوه‌نگار یا sms.ir بگیرید |
 | `PAYMENT_PROVIDER=mock` + `ALLOW_MOCK_PAYMENT=true` | **شارژ کیف پول بدون پرداخت واقعی انجام می‌شود** | زرین‌پال یا زیبال وصل کنید و `ALLOW_MOCK_PAYMENT` را حذف کنید |
 
 **تا وقتی `ALLOW_MOCK_PAYMENT` روشن است، نشانی سایت را عمومی نکنید** — هر کسی
 می‌تواند کیف پولش را رایگان شارژ کند.
-
-برای دیدن کد تأیید پیامک هنگام تست: در Vercel به **Deployments → آخرین مورد →
-Runtime Logs** بروید؛ کد آنجا چاپ می‌شود.
 
 ---
 
@@ -264,7 +259,7 @@ Runtime Logs** بروید؛ کد آنجا چاپ می‌شود.
 ## بعد از این چه؟
 
 وقتی خواستید باشگاه را واقعاً راه بیندازید:
-۱. درگاه پرداخت و پیامک واقعی وصل کنید ([`DEPLOYMENT.md`](./DEPLOYMENT.md) بخش ۷)
+۱. درگاه پرداخت واقعی وصل کنید ([`DEPLOYMENT.md`](./DEPLOYMENT.md) بخش ۷)
 ۲. `ALLOW_MOCK_PAYMENT` را حذف کنید
 ۳. رمز حساب `admin` را عوض کنید
 ۴. حساب‌های نمونه (`ali`، `sara` و بقیه) را از پنل مدیریت حذف کنید

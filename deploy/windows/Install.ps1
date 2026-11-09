@@ -299,13 +299,6 @@ CRON_SECRET="$cronSecret"
 # --- نشانی برنامه ---
 NEXT_PUBLIC_APP_URL="https://$Domain"
 APP_TIMEZONE="Asia/Tehran"
-
-# --- پیامک ---
-# تا وقتی روی console باشد، کد تأیید فقط در لاگ سرور چاپ می‌شود و
-# پیامکی ارسال نمی‌گردد. برای راه‌اندازی واقعی حتماً عوضش کنید.
-OTP_PROVIDER=console
-OTP_LENGTH=5
-OTP_TTL_SECONDS=120
 # KAVENEGAR_API_KEY=""
 # KAVENEGAR_TEMPLATE="verify"
 
@@ -484,7 +477,6 @@ Write-Host ''
 Write-Host '   کارهای باقی‌مانده:' -ForegroundColor Cyan
 Write-Host '     ۱. دامنه را به IP این سرور اشاره دهید (رکورد A).'
 Write-Host "     ۲. گواهی SSL بگیرید:  .\Setup-SSL.ps1 -Domain $Domain"
-Write-Host '     ۳. سرویس پیامک را در .env تنظیم کنید (OTP_PROVIDER).'
-Write-Host '     ۴. درگاه پرداخت را وصل کنید — docs\PAYMENT-GATEWAY.md'
-Write-Host '     ۵. رمز مدیر را یادداشت کنید و در صورت تمایل از پنل عوضش کنید.'
+Write-Host '     ۳. درگاه پرداخت را وصل کنید — docs\PAYMENT-GATEWAY.md'
+Write-Host '     ۴. رمز مدیر را یادداشت کنید و در صورت تمایل از پنل عوضش کنید.'
 Write-Host ''

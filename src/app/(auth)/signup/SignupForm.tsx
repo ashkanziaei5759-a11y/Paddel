@@ -45,12 +45,9 @@ export function SignupForm() {
         return;
       }
 
-      if (json.data?.devCode) {
-        toast.show(`کد تأیید (حالت توسعه): ${json.data.devCode}`, 'info');
-      } else {
-        toast.success('کد تأیید برای شما ارسال شد.');
-      }
-      router.push(`/verify?id=${encodeURIComponent(json.data.verificationId)}`);
+      toast.success('حساب شما ساخته شد. خوش آمدید!');
+      router.push('/home');
+      router.refresh();
     } catch {
       setError('ارتباط با سرور برقرار نشد.');
     } finally {
@@ -104,13 +101,13 @@ export function SignupForm() {
       </div>
 
       <div>
-        <label className="label" htmlFor="phone">شماره موبایل</label>
+        <label className="label" htmlFor="phone">شماره موبایل (اختیاری)</label>
         <input
           id="phone" name="phone" type="tel" inputMode="numeric" autoComplete="tel" dir="ltr"
           className={`field text-left ${err('phone') ? 'field-error' : ''}`}
-          placeholder="09121234567" required
+          placeholder="09121234567"
         />
-        <p className="helper">کد تأیید به این شماره پیامک می‌شود و پس از تأیید ثابت خواهد بود.</p>
+        <p className="helper">برای هماهنگی باشگاه با شما؛ می‌توانید خالی بگذارید.</p>
         {err('phone') && <p className="error-text">{err('phone')}</p>}
       </div>
 
@@ -121,7 +118,7 @@ export function SignupForm() {
       )}
 
       <button type="submit" disabled={loading} className="btn-accent btn-lg w-full">
-        {loading ? <Spinner /> : 'دریافت کد تأیید'}
+        {loading ? <Spinner /> : 'ساخت حساب'}
       </button>
     </form>
   );
