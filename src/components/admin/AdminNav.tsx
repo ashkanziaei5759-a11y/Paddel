@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 import { ArrowLeftRight, BellRing, PhoneCall, ShieldCheck, CalendarDays, ChartColumn, ImagePlay, Images, LandPlot, LayoutDashboard, Newspaper, Palette, Settings, ShoppingBag, TrendingUp, Trophy, Users, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -45,11 +46,19 @@ export function AdminNav({
   const isActive = (item: NavItem) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
+  /* اگر صفحه‌ی فعلی پایین منو باشد (مثلاً تنظیمات روی لپ‌تاپ کم‌ارتفاع)، گزینه‌اش دیده شود */
+  const navRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    navRef.current
+      ?.querySelector<HTMLElement>('[aria-current="page"]')
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [pathname]);
+
   return (
     <>
       {/* ---- کناره‌ی دسکتاپ ---- */}
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-brand-gradient p-5 lg:flex">
-        <div className="relative mb-8 flex items-center gap-3">
+        <div className="relative mb-6 flex shrink-0 items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoUrl} alt="" width={44} height={44} className="h-11 w-11 rounded-2xl object-cover" />
           <div>
@@ -58,11 +67,13 @@ export function AdminNav({
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1">
+        {/* min-h-0 + overflow: روی لپ‌تاپ‌های کم‌ارتفاع منو داخل خودش اسکرول می‌خورد */}
+        <nav ref={navRef} className="admin-nav-scroll -mx-2 min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-2">
           {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive(item) ? 'page' : undefined}
               className={cn(
                 'flex items-center gap-3 rounded-2xl px-4 py-3 text-xs font-bold transition-all duration-200',
                 isActive(item)
@@ -76,7 +87,7 @@ export function AdminNav({
           ))}
         </nav>
 
-        <div className="mt-6 space-y-2 border-t border-white/10 pt-4">
+        <div className="mt-4 shrink-0 space-y-2 border-t border-white/10 pt-4">
           <div className="px-2">
             <p className="truncate text-xs font-extrabold text-white">{fullName}</p>
             <p className="num truncate text-[10px] font-bold text-sky-light/60" dir="ltr">
