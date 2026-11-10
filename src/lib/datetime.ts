@@ -157,18 +157,6 @@ export function formatTime(date: Date): string {
   return toFaDigits(`${String(p.hour).padStart(2, '0')}:${String(p.minute).padStart(2, '0')}`);
 }
 
-/**
- * ساعت پایان کار زمین از روی ورودی «ساعت».
- *
- * ورودی time مرورگر «۲۴:۰۰» را نمی‌پذیرد؛ پس ساعت پایانی که کوچک‌تر یا مساوی
- * ساعت شروع است (مثلاً ۰۰:۰۰ یا ۰۲:۰۰) یعنی «بامداد روز بعد»، و ۲۳:۵۹ هم
- * همان نیمه‌شب حساب می‌شود تا سانسِ ۲۳ تا ۲۴ جا نیفتد.
- */
-export function closingMinuteFrom(openingMinute: number, closingOfDay: number): number {
-  if (closingOfDay === 23 * 60 + 59) return 24 * 60;
-  return closingOfDay <= openingMinute ? closingOfDay + 24 * 60 : closingOfDay;
-}
-
 /** «۰۰:۰۰» یا «۰۲:۰۰ بامداد» برای ساعت پایانی که از نیمه‌شب گذشته است */
 export function formatClosingMinute(minutes: number): string {
   if (minutes === 24 * 60) return `${formatMinutes(minutes)} (نیمه‌شب)`;

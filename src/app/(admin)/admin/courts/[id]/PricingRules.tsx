@@ -6,10 +6,11 @@ import { Sheet } from '@/components/ui/Sheet';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { WEEKDAYS_FA_SHORT } from '@/lib/jalali';
-import { formatMinutes, toFaDigits } from '@/lib/datetime';
+import { formatClosingMinute, formatMinutes, toFaDigits } from '@/lib/datetime';
 import { formatToman, rialToToman } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { Dot } from '@/components/ui/Dot';
+import { TimeSelect } from '@/components/ui/TimeSelect';
 
 interface RuleDto {
   id: string;
@@ -22,16 +23,7 @@ interface RuleDto {
   isActive: boolean;
 }
 
-function toTimeInput(minutes: number) {
-  const h = Math.floor(minutes / 60) % 24;
-  const m = minutes % 60;
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-}
 
-function toMinutes(value: string) {
-  const [h, m] = value.split(':').map(Number);
-  return (h || 0) * 60 + (m || 0);
-}
 
 export function PricingRules({
   courtId,
@@ -68,8 +60,8 @@ export function PricingRules({
 
     const payload = {
       name: String(form.get('name') || ''),
-      startMinute: toMinutes(String(form.get('start') || '')),
-      endMinute: toMinutes(String(form.get('end') || '')),
+      startMinute: Number(form.get('start')),
+      endMinute: Number(form.get('end')),
       daysOfWeek: days,
       priceToman: String(form.get('priceToman') || ''),
       priority: Number(form.get('priority') || 0),
@@ -148,7 +140,7 @@ export function PricingRules({
                   <div className="min-w-0">
                     <p className="truncate text-xs font-extrabold text-brand-800">{rule.name}</p>
                     <p className="num mt-1 text-[11px] font-bold text-brand-400">
-                      {formatMinutes(rule.startMinute)} تا {formatMinutes(rule.endMinute)}
+                      {formatMinutes(rule.startMinute)} تا {formatClosingMinute(rule.endMinute)}
                       {rule.daysOfWeek.length > 0 &&
                         <>
                           <Dot />
@@ -203,16 +195,18 @@ export function PricingRules({
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="label" htmlFor="rule-start">از ساعت</label>
-              <input
-                id="rule-start" name="start" type="time" dir="ltr" className="field text-left"
-                defaultValue={editing ? toTimeInput(editing.startMinute) : '16:00'} required
+              <TimeSelect
+                id="rule-start" name="start"
+                defaultValue={editing ? editing.startMinute : 16 * 60}
               />
             </div>
             <div>
               <label className="label" htmlFor="rule-end">تا ساعت</label>
-              <input
-                id="rule-end" name="end" type="time" dir="ltr" className="field text-left"
-                defaultValue={editing ? toTimeInput(editing.endMinute) : '23:00'} required
+              <TimeSelect
+                id="rule-end" name="end"
+                defaultValue={editing ? editing.endMinute : 24 * 60}
+                from={15}
+                to={1440}
               />
             </div>
           </div>

@@ -5,13 +5,14 @@ import { useState } from 'react';
 import { Sheet } from '@/components/ui/Sheet';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
-import { closingMinuteFrom } from '@/lib/datetime';
+import { readHours, SlotPreview, TimeSelect } from '@/components/ui/TimeSelect';
 
 export function CourtCreateButton() {
   const router = useRouter();
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hours, setHours] = useState({ opening: 8 * 60, closing: 24 * 60, duration: 90 });
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,11 +28,8 @@ export function CourtCreateButton() {
           description: String(form.get('description') || '') || null,
           basePriceToman: String(form.get('basePriceToman') || ''),
           slotDurationMinutes: Number(form.get('slotDurationMinutes')),
-          openingMinute: toMinutes(String(form.get('opening') || '10:00')),
-          closingMinute: closingMinuteFrom(
-            toMinutes(String(form.get('opening') || '10:00')),
-            toMinutes(String(form.get('closing') || '23:00')),
-          ),
+          openingMinute: Number(form.get('opening')),
+          closingMinute: Number(form.get('closing')),
           maxConsecutiveSlots: Number(form.get('maxConsecutiveSlots')),
           minLeadTimeMinutes: Number(form.get('minLeadTimeMinutes')),
           advanceBookingDays: Number(form.get('advanceBookingDays')),
@@ -60,7 +58,7 @@ export function CourtCreateButton() {
       </button>
 
       <Sheet open={open} onClose={() => setOpen(false)} title="ایجاد زمین جدید">
-        <form onSubmit={submit} className="space-y-3">
+        <form onSubmit={submit} onChange={(e) => setHours(readHours(e.currentTarget))} className="space-y-3">
           <div>
             <label className="label" htmlFor="name">نام زمین</label>
             <input id="name" name="name" className="field" placeholder="زمین ۴" required />
@@ -82,12 +80,11 @@ export function CourtCreateButton() {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="label" htmlFor="opening">ساعت شروع</label>
-              <input id="opening" name="opening" type="time" dir="ltr" className="field text-left" defaultValue="10:00" />
+              <TimeSelect id="opening" name="opening" defaultValue={8 * 60} />
             </div>
             <div>
               <label className="label" htmlFor="closing">ساعت پایان</label>
-              <input id="closing" name="closing" type="time" dir="ltr" className="field text-left" defaultValue="23:00" />
-              <p className="helper">نیمه‌شب: ۰۰:۰۰</p>
+              <TimeSelect id="closing" name="closing" defaultValue={24 * 60} from={15} to={1440 + 360} />
             </div>
           </div>
 
@@ -107,6 +104,7 @@ export function CourtCreateButton() {
               />
             </div>
           </div>
+          <SlotPreview {...hours} />
 
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -134,7 +132,3 @@ export function CourtCreateButton() {
   );
 }
 
-function toMinutes(value: string): number {
-  const [h, m] = value.split(':').map(Number);
-  return (h || 0) * 60 + (m || 0);
-}

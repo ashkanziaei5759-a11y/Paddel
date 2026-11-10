@@ -6,7 +6,7 @@ import { ImagePicker } from '@/components/media/ImagePicker';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { rialToToman } from '@/lib/utils';
-import { closingMinuteFrom } from '@/lib/datetime';
+import { readHours, SlotPreview, TimeSelect } from '@/components/ui/TimeSelect';
 
 interface CourtDto {
   id: string;
@@ -24,16 +24,7 @@ interface CourtDto {
   sortOrder: number;
 }
 
-function toTimeInput(minutes: number) {
-  const h = Math.floor(minutes / 60) % 24;
-  const m = minutes % 60;
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-}
 
-function toMinutes(value: string) {
-  const [h, m] = value.split(':').map(Number);
-  return (h || 0) * 60 + (m || 0);
-}
 
 export function CourtEditor({ court }: { court: CourtDto }) {
   const router = useRouter();
@@ -41,6 +32,11 @@ export function CourtEditor({ court }: { court: CourtDto }) {
   const [loading, setLoading] = useState(false);
   const [isActive, setIsActive] = useState(court.isActive);
   const [image, setImage] = useState<string | null>(court.imageUrl ?? null);
+  const [hours, setHours] = useState({
+    opening: court.openingMinute,
+    closing: court.closingMinute === 1439 ? 1440 : court.closingMinute,
+    duration: court.slotDurationMinutes,
+  });
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,11 +54,8 @@ export function CourtEditor({ court }: { court: CourtDto }) {
           isActive,
           basePriceToman: String(form.get('basePriceToman') || ''),
           slotDurationMinutes: Number(form.get('slotDurationMinutes')),
-          openingMinute: toMinutes(String(form.get('opening') || '')),
-          closingMinute: closingMinuteFrom(
-            toMinutes(String(form.get('opening') || '')),
-            toMinutes(String(form.get('closing') || '')),
-          ),
+          openingMinute: Number(form.get('opening')),
+          closingMinute: Number(form.get('closing')),
           maxConsecutiveSlots: Number(form.get('maxConsecutiveSlots')),
           minLeadTimeMinutes: Number(form.get('minLeadTimeMinutes')),
           advanceBookingDays: Number(form.get('advanceBookingDays')),
@@ -83,7 +76,7 @@ export function CourtEditor({ court }: { court: CourtDto }) {
   }
 
   return (
-    <form onSubmit={submit} className="card space-y-3 p-5">
+    <form onSubmit={submit} onChange={(e) => setHours(readHours(e.currentTarget))} className="card space-y-3 p-5">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-extrabold text-brand-800">مشخصات زمین</h2>
         <button
@@ -130,18 +123,18 @@ export function CourtEditor({ court }: { court: CourtDto }) {
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="label" htmlFor="opening">ساعت شروع</label>
-          <input
-            id="opening" name="opening" type="time" dir="ltr" className="field text-left"
-            defaultValue={toTimeInput(court.openingMinute)}
-          />
+          <TimeSelect id="opening" name="opening" defaultValue={court.openingMinute} />
         </div>
         <div>
           <label className="label" htmlFor="closing">ساعت پایان</label>
-          <input
-            id="closing" name="closing" type="time" dir="ltr" className="field text-left"
-            defaultValue={toTimeInput(court.closingMinute)}
+          <TimeSelect
+            id="closing"
+            name="closing"
+            defaultValue={court.closingMinute === 1439 ? 1440 : court.closingMinute}
+            from={15}
+            to={1440 + 360}
           />
-          <p className="helper">برای نیمه‌شب ۰۰:۰۰ بزنید؛ ساعت کمتر از شروع یعنی بامداد روز بعد.</p>
+          <p className="helper">تا نیمه‌شب: «۲۴:۰۰ — نیمه‌شب». بعد از آن یعنی بامداد روز بعد.</p>
         </div>
       </div>
 
@@ -162,6 +155,7 @@ export function CourtEditor({ court }: { court: CourtDto }) {
           />
         </div>
       </div>
+      <SlotPreview {...hours} />
 
       <div className="grid grid-cols-3 gap-2">
         <div>
