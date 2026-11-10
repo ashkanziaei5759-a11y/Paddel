@@ -131,12 +131,13 @@ export const courtSchema = z.object({
   basePriceToman: zTomanAmount,
   slotDurationMinutes: z.coerce.number().int().min(15).max(240),
   openingMinute: z.coerce.number().int().min(0).max(1440),
-  closingMinute: z.coerce.number().int().min(0).max(1440),
+  /** بیش از ۱۴۴۰ یعنی بعد از نیمه‌شب (تا ۶ بامداد روز بعد) */
+  closingMinute: z.coerce.number().int().min(0).max(1440 + 360),
   maxConsecutiveSlots: z.coerce.number().int().min(1).max(12),
   minLeadTimeMinutes: z.coerce.number().int().min(0).max(1440),
   advanceBookingDays: z.coerce.number().int().min(1).max(180),
   sortOrder: z.coerce.number().int().min(0).max(999).optional(),
-}).refine((v) => v.closingMinute > v.openingMinute, {
+}).refine((v) => v.closingMinute > v.openingMinute && v.closingMinute - v.openingMinute <= 1440, {
   message: 'ساعت پایان باید بعد از ساعت شروع باشد.',
   path: ['closingMinute'],
 });

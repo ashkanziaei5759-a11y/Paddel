@@ -6,6 +6,7 @@ import { ImagePicker } from '@/components/media/ImagePicker';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { rialToToman } from '@/lib/utils';
+import { closingMinuteFrom } from '@/lib/datetime';
 
 interface CourtDto {
   id: string;
@@ -58,7 +59,10 @@ export function CourtEditor({ court }: { court: CourtDto }) {
           basePriceToman: String(form.get('basePriceToman') || ''),
           slotDurationMinutes: Number(form.get('slotDurationMinutes')),
           openingMinute: toMinutes(String(form.get('opening') || '')),
-          closingMinute: toMinutes(String(form.get('closing') || '')),
+          closingMinute: closingMinuteFrom(
+            toMinutes(String(form.get('opening') || '')),
+            toMinutes(String(form.get('closing') || '')),
+          ),
           maxConsecutiveSlots: Number(form.get('maxConsecutiveSlots')),
           minLeadTimeMinutes: Number(form.get('minLeadTimeMinutes')),
           advanceBookingDays: Number(form.get('advanceBookingDays')),
@@ -137,6 +141,7 @@ export function CourtEditor({ court }: { court: CourtDto }) {
             id="closing" name="closing" type="time" dir="ltr" className="field text-left"
             defaultValue={toTimeInput(court.closingMinute)}
           />
+          <p className="helper">برای نیمه‌شب ۰۰:۰۰ بزنید؛ ساعت کمتر از شروع یعنی بامداد روز بعد.</p>
         </div>
       </div>
 

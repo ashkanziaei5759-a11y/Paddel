@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Sheet } from '@/components/ui/Sheet';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
+import { closingMinuteFrom } from '@/lib/datetime';
 
 export function CourtCreateButton() {
   const router = useRouter();
@@ -27,7 +28,10 @@ export function CourtCreateButton() {
           basePriceToman: String(form.get('basePriceToman') || ''),
           slotDurationMinutes: Number(form.get('slotDurationMinutes')),
           openingMinute: toMinutes(String(form.get('opening') || '10:00')),
-          closingMinute: toMinutes(String(form.get('closing') || '23:00')),
+          closingMinute: closingMinuteFrom(
+            toMinutes(String(form.get('opening') || '10:00')),
+            toMinutes(String(form.get('closing') || '23:00')),
+          ),
           maxConsecutiveSlots: Number(form.get('maxConsecutiveSlots')),
           minLeadTimeMinutes: Number(form.get('minLeadTimeMinutes')),
           advanceBookingDays: Number(form.get('advanceBookingDays')),
@@ -83,6 +87,7 @@ export function CourtCreateButton() {
             <div>
               <label className="label" htmlFor="closing">ساعت پایان</label>
               <input id="closing" name="closing" type="time" dir="ltr" className="field text-left" defaultValue="23:00" />
+              <p className="helper">نیمه‌شب: ۰۰:۰۰</p>
             </div>
           </div>
 

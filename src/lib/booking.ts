@@ -50,7 +50,9 @@ export function slotStartsForDay(court: Court, dayKeyStr: string): Date[] {
   const starts: Date[] = [];
   const duration = court.slotDurationMinutes;
 
-  for (let m = court.openingMinute; m + duration <= court.closingMinute; m += duration) {
+  /* ۲۳:۵۹ که قبلاً به‌جای «نیمه‌شب» ذخیره شده، همان ۲۴:۰۰ است */
+  const closing = court.closingMinute === 23 * 60 + 59 ? 24 * 60 : court.closingMinute;
+  for (let m = court.openingMinute; m + duration <= closing; m += duration) {
     starts.push(zonedToUtc(gy, gm, gd, m));
   }
   return starts;
@@ -210,9 +212,12 @@ export async function createBooking(input: CreateBookingInput) {
 
   for (const start of starts) {
     if (!validStarts.has(start.getTime())) {
-      // ممکن است سانس‌ها به روز بعد سرریز کرده باشند
-      const alt = new Set(slotStartsForDay(court, dayKey(start)).map((d) => d.getTime()));
-      if (!alt.has(start.getTime())) {
+      /* ممکن است سانس‌ها به روز بعد سرریز کرده باشند، یا سانسِ بعد از نیمه‌شب
+         جزو ساعات کاریِ روز قبل باشد (زمینی که تا بامداد باز است) */
+      const fits = [dayKey(start), dayKey(addDays(start, -1))].some((k) =>
+        slotStartsForDay(court, k).some((d) => d.getTime() === start.getTime()),
+      );
+      if (!fits) {
         throw new AppError('سانس انتخاب‌شده با ساعات کاری زمین هم‌خوانی ندارد.');
       }
     }
