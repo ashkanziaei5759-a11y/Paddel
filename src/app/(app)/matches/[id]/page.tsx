@@ -45,17 +45,17 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ id
     allowedLevels: match.allowedLevels,
     notes: match.notes,
     status: match.status,
-    /* بازیکنِ در انتظار هنوز عضو بازی نیست، پس روی کارت نشان داده نمی‌شود */
-    players: match.players
-      .filter((p) => p.status === 'APPROVED')
-      .map((p) => ({
+    /* بازیکنِ در انتظار هنوز عضو بازی نیست؛ روی کارت کم‌رنگ و با برچسب
+       «در انتظار تأیید» دیده می‌شود تا جایش خالی به نظر نرسد. */
+    players: match.players.map((p) => ({
       userId: p.userId,
       firstName: p.user.profile?.firstName ?? '؟',
       lastName: p.user.profile?.lastName ?? '',
       avatarUrl: p.user.profile?.avatarUrl ?? null,
       level: p.user.profile?.level ?? null,
-        isHost: p.isHost,
-      })),
+      isHost: p.isHost,
+      pending: p.status === 'PENDING',
+    })),
   };
 
   const isHost = match.hostId === user.id;

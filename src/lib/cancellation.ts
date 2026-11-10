@@ -141,11 +141,21 @@ export async function cancelBooking(input: CancelBookingInput) {
           refundAmount,
           reason: input.reason,
           isManualAdjustment: isManual,
-          adjustmentNote: input.adjustmentNote,
+          adjustmentNote:
+            booking.paymentMethod === 'CARD_TO_CARD' || booking.userId === null
+              ? [input.adjustmentNote, 'بازگشت وجه به‌صورت دستی (خارج از کیف پول)']
+                  .filter(Boolean)
+                  .join(' — ')
+              : input.adjustmentNote,
         },
       });
 
-      if (refundAmount > 0n) {
+      /* رزروی که کارت به کارت پرداخت شده یا مشتری متفرقه (بدون حساب) دارد،
+         پولش از کیف پول نیامده؛ پس بازگشت هم به کیف پول نمی‌رود و باید
+         بیرون از سامانه (کارت به کارت) به مشتری پس داده شود. */
+      const refundToWallet =
+        booking.userId !== null && booking.paymentMethod !== 'CARD_TO_CARD';
+      if (refundAmount > 0n && refundToWallet && booking.userId) {
         await mutateWallet(tx, {
           userId: booking.userId,
           amount: refundAmount,
@@ -189,7 +199,7 @@ export async function cancelBooking(input: CancelBookingInput) {
         where: { referenceKey: `booking:${booking.id}:reward` },
         select: { amount: true },
       });
-      if (rewardTx && rewardTx.amount > 0) {
+      if (rewardTx && rewardTx.amount > 0 && booking.userId) {
         const profile = await tx.profile.findUnique({
           where: { userId: booking.userId },
           select: { points: true },
@@ -221,19 +231,23 @@ export async function cancelBooking(input: CancelBookingInput) {
         quote,
         match,
         restoredVoucher,
+        refundToWallet,
       };
     },
     { isolationLevel: 'ReadCommitted', timeout: 20_000 },
   ).then(async (result) => {
-    await notify({
+    /* مشتری متفرقه حساب کاربری ندارد که اعلانی بگیرد */
+    if (result.booking.userId) await notify({
       userId: result.booking.userId,
       type: 'BOOKING_CANCELLED',
       title: input.cancelledRole === 'ADMIN' ? 'باشگاه رزرو شما را لغو کرد' : 'رزرو شما لغو شد',
       body: withMessage(
         result.restoredVoucher !== null
           ? `${result.booking.court.name} — ${formatDateTime(result.booking.startsAt)}. بن ${result.restoredVoucher} دوباره قابل استفاده شد.`
-          : result.refundAmount > 0n
+          : result.refundAmount > 0n && result.refundToWallet
             ? `${result.booking.court.name} — ${formatDateTime(result.booking.startsAt)}. مبلغ ${formatToman(result.refundAmount)} به کیف پول شما بازگشت.`
+          : result.refundAmount > 0n
+            ? `${result.booking.court.name} — ${formatDateTime(result.booking.startsAt)}. مبلغ ${formatToman(result.refundAmount)} توسط باشگاه به کارت شما بازگردانده می‌شود.`
             : `${result.booking.court.name} — ${formatDateTime(result.booking.startsAt)}.`,
         input.playerMessage,
       ),

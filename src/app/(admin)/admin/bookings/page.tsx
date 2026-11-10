@@ -8,6 +8,7 @@ import { AdminBookingRow } from './AdminBookingRow';
 import { BookingFilters } from './BookingFilters';
 import { addDays, dayKey, parseDayKey, toFaDigits, zonedToUtc } from '@/lib/datetime';
 import { formatToman, iso } from '@/lib/utils';
+import { bookingCustomerName } from '@/lib/booking-customer';
 
 export const metadata: Metadata = { title: 'مدیریت رزروها' };
 export const dynamic = 'force-dynamic';
@@ -102,9 +103,13 @@ export default async function AdminBookingsPage({
                   status: b.status,
                   totalPrice: b.totalPrice.toString(),
                   courtName: b.court.name,
-                  userName: `${b.user.profile?.firstName ?? ''} ${b.user.profile?.lastName ?? ''}`.trim(),
-                  username: b.user.username,
+                  userName: bookingCustomerName(b),
+                  username: b.user?.username ?? null,
                   userId: b.userId,
+                  guestPhone: b.guestPhone,
+                  paymentMethod: b.paymentMethod,
+                  cardAmount: b.cardAmount?.toString() ?? null,
+                  cardReceipt: b.cardReceipt,
                   refundAmount: b.cancellation?.refundAmount.toString() ?? null,
                   createdBy:
                     b.createdBy && b.createdById !== b.userId

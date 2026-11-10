@@ -22,8 +22,13 @@ interface BookingDto {
   totalPrice: string;
   courtName: string;
   userName: string;
-  username: string;
-  userId: string;
+  username: string | null;
+  /** خالی یعنی مشتری متفرقه (بدون حساب کاربری) */
+  userId: string | null;
+  guestPhone: string | null;
+  paymentMethod: 'WALLET' | 'POINTS' | 'CARD_TO_CARD' | 'FREE' | null;
+  cardAmount: string | null;
+  cardReceipt: string | null;
   refundAmount: string | null;
   /** ادمینی که رزرو تلفنی را ثبت کرد */
   createdBy: string | null;
@@ -46,6 +51,8 @@ export function AdminBookingRow({ booking, isAdmin }: { booking: BookingDto; isA
 
   /* لغو رزرو فقط با مدیر کل */
   const canCancel = isAdmin && (booking.status === 'CONFIRMED' || booking.status === 'PENDING');
+  /* پولِ این رزرو از کیف پول نیامده و بازگشتش هم بیرون از سامانه است */
+  const offWallet = !booking.userId || booking.paymentMethod === 'CARD_TO_CARD';
 
   async function cancel(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -67,7 +74,11 @@ export function AdminBookingRow({ booking, isAdmin }: { booking: BookingDto; isA
 
       if (!res.ok || !json.ok) { toast.error(json.error || 'لغو رزرو ناموفق بود.'); return; }
 
-      toast.success(`رزرو لغو شد. مبلغ ${formatToman(BigInt(json.data.refundAmount))} بازگشت داده شد.`);
+      toast.success(
+        offWallet
+          ? `رزرو لغو شد. مبلغ ${formatToman(BigInt(json.data.refundAmount))} را دستی (کارت به کارت) به مشتری برگردانید.`
+          : `رزرو لغو شد. مبلغ ${formatToman(BigInt(json.data.refundAmount))} بازگشت داده شد.`,
+      );
       setOpen(false);
       router.refresh();
     } catch {
@@ -88,7 +99,7 @@ export function AdminBookingRow({ booking, isAdmin }: { booking: BookingDto; isA
         </div>
 
         <div className="min-w-0 flex-1">
-          {isAdmin ? (
+          {isAdmin && booking.userId ? (
             <Link
               href={`/admin/users/${booking.userId}`}
               className="truncate text-xs font-extrabold text-brand-800 hover:text-accent-600"
@@ -96,7 +107,10 @@ export function AdminBookingRow({ booking, isAdmin }: { booking: BookingDto; isA
               {booking.userName}
             </Link>
           ) : (
-            <p className="truncate text-xs font-extrabold text-brand-800">{booking.userName}</p>
+            <p className="truncate text-xs font-extrabold text-brand-800">
+              {booking.userName}
+              {!booking.userId && <span className="badge-muted mr-1.5 text-[9px]">متفرقه</span>}
+            </p>
           )}
           <p className="num truncate text-[10px] font-semibold text-brand-400">
             {booking.courtName} <Dot />
@@ -105,7 +119,13 @@ export function AdminBookingRow({ booking, isAdmin }: { booking: BookingDto; isA
           <p className="num mt-0.5 text-[10px] font-bold text-brand-300">
             {booking.code}
             {booking.createdBy && <span className="font-semibold"> · ثبت تلفنی: {booking.createdBy}</span>}
+            {booking.guestPhone && <span className="font-semibold"> · {booking.guestPhone}</span>}
           </p>
+          {booking.paymentMethod === 'CARD_TO_CARD' && (
+            <p className="num mt-0.5 text-[10px] font-bold text-accent-700">
+              کارت به کارت {formatToman(BigInt(booking.cardAmount ?? '0'))} · فیش {booking.cardReceipt}
+            </p>
+          )}
         </div>
 
         <div className="shrink-0 text-left">
@@ -140,6 +160,12 @@ export function AdminBookingRow({ booking, isAdmin }: { booking: BookingDto; isA
             <p className="num mt-1 font-bold text-brand-600">
               مبلغ پرداختی: {formatToman(BigInt(booking.totalPrice))}
             </p>
+            {offWallet && (
+              <p className="mt-1.5 font-bold leading-6 text-accent-700">
+                این رزرو از کیف پول پرداخت نشده است؛ مبلغ بازگشتی به کیف پول نمی‌رود و باید دستی به
+                مشتری برگردانده شود.
+              </p>
+            )}
           </div>
 
           <div>

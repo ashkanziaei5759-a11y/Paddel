@@ -250,6 +250,8 @@ enum NotificationType {
   MATCH_JOIN_REQUEST
   MATCH_JOIN_APPROVED
   MATCH_JOIN_REJECTED
+  /// بازی تمام شد و سهم بازیکنان به میزبان پرداخت شد
+  MATCH_SETTLED
   /// یادآوری رزرو، اندکی پیش از شروع بازی
   BOOKING_REMINDER
   /// تورنومنت تازه‌ای اعلام شد
@@ -688,11 +690,29 @@ model CourtBlackout {
   @@map("court_blackouts")
 }
 
+enum BookingPaymentMethod {
+  WALLET
+  POINTS
+  CARD_TO_CARD
+  FREE
+}
+
 model Booking {
-  id     String @id @default(cuid())
-  code   String @unique
-  userId String
-  user   User   @relation("BookingUser", fields: [userId], references: [id])
+  id     String  @id @default(cuid())
+  code   String  @unique
+  /// خالی یعنی مشتری متفرقه (بدون حساب کاربری) — نامش در guestName است
+  userId String?
+  user   User?   @relation("BookingUser", fields: [userId], references: [id], onDelete: Restrict)
+
+  /// مشتری متفرقه‌ای که پشت تلفن رزرو کرده و ثبت‌نام نکرده است
+  guestName  String?
+  guestPhone String?
+
+  /// روش پرداخت رزرو (رزروهای قدیمی خالی‌اند)
+  paymentMethod BookingPaymentMethod?
+  /// کارت به کارت: مبلغ واریزی (ریال) و شماره‌ی فیش/پیگیری
+  cardAmount    BigInt?
+  cardReceipt   String?
 
   /// بنی که روی این رزرو خرج شد
   voucher BookingVoucher? @relation("BookingVoucherUse")
@@ -732,6 +752,7 @@ model Booking {
   @@index([userId, startsAt])
   @@index([courtId, startsAt])
   @@index([status])
+  @@index([cardReceipt])
   @@map("bookings")
 }
 

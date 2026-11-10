@@ -1,13 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, Search, Building2, UserRound, X } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Search, Building2, UserRound, UserPlus, X } from 'lucide-react';
 import { Sheet } from '@/components/ui/Sheet';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { JalaliCalendar } from '@/components/booking/JalaliCalendar';
 import { formatJalaliDate, formatTime, toFaDigits } from '@/lib/datetime';
-import { cn, formatToman } from '@/lib/utils';
+import { cn, formatToman, rialToToman } from '@/lib/utils';
 
 interface Player {
   id: string;
@@ -31,7 +31,14 @@ interface CourtDay {
   slots: Slot[];
 }
 
-type Mode = 'WALLET' | 'FREE' | 'CLUB';
+type Mode = 'WALLET' | 'FREE' | 'CLUB' | 'CARD_TO_CARD';
+/** رزرو برای چه کسی: بازیکن عضو، مشتری متفرقه (بدون حساب) یا خود باشگاه */
+type Who = 'player' | 'guest' | 'club';
+/** روش پرداخت برای بازیکن یا مشتری متفرقه */
+type Pay = 'WALLET' | 'CARD' | 'FREE';
+
+/** ارقام فارسی را لاتین می‌کند تا در فیلدهای عددی هر دو پذیرفته شوند */
+const toLatin = (v: string) => v.replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
 
 /** کلید روز (YYYY-MM-DD میلادی) به‌اضافه‌ی چند روز */
 function shiftKey(key: string, days: number): string {
@@ -55,7 +62,15 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
   const [results, setResults] = useState<Player[]>([]);
   const [searching, setSearching] = useState(false);
   const [player, setPlayer] = useState<Player | null>(null);
-  const [mode, setMode] = useState<Mode>('WALLET');
+  const [who, setWho] = useState<Who>('player');
+  const [pay, setPay] = useState<Pay>('WALLET');
+  const [guestName, setGuestName] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
+  const [cardAmount, setCardAmount] = useState('');
+  const [cardAmountTouched, setCardAmountTouched] = useState(false);
+  const [receipt, setReceipt] = useState('');
+  const mode: Mode =
+    who === 'club' ? 'CLUB' : pay === 'FREE' ? 'FREE' : pay === 'CARD' ? 'CARD_TO_CARD' : 'WALLET';
 
   const [date, setDate] = useState(todayKey);
   const [stripStart, setStripStart] = useState(todayKey);
@@ -122,6 +137,22 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
   const balance = player ? BigInt(player.balance) : 0n;
   const insufficient = mode === 'WALLET' && player !== null && charge > balance;
 
+  /* مبلغ کارت به کارت به‌طور پیش‌فرض همان مبلغ رزرو است، تا وقتی پذیرش خودش عوضش نکند */
+  useEffect(() => {
+    if (!cardAmountTouched) setCardAmount(total > 0n ? rialToToman(total).toString() : '');
+  }, [total, cardAmountTouched]);
+
+  function chooseWho(next: Who) {
+    setWho(next);
+    /* مشتری متفرقه کیف پول ندارد: پیش‌فرضش کارت به کارت است */
+    if (next === 'guest' && pay === 'WALLET') setPay('CARD');
+    if (next === 'player' && pay === 'CARD' && who === 'guest') setPay('WALLET');
+    setConfirming(false);
+  }
+
+  const cardAmountNum = Number(cardAmount || '0');
+  const cardValid = cardAmountNum > 0 && receipt.trim().length >= 3;
+
   function toggleSlot(c: CourtDay, slot: Slot) {
     if (!slot.selectable) return;
     if (courtId !== c.court.id) {
@@ -138,8 +169,15 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
     });
   }
 
-  const forWhom = mode === 'CLUB' ? 'club' : player ? 'player' : null;
-  const ready = forWhom !== null && chosenSlots.length > 0 && !insufficient;
+  const customerName = who === 'club' ? 'باشگاه' : who === 'guest' ? guestName.trim() : player?.name ?? '';
+  const forWhom =
+    who === 'club' ? 'club' : who === 'guest' ? (guestName.trim().length >= 2 ? 'guest' : null) : player ? 'player' : null;
+  const ready =
+    forWhom !== null &&
+    chosenSlots.length > 0 &&
+    !insufficient &&
+    !(mode === 'WALLET' && who === 'guest') &&
+    (mode !== 'CARD_TO_CARD' || cardValid);
 
   async function submit() {
     if (!court) return;
@@ -152,7 +190,12 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
           courtId: court.court.id,
           slots: chosenSlots.map((s) => s.startsAt),
           mode,
-          userId: mode === 'CLUB' ? undefined : player?.id,
+          customer: who === 'guest' ? 'GUEST' : 'PLAYER',
+          userId: who === 'player' ? player?.id : undefined,
+          guestName: who === 'guest' ? guestName.trim() : undefined,
+          guestPhone: who === 'guest' && guestPhone.trim() ? guestPhone.trim() : undefined,
+          cardAmountToman: mode === 'CARD_TO_CARD' ? cardAmountNum : undefined,
+          receiptNumber: mode === 'CARD_TO_CARD' ? receipt.trim() : undefined,
           notes: notes.trim() || undefined,
         }),
       });
@@ -162,12 +205,20 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
       toast.success(
         mode === 'CLUB'
           ? `رزرو باشگاه ثبت شد (کد ${toFaDigits(json.data.code)}).`
-          : `رزرو ${player?.name} ثبت شد${charge > 0n ? ` و ${formatToman(charge)} از کیف پولش کسر شد` : ''}.`,
+          : mode === 'CARD_TO_CARD'
+            ? `رزرو ${customerName} ثبت شد — کارت به کارت ${formatToman(BigInt(cardAmountNum) * 10n)}، فیش ${toFaDigits(receipt.trim())}.`
+            : `رزرو ${customerName} ثبت شد${charge > 0n ? ` و ${formatToman(charge)} از کیف پولش کسر شد` : ''}.`,
       );
-      if (player && charge > 0n) setPlayer({ ...player, balance: (balance - charge).toString() });
+      if (who === 'player' && player && charge > 0n) setPlayer({ ...player, balance: (balance - charge).toString() });
       setConfirming(false);
       setSelected([]);
       setNotes('');
+      setReceipt('');
+      setCardAmountTouched(false);
+      if (who === 'guest') {
+        setGuestName('');
+        setGuestPhone('');
+      }
       void loadSlots();
     } catch (error) {
       toast.error((error as Error).message);
@@ -188,39 +239,70 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
         <section className="card space-y-3 p-4">
           <h2 className="text-sm font-extrabold text-brand-800">۱. برای چه کسی؟</h2>
 
-          {isAdmin && (
-            <div className="grid grid-cols-2 gap-2">
-              {(
-                [
-                  ['player', 'برای بازیکن', UserRound],
-                  ['club', 'به نام باشگاه (رایگان)', Building2],
-                ] as const
-              ).map(([value, label, Icon]) => {
-                const active = value === 'club' ? mode === 'CLUB' : mode !== 'CLUB';
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => setMode(value === 'club' ? 'CLUB' : 'WALLET')}
-                    className={cn(
-                      'flex items-center justify-center gap-2 rounded-2xl px-3 py-3 text-[11.5px] font-black transition',
-                      active ? 'bg-primary text-on-primary' : 'bg-surface-muted text-brand-400 hover:text-brand-600',
-                    )}
-                  >
-                    <Icon className="h-4 w-4" strokeWidth={2.2} aria-hidden="true" />
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          <div className={cn('grid gap-2', isAdmin ? 'grid-cols-3' : 'grid-cols-2')}>
+            {(
+              [
+                ['player', 'بازیکن عضو', UserRound],
+                ['guest', 'افراد متفرقه', UserPlus],
+                ...(isAdmin ? ([['club', 'به نام باشگاه', Building2]] as const) : []),
+              ] as const
+            ).map(([value, label, Icon]) => {
+              const active = who === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => chooseWho(value)}
+                  className={cn(
+                    'flex min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2.5 text-[11px] font-black transition sm:flex-row sm:gap-2 sm:text-[11.5px]',
+                    active ? 'bg-primary text-on-primary' : 'bg-surface-muted text-brand-400 hover:text-brand-600',
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" strokeWidth={2.2} aria-hidden="true" />
+                  <span className="truncate">{label}</span>
+                </button>
+              );
+            })}
+          </div>
 
-          {mode === 'CLUB' ? (
+          {who === 'club' ? (
             <p className="rounded-2xl bg-surface-muted p-3 text-[11.5px] font-semibold leading-6 text-brand-500">
               زمین به نام مدیریت رزرو می‌شود: بدون پرداخت و بدون محدودیت زمانی (برای کلاس، تعمیرات یا
               مهمان باشگاه).
             </p>
+          ) : who === 'guest' ? (
+            <div className="space-y-3">
+              <p className="rounded-2xl bg-surface-muted p-3 text-[11px] font-semibold leading-6 text-brand-500">
+                برای مشتری‌ای که نمی‌خواهد ثبت‌نام کند. فقط نامش را بنویسید؛ حساب کاربری لازم نیست.
+              </p>
+              <div>
+                <label className="label" htmlFor="desk-guest-name">نام مشتری</label>
+                <input
+                  id="desk-guest-name"
+                  className="field"
+                  maxLength={60}
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  placeholder="مثلاً: آقای محمدی"
+                  autoComplete="off"
+                />
+              </div>
+              <div>
+                <label className="label" htmlFor="desk-guest-phone">شماره تماس (اختیاری)</label>
+                <input
+                  id="desk-guest-phone"
+                  className="field num text-left"
+                  dir="ltr"
+                  inputMode="tel"
+                  maxLength={20}
+                  value={guestPhone}
+                  onChange={(e) => setGuestPhone(e.target.value.replace(/[^0-9۰-۹+\-\s]/g, ''))}
+                  placeholder="09…"
+                  autoComplete="off"
+                />
+              </div>
+            </div>
           ) : player ? (
             <div className="flex items-center gap-3 rounded-2xl bg-surface-muted p-3">
               <div className="min-w-0 flex-1">
@@ -401,7 +483,7 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
 
           {chosenSlots.length === 0 || !court ? (
             <p className="text-[11.5px] font-semibold leading-6 text-brand-300">
-              بازیکن و سانس را انتخاب کنید. برای چند سانس پشت‌سرهم، روی سانس‌های کنار هم بزنید.
+              مشتری و سانس را انتخاب کنید. برای چند سانس پشت‌سرهم، روی سانس‌های کنار هم بزنید.
             </p>
           ) : (
             <div className="space-y-2 rounded-2xl bg-surface-muted p-3 text-[11.5px]">
@@ -412,7 +494,7 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
                 value={`${formatTime(new Date(chosenSlots[0].startsAt))} تا ${formatTime(new Date(chosenSlots.at(-1)!.endsAt))}`}
               />
               <Row label="مبلغ" value={formatToman(total)} />
-              {mode !== 'CLUB' && player && (
+              {who === 'player' && player && mode === 'WALLET' && (
                 <Row
                   label="کیف پول بعد از رزرو"
                   value={formatToman(balance - charge)}
@@ -422,22 +504,80 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
             </div>
           )}
 
-          {isAdmin && mode !== 'CLUB' && (
-            <label className="flex items-center gap-2 text-[11.5px] font-bold text-brand-600">
-              <input
-                type="checkbox"
-                checked={mode === 'FREE'}
-                onChange={(e) => setMode(e.target.checked ? 'FREE' : 'WALLET')}
-                className="h-4 w-4 accent-primary"
-              />
-              رایگان — از کیف پول بازیکن کسر نشود
-            </label>
+          {who !== 'club' && (
+            <div className="space-y-2.5">
+              <label className="flex items-center gap-2 text-[11.5px] font-bold text-brand-600">
+                <input
+                  type="checkbox"
+                  checked={pay === 'CARD'}
+                  disabled={who === 'guest' && !isAdmin}
+                  onChange={(e) => setPay(e.target.checked ? 'CARD' : who === 'guest' ? 'FREE' : 'WALLET')}
+                  className="h-4 w-4 accent-primary"
+                />
+                کارت به کارت — از کیف پول کم نشود
+              </label>
+
+              {pay === 'CARD' && (
+                <div className="space-y-2.5 rounded-2xl border border-brand-100 p-3">
+                  <div>
+                    <label className="label" htmlFor="desk-card-amount">مبلغ کارت به کارت (تومان)</label>
+                    <input
+                      id="desk-card-amount"
+                      className="field num text-left"
+                      dir="ltr"
+                      inputMode="numeric"
+                      value={cardAmount}
+                      onChange={(e) => {
+                        setCardAmountTouched(true);
+                        setCardAmount(toLatin(e.target.value).replace(/\D/g, '').slice(0, 11));
+                      }}
+                      placeholder="مثلاً 450000"
+                    />
+                    {cardAmountNum > 0 && (
+                      <p className="helper num">{formatToman(BigInt(cardAmountNum) * 10n)}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="label" htmlFor="desk-card-receipt">شماره فیش / کد پیگیری</label>
+                    <input
+                      id="desk-card-receipt"
+                      className="field num text-left"
+                      dir="ltr"
+                      maxLength={40}
+                      value={receipt}
+                      onChange={(e) => setReceipt(e.target.value)}
+                      placeholder="مثلاً 123456"
+                      autoComplete="off"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {isAdmin && (
+                <label className="flex items-center gap-2 text-[11.5px] font-bold text-brand-600">
+                  <input
+                    type="checkbox"
+                    checked={pay === 'FREE'}
+                    onChange={(e) =>
+                      setPay(e.target.checked ? 'FREE' : who === 'guest' ? 'CARD' : 'WALLET')
+                    }
+                    className="h-4 w-4 accent-primary"
+                  />
+                  رایگان — هیچ مبلغی دریافت نشود
+                </label>
+              )}
+
+              {who === 'guest' && pay === 'WALLET' && (
+                <p className="text-[11px] font-bold text-danger">مشتری متفرقه کیف پول ندارد.</p>
+              )}
+            </div>
           )}
 
           {insufficient && (
             <p className="rounded-2xl bg-danger/10 p-3 text-[11px] font-bold leading-6 text-danger">
               موجودی کیف پول بازیکن کافی نیست. اول کیف پولش را شارژ کنید
-              {isAdmin ? ' یا گزینه‌ی رایگان را بزنید' : ''}.
+              {' یا کارت به کارت را بزنید'}
+              {isAdmin ? ' یا گزینه‌ی رایگان را' : ''}.
             </p>
           )}
 
@@ -458,7 +598,9 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
               <p className="text-[11.5px] font-bold leading-6 text-accent-700">
                 {mode === 'CLUB'
                   ? 'رزرو به نام باشگاه ثبت شود؟'
-                  : `رزرو برای ${player?.name} ثبت شود${charge > 0n ? ` و ${formatToman(charge)} از کیف پولش کسر شود` : ' (رایگان)'}؟`}
+                  : mode === 'CARD_TO_CARD'
+                    ? `رزرو برای ${customerName}${who === 'guest' ? ' (متفرقه)' : ''} با کارت به کارت ${formatToman(BigInt(cardAmountNum) * 10n)} و فیش ${toFaDigits(receipt.trim())} ثبت شود؟ از کیف پول چیزی کم نمی‌شود.`
+                    : `رزرو برای ${customerName}${who === 'guest' ? ' (متفرقه)' : ''} ثبت شود${charge > 0n ? ` و ${formatToman(charge)} از کیف پولش کسر شود` : ' (رایگان)'}؟`}
               </p>
               <div className="mt-3 flex gap-2">
                 <button type="button" onClick={submit} disabled={saving} className="btn-accent btn-sm flex-1">

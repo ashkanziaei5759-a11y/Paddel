@@ -9,6 +9,7 @@ import { formatToman } from '@/lib/utils';
 import { formatDateTime, toFaDigits } from '@/lib/datetime';
 import { BOOKING_STATUS_LABEL } from '@/lib/constants';
 import { Dot } from '@/components/ui/Dot';
+import { bookingCustomerName } from '@/lib/booking-customer';
 
 export const metadata: Metadata = { title: 'ویرایش زمین' };
 export const dynamic = 'force-dynamic';
@@ -93,7 +94,7 @@ export default async function AdminCourtDetail({ params }: { params: Promise<{ i
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-extrabold text-brand-800">
-                      {b.user.profile?.firstName} {b.user.profile?.lastName}
+                      {bookingCustomerName(b)}
                     </p>
                     <p className="num text-[10px] font-semibold text-brand-400">
                       {formatDateTime(b.startsAt)} <Dot />{toFaDigits(b.slotCount)} سانس

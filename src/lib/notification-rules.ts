@@ -64,12 +64,13 @@ async function candidatesFor(rule: NotificationRule, now: Date): Promise<Candida
         },
         take: 2000,
       });
+      /* شرط user در where رزروهای مشتری متفرقه (بدون حساب) را کنار گذاشته است */
       return bookings.map((b) => ({
-        userId: b.userId,
+        userId: b.userId as string,
         refKey: `booking:${b.id}`,
         url: `/bookings/${b.id}`,
         vars: {
-          name: b.user.profile?.firstName ?? '',
+          name: b.user?.profile?.firstName ?? '',
           court: b.court.name,
           time: formatTime(b.startsAt),
           date: formatJalaliDate(b.startsAt, { withWeekday: true }),
@@ -96,12 +97,13 @@ async function candidatesFor(rule: NotificationRule, now: Date): Promise<Candida
         },
         take: 2000,
       });
+      /* شرط user در where رزروهای مشتری متفرقه (بدون حساب) را کنار گذاشته است */
       return bookings.map((b) => ({
-        userId: b.userId,
+        userId: b.userId as string,
         refKey: `booking:${b.id}`,
         url: `/bookings/${b.id}`,
         vars: {
-          name: b.user.profile?.firstName ?? '',
+          name: b.user?.profile?.firstName ?? '',
           court: b.court.name,
           time: formatTime(b.startsAt),
           date: formatJalaliDate(b.startsAt, { withWeekday: true }),

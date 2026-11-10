@@ -15,6 +15,7 @@ import { PAYMENT_STATUS_LABEL, WALLET_TX_LABEL } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Icon } from '@/components/ui/Icon';
 import { Dot } from '@/components/ui/Dot';
+import { bookingCustomerName, GUEST_LABEL } from '@/lib/booking-customer';
 
 export const metadata: Metadata = { title: 'گزارش مالی' };
 export const dynamic = 'force-dynamic';
@@ -38,6 +39,8 @@ export default async function AdminFinancePage() {
     walletTotal,
     recentPayments,
     recentTransactions,
+    cardTotal,
+    recentCard,
   ] = await Promise.all([
     prisma.booking.aggregate({
       where: { createdAt: { gte: todayStart }, status: { not: 'CANCELLED' } },
@@ -67,6 +70,16 @@ export default async function AdminFinancePage() {
       orderBy: { createdAt: 'desc' },
       take: 20,
       include: { user: { include: { profile: true } } },
+    }),
+    prisma.booking.aggregate({
+      where: { paymentMethod: 'CARD_TO_CARD', status: { not: 'CANCELLED' } },
+      _sum: { cardAmount: true }, _count: true,
+    }),
+    prisma.booking.findMany({
+      where: { paymentMethod: 'CARD_TO_CARD' },
+      orderBy: { createdAt: 'desc' },
+      take: 15,
+      include: { court: { select: { name: true } }, user: { include: { profile: true } } },
     }),
   ]);
 
@@ -210,6 +223,40 @@ export default async function AdminFinancePage() {
             hint="درآمد ناشی از لغو"
             icon={<Icon name="pricing" className="h-4 w-4" />}
           />
+        </section>
+
+        <section>
+          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-sm font-extrabold text-brand-800">رزروهای کارت به کارت</h2>
+            <span className="num text-[11px] font-bold text-brand-400">
+              {toFaDigits(cardTotal._count)} رزرو فعال <Dot />
+              {formatToman(cardTotal._sum.cardAmount ?? 0n)}
+            </span>
+          </div>
+          {recentCard.length === 0 ? (
+            <Empty text="رزرو کارت به کارتی ثبت نشده است." />
+          ) : (
+            <div className="card divide-y divide-brand-50 overflow-hidden">
+              {recentCard.map((b) => (
+                <div key={b.id} className="flex items-center gap-3 p-3.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-extrabold text-brand-800">
+                      {bookingCustomerName(b)}
+                      {!b.userId && <span className="badge-muted mr-1.5 text-[9px]">{GUEST_LABEL}</span>}
+                    </p>
+                    <p className="num truncate text-[10px] font-semibold text-brand-400">
+                      {b.court.name} <Dot />{formatDateTime(b.startsAt, { withWeekday: false })}
+                      <Dot />فیش {b.cardReceipt ?? '—'}
+                    </p>
+                  </div>
+                  <span className="num shrink-0 text-xs font-black text-brand-700">
+                    {formatToman(b.cardAmount ?? 0n, { withUnit: false })}
+                  </span>
+                  {b.status === 'CANCELLED' && <span className="badge-danger shrink-0">لغو</span>}
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <section>

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { runNotificationRules, schedulerToken } from '@/lib/notification-rules';
 import { handleApiError, ok, AppError } from '@/lib/api';
+import { settleDueMatches } from '@/lib/matches';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,11 @@ export async function GET(req: NextRequest) {
     const header = req.headers.get('authorization');
     if (header !== `Bearer ${token}`) throw new AppError('دسترسی ندارید.', 401);
 
-    return ok(await runNotificationRules());
+    const rules = await runNotificationRules();
+    /* بازی‌های بازِ تمام‌شده: سهم بازیکنان به میزبان پرداخت می‌شود و
+       درخواست‌هایی که تأیید نشده‌اند بازمی‌گردند */
+    const settled = rules.ran ? await settleDueMatches() : 0;
+    return ok({ ...rules, settled });
   } catch (error) {
     return handleApiError(error);
   }

@@ -20,6 +20,8 @@ export interface MatchPlayerDto {
   avatarUrl: string | null;
   level: PlayerLevel | null;
   isHost: boolean;
+  /** درخواست پیوستن داده و منتظر تأیید میزبان است */
+  pending?: boolean;
 }
 
 export interface MatchDto {
@@ -56,6 +58,8 @@ export function MatchCard({
 
   const seat = match.players.find((p) => p.userId === viewerId);
   const isHost = seat?.isHost ?? false;
+  const isPending = seat?.pending ?? false;
+  const pendingCount = match.players.filter((p) => p.pending).length;
   const empty = Math.max(0, match.capacity - match.players.length);
   const startsAt = new Date(match.startsAt);
   const hoursToStart = (startsAt.getTime() - Date.now()) / 3_600_000;
@@ -73,9 +77,11 @@ export function MatchCard({
 
       toast.success(
         action === 'JOIN'
-          ? json.data.nowFull
-            ? 'به بازی پیوستید و ظرفیت تکمیل شد 🎾'
-            : 'به بازی پیوستید. سهم شما از کیف پول کسر شد.'
+          ? json.data.pending
+            ? 'درخواست شما برای میزبان فرستاده شد. پس از تأیید او عضو بازی می‌شوید.'
+            : json.data.nowFull
+              ? 'به بازی پیوستید و ظرفیت تکمیل شد 🎾'
+              : 'به بازی پیوستید. سهم شما از کیف پول کسر شد.'
           : `از بازی خارج شدید و ${formatToman(BigInt(json.data.refunded))} به کیف پولتان بازگشت.`,
       );
       router.refresh();
@@ -120,7 +126,10 @@ export function MatchCard({
       <div className="p-4">
         <div className="flex flex-wrap items-start gap-3">
           {match.players.map((p) => (
-            <div key={p.userId} className="flex w-14 flex-col items-center gap-1.5">
+            <div
+              key={p.userId}
+              className={cn('flex w-14 flex-col items-center gap-1.5', p.pending && 'opacity-55')}
+            >
               <div className="relative">
                 <Avatar
                   firstName={p.firstName}
@@ -143,6 +152,9 @@ export function MatchCard({
               </span>
               {p.isHost && (
                 <span className="text-[9px] font-black text-accent-600">میزبان</span>
+              )}
+              {p.pending && (
+                <span className="text-[9px] font-black text-brand-400">در انتظار تأیید</span>
               )}
             </div>
           ))}
@@ -183,9 +195,15 @@ export function MatchCard({
         {!compact && (
           <div className="mt-3">
             {isHost ? (
-              <Link href="/bookings" className="btn-outline btn-sm w-full">
-                مدیریت رزرو
-              </Link>
+              pendingCount > 0 ? (
+                <Link href={`/matches/${match.id}`} className="btn-accent btn-sm w-full">
+                  {`${toFaDigits(pendingCount)} درخواست در انتظار تأیید شما`}
+                </Link>
+              ) : (
+                <Link href={`/matches/${match.id}`} className="btn-outline btn-sm w-full">
+                  مدیریت بازی
+                </Link>
+              )
             ) : seat ? (
               hoursToStart >= 2 ? (
                 <button
@@ -194,7 +212,13 @@ export function MatchCard({
                   disabled={loading !== null}
                   className="btn-outline btn-sm w-full text-danger"
                 >
-                  {loading === 'LEAVE' ? <Spinner /> : 'خروج از بازی و بازگشت سهم'}
+                  {loading === 'LEAVE' ? (
+                    <Spinner />
+                  ) : isPending ? (
+                    'در انتظار تأیید میزبان — لغو درخواست'
+                  ) : (
+                    'خروج از بازی و بازگشت سهم'
+                  )}
                 </button>
               ) : (
                 <p className="rounded-2xl bg-surface-muted px-3 py-2.5 text-center text-[11px] font-bold text-brand-400">

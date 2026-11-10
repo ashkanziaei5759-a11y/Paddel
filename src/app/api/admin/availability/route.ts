@@ -4,6 +4,7 @@ import { requireStaff } from '@/lib/auth/rbac';
 import { getCourtAvailability } from '@/lib/booking';
 import { handleApiError, ok } from '@/lib/api';
 import { availabilityQuerySchema } from '@/lib/validation';
+import { bookingCustomerName } from '@/lib/booking-customer';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
           select: {
             courtId: true,
             startsAt: true,
-            booking: { select: { id: true, user: { select: { username: true, profile: { select: { firstName: true, lastName: true } } } } } },
+            booking: { select: { id: true, guestName: true, user: { select: { username: true, profile: { select: { firstName: true, lastName: true } } } } } },
           },
         })
       : [];
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
         `${o.courtId}|${o.startsAt.toISOString()}`,
         {
           bookingId: o.booking.id,
-          name: `${o.booking.user.profile?.firstName ?? ''} ${o.booking.user.profile?.lastName ?? ''}`.trim() || o.booking.user.username,
+          name: bookingCustomerName(o.booking),
         },
       ]),
     );

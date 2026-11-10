@@ -19,11 +19,49 @@ const schema = z.object({
    * WALLET: برای بازیکن، از کیف پولش کسر می‌شود.
    * FREE:   برای بازیکن، بدون پرداخت (فقط مدیر کل).
    * CLUB:   به نام خود مدیریت، بدون پرداخت و بدون محدودیت (فقط مدیر کل).
+   * CARD_TO_CARD: مشتری کارت به کارت کرده؛ از کیف پول چیزی کم نمی‌شود و
+   *         مبلغ واریزی و شماره‌ی فیش ثبت می‌شود (پذیرش و مدیر کل).
    */
-  mode: z.enum(['WALLET', 'FREE', 'CLUB']),
+  mode: z.enum(['WALLET', 'FREE', 'CLUB', 'CARD_TO_CARD']),
+  /** PLAYER: بازیکن ثبت‌نام‌شده (userId) — GUEST: مشتری متفرقه بدون حساب (guestName) */
+  customer: z.enum(['PLAYER', 'GUEST']).default('PLAYER'),
   userId: z.string().min(1).optional(),
+  guestName: z
+    .string()
+    .trim()
+    .min(2, 'نام مشتری را وارد کنید.')
+    .max(60, 'نام مشتری بیش از حد طولانی است.')
+    .optional(),
+  guestPhone: z
+    .string()
+    .trim()
+    .regex(/^[0-9۰-۹+\-\s]{0,20}$/, 'شماره تماس نامعتبر است.')
+    .optional(),
+  /** مبلغ کارت به کارت به تومان */
+  cardAmountToman: z
+    .number({ invalid_type_error: 'مبلغ کارت به کارت را وارد کنید.' })
+    .int('مبلغ باید عدد صحیح باشد.')
+    .positive('مبلغ کارت به کارت را وارد کنید.')
+    .max(10_000_000_000, 'مبلغ کارت به کارت بیش از حد است.')
+    .optional(),
+  receiptNumber: z
+    .string()
+    .trim()
+    .min(3, 'شماره فیش را وارد کنید.')
+    .max(40, 'شماره فیش بیش از حد طولانی است.')
+    .optional(),
   notes: z.string().trim().max(240).optional(),
 });
+
+const FA_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
+const AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+/** ارقام فارسی/عربی را لاتین می‌کند تا شماره‌ی فیش یکسان ذخیره و جست‌وجو شود */
+function latinDigits(value: string) {
+  return value.replace(/[۰-۹٠-٩]/g, (d) => {
+    const i = FA_DIGITS.indexOf(d);
+    return String(i >= 0 ? i : AR_DIGITS.indexOf(d));
+  });
+}
 
 /** رزرو تلفنی: ادمین برای بازیکنی که تماس گرفته زمین می‌گیرد */
 export async function POST(req: NextRequest) {
@@ -35,12 +73,36 @@ export async function POST(req: NextRequest) {
     const input = schema.parse(await req.json());
     const isAdmin = actor.role === 'ADMIN';
 
-    if (!isAdmin && input.mode !== 'WALLET') {
+    if (!isAdmin && (input.mode === 'FREE' || input.mode === 'CLUB')) {
       throw new AppError('رزرو رایگان فقط با دسترسی مدیر کل ممکن است.', 403);
     }
 
-    let userId = actor.id;
-    if (input.mode !== 'CLUB') {
+    const isGuest = input.mode !== 'CLUB' && input.customer === 'GUEST';
+    if (isGuest && input.mode === 'WALLET') {
+      throw new AppError('مشتری متفرقه کیف پول ندارد؛ کارت به کارت را انتخاب کنید.', 400);
+    }
+    if (isGuest && !input.guestName) throw new AppError('نام مشتری را وارد کنید.', 400);
+
+    let cardToCard: { amount: bigint; receipt: string } | undefined;
+    if (input.mode === 'CARD_TO_CARD') {
+      if (!input.cardAmountToman) throw new AppError('مبلغ کارت به کارت را وارد کنید.', 400);
+      if (!input.receiptNumber) throw new AppError('شماره فیش را وارد کنید.', 400);
+      const receipt = latinDigits(input.receiptNumber).replace(/\s+/g, '');
+      /* یک فیش فقط یک بار: جلوی ثبت دوباره‌ی همان واریز برای دو رزرو را می‌گیرد */
+      const reused = await prisma.booking.findFirst({
+        where: { cardReceipt: receipt, status: { not: 'CANCELLED' } },
+        select: { code: true },
+      });
+      if (reused) {
+        throw new AppError(`این شماره فیش قبلاً برای رزرو ${reused.code} ثبت شده است.`, 409);
+      }
+      cardToCard = { amount: BigInt(input.cardAmountToman) * 10n, receipt };
+    }
+
+    let userId: string | null = actor.id;
+    if (isGuest) {
+      userId = null;
+    } else if (input.mode !== 'CLUB') {
       if (!input.userId) throw new AppError('بازیکن را انتخاب کنید.', 400);
       const player = await prisma.user.findUnique({
         where: { id: input.userId },
@@ -76,14 +138,34 @@ export async function POST(req: NextRequest) {
 
     const booking = await createBooking({
       userId,
+      guest: isGuest
+        ? { name: input.guestName!, phone: input.guestPhone ? latinDigits(input.guestPhone) : undefined }
+        : undefined,
+      cardToCard,
       courtId: input.courtId,
       slotStarts: starts,
       source: 'ADMIN',
       notes: input.notes,
       performedBy: actor.id,
       createdById: actor.id,
-      skipPayment: input.mode !== 'WALLET',
+      skipPayment: input.mode === 'FREE' || input.mode === 'CLUB',
       silent: input.mode === 'CLUB',
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: actor.id,
+        action: 'DESK_BOOKING',
+        entityType: 'Booking',
+        entityId: booking.id,
+        after: {
+          code: booking.code,
+          mode: input.mode,
+          guest: isGuest ? input.guestName : undefined,
+          cardAmount: cardToCard?.amount.toString(),
+          receipt: cardToCard?.receipt,
+        },
+      },
     });
 
     return ok({ id: booking.id, code: booking.code, totalPrice: booking.totalPrice.toString() }, { status: 201 });
