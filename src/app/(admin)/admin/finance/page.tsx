@@ -246,7 +246,7 @@ export default async function AdminFinancePage() {
                     </p>
                     <p className="num truncate text-[10px] font-semibold text-brand-400">
                       {b.court.name} <Dot />{formatDateTime(b.startsAt, { withWeekday: false })}
-                      <Dot />فیش {b.cardReceipt ?? '—'}
+                      {b.cardReceipt && <><Dot />فیش {b.cardReceipt}</>}
                     </p>
                   </div>
                   <span className="num shrink-0 text-xs font-black text-brand-700">

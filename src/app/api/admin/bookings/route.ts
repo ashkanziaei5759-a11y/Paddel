@@ -20,7 +20,7 @@ const schema = z.object({
    * FREE:   برای بازیکن، بدون پرداخت (فقط مدیر کل).
    * CLUB:   به نام خود مدیریت، بدون پرداخت و بدون محدودیت (فقط مدیر کل).
    * CARD_TO_CARD: مشتری کارت به کارت کرده؛ از کیف پول چیزی کم نمی‌شود و
-   *         مبلغ واریزی و شماره‌ی فیش ثبت می‌شود (پذیرش و مدیر کل).
+   *         مبلغ واریزی (و در صورت وجود، شماره‌ی فیش) ثبت می‌شود (پذیرش و مدیر کل).
    */
   mode: z.enum(['WALLET', 'FREE', 'CLUB', 'CARD_TO_CARD']),
   /** PLAYER: بازیکن ثبت‌نام‌شده (userId) — GUEST: مشتری متفرقه بدون حساب (guestName) */
@@ -44,10 +44,10 @@ const schema = z.object({
     .positive('مبلغ کارت به کارت را وارد کنید.')
     .max(10_000_000_000, 'مبلغ کارت به کارت بیش از حد است.')
     .optional(),
+  /** شماره‌ی فیش / کد پیگیری — اختیاری */
   receiptNumber: z
     .string()
     .trim()
-    .min(3, 'شماره فیش را وارد کنید.')
     .max(40, 'شماره فیش بیش از حد طولانی است.')
     .optional(),
   notes: z.string().trim().max(240).optional(),
@@ -83,18 +83,22 @@ export async function POST(req: NextRequest) {
     }
     if (isGuest && !input.guestName) throw new AppError('نام مشتری را وارد کنید.', 400);
 
-    let cardToCard: { amount: bigint; receipt: string } | undefined;
+    let cardToCard: { amount: bigint; receipt?: string } | undefined;
     if (input.mode === 'CARD_TO_CARD') {
       if (!input.cardAmountToman) throw new AppError('مبلغ کارت به کارت را وارد کنید.', 400);
-      if (!input.receiptNumber) throw new AppError('شماره فیش را وارد کنید.', 400);
-      const receipt = latinDigits(input.receiptNumber).replace(/\s+/g, '');
-      /* یک فیش فقط یک بار: جلوی ثبت دوباره‌ی همان واریز برای دو رزرو را می‌گیرد */
-      const reused = await prisma.booking.findFirst({
-        where: { cardReceipt: receipt, status: { not: 'CANCELLED' } },
-        select: { code: true },
-      });
-      if (reused) {
-        throw new AppError(`این شماره فیش قبلاً برای رزرو ${reused.code} ثبت شده است.`, 409);
+      const receipt = input.receiptNumber
+        ? latinDigits(input.receiptNumber).replace(/\s+/g, '') || undefined
+        : undefined;
+      /* شماره‌ی فیش اختیاری است؛ اگر وارد شد، هر فیش فقط یک بار پذیرفته می‌شود
+         تا همان واریز برای دو رزرو ثبت نشود */
+      if (receipt) {
+        const reused = await prisma.booking.findFirst({
+          where: { cardReceipt: receipt, status: { not: 'CANCELLED' } },
+          select: { code: true },
+        });
+        if (reused) {
+          throw new AppError(`این شماره فیش قبلاً برای رزرو ${reused.code} ثبت شده است.`, 409);
+        }
       }
       cardToCard = { amount: BigInt(input.cardAmountToman) * 10n, receipt };
     }

@@ -139,7 +139,7 @@ export interface CreateBookingInput {
   /** مشتری متفرقه که ثبت‌نام نکرده؛ فقط در رزرو تلفنی */
   guest?: { name: string; phone?: string };
   /** پرداخت کارت به کارت در رزرو تلفنی: از کیف پول کم نمی‌شود */
-  cardToCard?: { amount: bigint; receipt: string };
+  cardToCard?: { amount: bigint; receipt?: string };
   courtId: string;
   /** زمان شروع سانس‌های انتخاب‌شده — باید پشت‌سرهم باشند */
   slotStarts: Date[];

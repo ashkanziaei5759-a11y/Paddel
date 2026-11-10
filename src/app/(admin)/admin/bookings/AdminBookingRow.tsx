@@ -123,7 +123,8 @@ export function AdminBookingRow({ booking, isAdmin }: { booking: BookingDto; isA
           </p>
           {booking.paymentMethod === 'CARD_TO_CARD' && (
             <p className="num mt-0.5 text-[10px] font-bold text-accent-700">
-              کارت به کارت {formatToman(BigInt(booking.cardAmount ?? '0'))} · فیش {booking.cardReceipt}
+              کارت به کارت {formatToman(BigInt(booking.cardAmount ?? '0'))}
+              {booking.cardReceipt && <> · فیش {booking.cardReceipt}</>}
             </p>
           )}
         </div>

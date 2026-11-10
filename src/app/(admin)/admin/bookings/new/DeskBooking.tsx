@@ -151,7 +151,8 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
   }
 
   const cardAmountNum = Number(cardAmount || '0');
-  const cardValid = cardAmountNum > 0 && receipt.trim().length >= 3;
+  /* شماره‌ی فیش اختیاری است؛ فقط مبلغ لازم است */
+  const cardValid = cardAmountNum > 0;
 
   function toggleSlot(c: CourtDay, slot: Slot) {
     if (!slot.selectable) return;
@@ -206,7 +207,7 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
         mode === 'CLUB'
           ? `رزرو باشگاه ثبت شد (کد ${toFaDigits(json.data.code)}).`
           : mode === 'CARD_TO_CARD'
-            ? `رزرو ${customerName} ثبت شد — کارت به کارت ${formatToman(BigInt(cardAmountNum) * 10n)}، فیش ${toFaDigits(receipt.trim())}.`
+            ? `رزرو ${customerName} ثبت شد — کارت به کارت ${formatToman(BigInt(cardAmountNum) * 10n)}${receipt.trim() ? `، فیش ${toFaDigits(receipt.trim())}` : ''}.`
             : `رزرو ${customerName} ثبت شد${charge > 0n ? ` و ${formatToman(charge)} از کیف پولش کسر شد` : ''}.`,
       );
       if (who === 'player' && player && charge > 0n) setPlayer({ ...player, balance: (balance - charge).toString() });
@@ -538,7 +539,7 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
                     )}
                   </div>
                   <div>
-                    <label className="label" htmlFor="desk-card-receipt">شماره فیش / کد پیگیری</label>
+                    <label className="label" htmlFor="desk-card-receipt">شماره فیش / کد پیگیری (اختیاری)</label>
                     <input
                       id="desk-card-receipt"
                       className="field num text-left"
@@ -599,7 +600,7 @@ export function DeskBooking({ isAdmin, todayKey }: { isAdmin: boolean; todayKey:
                 {mode === 'CLUB'
                   ? 'رزرو به نام باشگاه ثبت شود؟'
                   : mode === 'CARD_TO_CARD'
-                    ? `رزرو برای ${customerName}${who === 'guest' ? ' (متفرقه)' : ''} با کارت به کارت ${formatToman(BigInt(cardAmountNum) * 10n)} و فیش ${toFaDigits(receipt.trim())} ثبت شود؟ از کیف پول چیزی کم نمی‌شود.`
+                    ? `رزرو برای ${customerName}${who === 'guest' ? ' (متفرقه)' : ''} با کارت به کارت ${formatToman(BigInt(cardAmountNum) * 10n)}${receipt.trim() ? ` و فیش ${toFaDigits(receipt.trim())}` : ''} ثبت شود؟ از کیف پول چیزی کم نمی‌شود.`
                     : `رزرو برای ${customerName}${who === 'guest' ? ' (متفرقه)' : ''} ثبت شود${charge > 0n ? ` و ${formatToman(charge)} از کیف پولش کسر شود` : ' (رایگان)'}؟`}
               </p>
               <div className="mt-3 flex gap-2">
