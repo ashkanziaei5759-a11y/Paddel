@@ -34,6 +34,18 @@ export async function GET(req: NextRequest) {
       courts.map((court) => getCourtAvailability(court, input.date, user.id)),
     );
 
+    /* مدیر کل محدودیت «فاصله تا شروع» و بازه‌ی مسدود ندارد */
+    if (user.role === 'ADMIN') {
+      for (const court of availability) {
+        for (const slot of court.slots) {
+          if (slot.reason === 'LEAD_TIME' || slot.reason === 'BLACKOUT') {
+            slot.reason = null;
+            slot.available = true;
+          }
+        }
+      }
+    }
+
     return ok({ date: input.date, courts: availability });
   } catch (error) {
     return handleApiError(error);

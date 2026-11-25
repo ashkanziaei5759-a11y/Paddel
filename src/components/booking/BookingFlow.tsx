@@ -65,11 +65,14 @@ export function BookingFlow({
   todayKey,
   balance,
   maxAdvanceDays,
+  adminFree = false,
 }: {
   courts: CourtDto[];
   todayKey: string;
   balance: string;
   maxAdvanceDays: number;
+  /** مدیر کل: کیف پول ندارد، رزروش رایگان و بدون محدودیت است */
+  adminFree?: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -207,7 +210,7 @@ export function BookingFlow({
     return capped > listTotal ? listTotal : capped;
   })();
   const total = listTotal - discount;
-  const insufficient = total > BigInt(balance);
+  const insufficient = !adminFree && total > BigInt(balance);
 
   /* بن‌ها فقط وقتی لازم‌اند که کاربر به مرحله‌ی تأیید رسیده باشد */
   useEffect(() => {
@@ -405,7 +408,7 @@ export function BookingFlow({
                 <span className="h-2.5 w-2.5 rounded bg-card ring-1 ring-brand-100" /> آزاد
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded bg-brand-700" /> انتخاب شما
+                <span className="h-2.5 w-2.5 rounded bg-primary" /> انتخاب شما
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded bg-brand-100" /> رزرو شما
@@ -673,12 +676,18 @@ export function BookingFlow({
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] font-bold">
-            <span className="text-brand-400">موجودی کیف پول</span>
-            <span className={cn('num', insufficient ? 'text-danger' : 'text-success')}>
-              {formatToman(BigInt(balance))}
-            </span>
-          </div>
+          {adminFree ? (
+            <div className="rounded-2xl bg-success/10 px-4 py-2.5 text-[11px] font-bold leading-6 text-success">
+              رزرو مدیر باشگاه — رایگان، بدون کسر از کیف پول.
+            </div>
+          ) : (
+            <div className="flex items-center justify-between text-[11px] font-bold">
+              <span className="text-brand-400">موجودی کیف پول</span>
+              <span className={cn('num', insufficient ? 'text-danger' : 'text-success')}>
+                {formatToman(BigInt(balance))}
+              </span>
+            </div>
+          )}
 
           {insufficient && !payWithPoints && !voucherCode ? (
             <div className="space-y-3">
@@ -696,12 +705,14 @@ export function BookingFlow({
               disabled={submitting}
               className="btn-accent btn-lg w-full"
             >
-              {submitting ? <Spinner /> : 'پرداخت و تأیید رزرو'}
+              {submitting ? <Spinner /> : adminFree ? 'تأیید رزرو' : 'پرداخت و تأیید رزرو'}
             </button>
           )}
 
           <p className="text-center text-[10px] leading-5 text-brand-300">
-            {total === 0n
+            {adminFree
+              ? 'رزرو به نام مدیریت ثبت می‌شود و در فهرست رزروهای پنل دیده می‌شود.'
+              : total === 0n
               ? 'این رزرو با بن شما رایگان می‌شود و مبلغی از کیف پول کسر نمی‌گردد. در صورت لغو، بن طبق قوانین باشگاه به شما بازمی‌گردد.'
               : payWithPoints
                 ? 'با تأیید رزرو، معادل امتیازیِ مبلغ نهایی از امتیازهای شما کم می‌شود. در صورت لغو، بازگشت طبق قوانین باشگاه انجام می‌گیرد.'

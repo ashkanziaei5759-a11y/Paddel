@@ -72,6 +72,9 @@ export default async function ProfilePage() {
                 {user.role === 'ADMIN' && (
                   <span className="badge bg-white/15 text-white">مدیر باشگاه</span>
                 )}
+                {user.role === 'STAFF' && (
+                  <span className="badge bg-white/15 text-white">ادمین پذیرش</span>
+                )}
               </div>
             </div>
           </div>
@@ -93,7 +96,7 @@ export default async function ProfilePage() {
           <MiniStat label="رزروها" value={formatNumber(bookingCount)} icon="booking" />
           <MiniStat
             label="کیف پول"
-            value={formatToman(wallet?.balance ?? 0n, { withUnit: false })}
+            value={user.role === 'PLAYER' ? formatToman(wallet?.balance ?? 0n, { withUnit: false }) : '—'}
             icon="wallet"
           />
         </section>
@@ -202,17 +205,22 @@ export default async function ProfilePage() {
         {/* ---- منو ---- */}
         <section className="card divide-y divide-brand-50 overflow-hidden">
           <MenuItem href="/tournaments" icon="tournament" label="تورنومنت‌ها" />
-          <MenuItem href="/wallet" icon="wallet" label="کیف پول" />
+          {user.role === 'PLAYER' && <MenuItem href="/wallet" icon="wallet" label="کیف پول" />}
           <MenuItem href="/market" icon="ticket" label="فروشگاه باشگاه" />
           <MenuItem href="/market/orders" icon="receipt" label="سفارش‌های فروشگاه" />
           <MenuItem href="/vouchers" icon="ticket" label="بن‌های رزرو" />
           <MenuItem href="/news" icon="notification" label="اخبار باشگاه" />
           <MenuItem href="/bookings" icon="history" label="تاریخچه رزرو" />
-          <MenuItem href="/wallet/transactions" icon="receipt" label="تراکنش‌های کیف پول" />
+          {user.role === 'PLAYER' && (
+            <MenuItem href="/wallet/transactions" icon="receipt" label="تراکنش‌های کیف پول" />
+          )}
           <MenuItem href="/partner-requests" icon="partner" label="درخواست‌های پارتنری" />
           <MenuItem href="/notifications" icon="notification" label="اعلان‌ها" badge={unread} />
           <MenuItem href="/profile/settings" icon="settings" label="تنظیمات حساب" />
           {user.role === 'ADMIN' && <MenuItem href="/admin" icon="admin" label="پنل مدیریت" />}
+          {user.role === 'STAFF' && (
+            <MenuItem href="/admin/bookings/new" icon="admin" label="پیشخوان پذیرش (رزرو تلفنی)" />
+          )}
         </section>
 
         <LogoutButton />

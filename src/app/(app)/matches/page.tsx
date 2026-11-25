@@ -62,6 +62,7 @@ export default async function MatchesPage() {
       avatarUrl: p.user.profile?.avatarUrl ?? null,
       level: p.user.profile?.level ?? null,
       isHost: p.isHost,
+      pending: p.status === 'PENDING',
     })),
   }));
 

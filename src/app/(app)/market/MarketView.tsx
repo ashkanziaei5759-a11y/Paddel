@@ -240,7 +240,7 @@ export function MarketView({
             )}
 
             {isVoucher && (
-              <div className="rounded-2xl bg-accent/10 px-4 py-3 text-xs font-bold leading-6 text-brand-700">
+              <div className="rounded-2xl bg-brand-50 px-4 py-3 text-xs font-bold leading-6 text-brand-700">
                 {active.voucherKind === 'FREE_SESSION'
                   ? 'با این بن، هزینه‌ی یک رزرو زمین به‌طور کامل رایگان می‌شود.'
                   : `با این بن، ${toFaDigits(active.voucherPercent ?? 0)}٪ از هزینه‌ی یک رزرو کم می‌شود.`}

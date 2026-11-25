@@ -41,7 +41,8 @@ export default async function AdminAnalyticsPage() {
     prisma.profile.groupBy({ by: ['level'], _count: { _all: true } }),
     prisma.booking.groupBy({
       by: ['userId'],
-      where: { status: { not: 'CANCELLED' } },
+      /* رزرو مشتری متفرقه به حسابی وصل نیست و در رتبه‌بندی بازیکن‌ها نمی‌آید */
+      where: { status: { not: 'CANCELLED' }, userId: { not: null } },
       _sum: { totalPrice: true },
       _count: { _all: true },
       orderBy: { _sum: { totalPrice: 'desc' } },
@@ -55,8 +56,9 @@ export default async function AdminAnalyticsPage() {
     }),
   ]);
 
+  const spenders = topSpenders.flatMap((s) => (s.userId ? [{ ...s, userId: s.userId }] : []));
   const spenderProfiles = await prisma.profile.findMany({
-    where: { userId: { in: topSpenders.map((s) => s.userId) } },
+    where: { userId: { in: spenders.map((s) => s.userId) } },
     select: { userId: true, firstName: true, lastName: true },
   });
   const nameOf = new Map(
@@ -170,7 +172,7 @@ export default async function AdminAnalyticsPage() {
       <RankBars
         title="بیشترین هزینه‌ی رزرو"
         subtitle="در تمام دوره‌ها"
-        rows={topSpenders.map((s) => ({
+        rows={spenders.map((s) => ({
           id: s.userId,
           name: nameOf.get(s.userId) ?? '—',
           meta: `${formatNumber(s._count._all)} رزرو`,

@@ -34,11 +34,6 @@ export const zPersianName = z
   .min(2, 'حداقل ۲ کاراکتر وارد کنید.')
   .max(40, 'حداکثر ۴۰ کاراکتر مجاز است.');
 
-export const zOtpCode = z
-  .string({ required_error: 'کد تأیید الزامی است.' })
-  .transform((v) => toEnDigits(v).replace(/\D/g, ''))
-  .refine((v) => v.length >= 4 && v.length <= 8, { message: 'کد تأیید معتبر نیست.' });
-
 export const zLevel = z.enum(LEVELS, { errorMap: () => ({ message: 'سطح انتخابی معتبر نیست.' }) });
 
 /** مبلغ به تومان از سمت کاربر دریافت و به ریال تبدیل می‌شود */
@@ -49,29 +44,23 @@ export const zTomanAmount = z
 
 // --- Auth ------------------------------------------------------------------
 
-export const signupStartSchema = z.object({
+export const signupSchema = z.object({
   username: zUsername,
   password: zPassword,
   firstName: zPersianName,
   lastName: zPersianName,
-  phone: zPhone,
-});
-
-export const signupVerifySchema = z.object({
-  verificationId: z.string().min(1, 'شناسه‌ی تأیید نامعتبر است.'),
-  code: zOtpCode,
+  /** اختیاری و بدون تأیید پیامکی؛ خالی یعنی ثبت نشود */
+  phone: z
+    .string()
+    .optional()
+    .transform((v) => (v && v.trim() ? v : undefined))
+    .pipe(zPhone.optional()),
 });
 
 export const loginSchema = z.object({
   username: z.string().trim().min(1, 'نام کاربری را وارد کنید.').transform((v) => v.toLowerCase()),
   password: z.string().min(1, 'رمز عبور را وارد کنید.'),
 });
-
-export const resendOtpSchema = z.object({
-  verificationId: z.string().min(1),
-});
-
-export const changePhoneStartSchema = z.object({ phone: zPhone });
 
 // --- Profile ---------------------------------------------------------------
 
@@ -142,12 +131,13 @@ export const courtSchema = z.object({
   basePriceToman: zTomanAmount,
   slotDurationMinutes: z.coerce.number().int().min(15).max(240),
   openingMinute: z.coerce.number().int().min(0).max(1440),
-  closingMinute: z.coerce.number().int().min(0).max(1440),
+  /** بیش از ۱۴۴۰ یعنی بعد از نیمه‌شب (تا ۶ بامداد روز بعد) */
+  closingMinute: z.coerce.number().int().min(0).max(1440 + 360),
   maxConsecutiveSlots: z.coerce.number().int().min(1).max(12),
   minLeadTimeMinutes: z.coerce.number().int().min(0).max(1440),
   advanceBookingDays: z.coerce.number().int().min(1).max(180),
   sortOrder: z.coerce.number().int().min(0).max(999).optional(),
-}).refine((v) => v.closingMinute > v.openingMinute, {
+}).refine((v) => v.closingMinute > v.openingMinute && v.closingMinute - v.openingMinute <= 1440, {
   message: 'ساعت پایان باید بعد از ساعت شروع باشد.',
   path: ['closingMinute'],
 });
@@ -369,7 +359,18 @@ export const bannerSchema = z.object({
   title: z.string().trim().min(1, 'عنوان بنر الزامی است.').max(80),
   subtitle: z.string().trim().max(160).optional().nullable(),
   imageUrl: z.string().trim().min(1, 'نشانی تصویر الزامی است.').max(500),
-  linkUrl: z.string().trim().max(500).optional().nullable(),
+  /* فقط مسیر داخلی (/booking) یا نشانی http(s). بدون این، «javascript:...» در
+     href بنر صفحه‌ی اصلیِ همه‌ی بازیکن‌ها اجرا می‌شد؛ «//» هم کاربر را بی‌صدا به
+     دامنه‌ی دیگری می‌برد. */
+  linkUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => v === '' || (v.startsWith('/') && !v.startsWith('//')) || /^https?:\/\//i.test(v), {
+      message: 'لینک باید با / (صفحه‌ای از همین سایت) یا https:// شروع شود.',
+    })
+    .optional()
+    .nullable(),
   sortOrder: z.coerce.number().int().min(0).max(999).default(0),
   isActive: z.boolean().default(true),
   startsAt: z.string().datetime({ offset: true }).optional().nullable(),
@@ -422,3 +423,58 @@ export const articleSchema = z.object({
 // --- جنسیت ----------------------------------------------------------------
 
 export const genderSchema = z.enum(['MALE', 'FEMALE']).nullable().optional();
+
+/* ---------------- اعلان‌ها ---------------- */
+
+/** لینک داخل سایت (/…) یا آدرس کامل http(s) — خالی یعنی بدون لینک */
+const zLink = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((v) => v === '' || (v.startsWith('/') && !v.startsWith('//')) || /^https?:\/\//i.test(v), {
+    message: 'لینک باید با / (صفحه‌ای از همین سایت) یا https:// شروع شود.',
+  })
+  .transform((v) => v || null)
+  .optional()
+  .nullable();
+
+export const adminNotifySchema = z.object({
+  title: z.string().trim().min(2, 'عنوان کوتاه است.').max(120),
+  body: z.string().trim().min(2, 'متن پیام کوتاه است.').max(1000),
+  /* یا برای یک نفر، یا برای همه‌ی بازیکنان فعال */
+  audience: z.enum(['USER', 'ALL_PLAYERS']),
+  userId: z.string().min(1).optional(),
+  actionUrl: zLink,
+  imageUrl: zLink,
+  /** ارسال در زمان مشخص (فقط همگانی) — خالی یعنی همین حالا */
+  scheduleAt: z.string().datetime({ offset: true }).optional().nullable(),
+});
+
+export const notificationRuleSchema = z
+  .object({
+    name: z.string().trim().min(2, 'نام قانون کوتاه است.').max(80),
+    trigger: z.enum(['BEFORE_BOOKING', 'AFTER_BOOKING', 'INACTIVE_PLAYER', 'LOW_WALLET', 'SCHEDULED']),
+    /** دقیقه برای رزرو، روز برای بازیکن غیرفعال */
+    offset: z.coerce.number().int().min(0).max(60 * 24 * 14).default(60),
+    thresholdToman: z.coerce.number().int().min(1).max(1_000_000_000).optional().nullable(),
+    runAt: z.string().datetime({ offset: true }).optional().nullable(),
+    title: z.string().trim().min(2, 'عنوان کوتاه است.').max(120),
+    body: z.string().trim().min(2, 'متن پیام کوتاه است.').max(1000),
+    actionUrl: zLink,
+    imageUrl: zLink,
+    isActive: z.boolean().default(true),
+  })
+  .superRefine((v, ctx) => {
+    if ((v.trigger === 'BEFORE_BOOKING' || v.trigger === 'AFTER_BOOKING') && (v.offset < 5 || v.offset > 60 * 24 * 7)) {
+      ctx.addIssue({ code: 'custom', path: ['offset'], message: 'زمان باید بین ۵ دقیقه تا ۷ روز باشد.' });
+    }
+    if (v.trigger === 'INACTIVE_PLAYER' && (v.offset < 1 || v.offset > 365)) {
+      ctx.addIssue({ code: 'custom', path: ['offset'], message: 'تعداد روز باید بین ۱ تا ۳۶۵ باشد.' });
+    }
+    if (v.trigger === 'LOW_WALLET' && !v.thresholdToman) {
+      ctx.addIssue({ code: 'custom', path: ['thresholdToman'], message: 'مبلغ حد کیف پول را وارد کنید.' });
+    }
+    if (v.trigger === 'SCHEDULED' && !v.runAt) {
+      ctx.addIssue({ code: 'custom', path: ['runAt'], message: 'زمان ارسال را انتخاب کنید.' });
+    }
+  });

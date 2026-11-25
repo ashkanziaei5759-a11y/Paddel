@@ -1,3 +1,4 @@
+import { appUrl } from '@/lib/app-url';
 import type {
   PaymentGateway,
   PaymentInitInput,
@@ -17,7 +18,7 @@ export class MockGateway implements PaymentGateway {
 
   async init(input: PaymentInitInput): Promise<PaymentInitResult> {
     const ref = `MOCK-${input.orderId}`;
-    const base = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const base = appUrl() || 'http://localhost:3000';
     const url = new URL('/payment/mock', base);
     url.searchParams.set('ref', ref);
     url.searchParams.set('amount', String(input.amount));

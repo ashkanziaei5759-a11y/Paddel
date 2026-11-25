@@ -55,18 +55,13 @@ export default async function LoginPage() {
       <div className="relative flex min-h-dvh flex-col justify-end px-4 pb-5 safe-top safe-bottom lg:justify-center lg:px-16">
         <div className="w-full lg:max-w-[420px]">
           {/* ---- نشان برند ---- */}
-          <Link href="/" className="mb-5 flex items-center gap-3">
-            <BrandLogo size={52} className="shadow-lift-electric" />
-            <span>
-              <span className="block text-[10px] font-bold tracking-[0.34em] text-electric-300">
-                PERSIAN PADEL
-              </span>
-              <span className="mt-1 block text-lg font-black leading-tight text-white">
-                باشگاه پدل حرفه‌ای
-              </span>
-              {/* رد توپ — تنها جایی که رنگ لیمویی پوستر برمی‌گردد */}
-              <span className="mt-1.5 block h-[3px] w-16 rounded-full bg-gradient-to-l from-[#D8F24A] to-transparent" />
-            </span>
+          <Link href="/" className="mb-5 block" aria-label="Persian Padel">
+            {/* لوگوی کامل برند — نسخه‌ی سفید با توپ لیمویی */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/logo-white.png" alt="Persian Padel" width={230} height={70} className="h-auto w-[200px] lg:w-[230px]" />
+            <span className="mt-2 block text-sm font-black leading-tight text-white/90">باشگاه پدل حرفه‌ای</span>
+            {/* رد توپ — تنها جایی که رنگ لیمویی برمی‌گردد */}
+            <span className="mt-1.5 block h-[3px] w-16 rounded-full bg-gradient-to-l from-accent to-transparent" />
           </Link>
 
           <GlassCard className="on-glass w-full">

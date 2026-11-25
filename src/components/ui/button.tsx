@@ -11,7 +11,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'bg-primary text-on-primary shadow-card hover:opacity-90 hover:shadow-card-hover',
-        accent: 'bg-accent-gradient text-on-accent shadow-card hover:shadow-glow',
+        accent: 'bg-brand-gradient text-white shadow-card hover:shadow-glow',
         destructive: 'bg-danger/10 text-danger hover:bg-danger/15',
         outline: 'border border-brand-200 bg-card text-brand-700 hover:border-brand-300 hover:bg-brand-50',
         secondary: 'bg-brand-50 text-brand-700 hover:bg-brand-100',

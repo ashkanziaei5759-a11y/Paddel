@@ -28,8 +28,8 @@ export function OfflineRetry() {
       <button
         type="button"
         onClick={() => window.location.reload()}
-        className="flex h-12 min-w-[180px] items-center justify-center gap-2 rounded-2xl bg-accent-gradient
-                   px-6 text-sm font-black text-on-accent shadow-card transition
+        className="flex h-12 min-w-[180px] items-center justify-center gap-2 rounded-2xl bg-brand-gradient
+                   px-6 text-sm font-black text-white shadow-card transition
                    active:scale-[.97]"
       >
         <RotateCw className="h-4 w-4" strokeWidth={2.4} aria-hidden="true" />

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>کاتالوگ اپ هوشمند زمین پدل</title>
+<style>
+@font-face{font-family:V;src:url(vazirmatn-arabic-800-normal.woff2) format('woff2');font-weight:800}
+@font-face{font-family:V;src:url(vazirmatn-arabic-900-normal.woff2) format('woff2');font-weight:900}
+@font-face{font-family:D;src:url(DanaFaNum-Light.ttf) format('truetype');font-weight:300}
+@font-face{font-family:D;src:url(DanaFaNum-Regular.ttf) format('truetype');font-weight:400}
+@font-face{font-family:D;src:url(DanaFaNum-Bold.ttf) format('truetype');font-weight:700}
+@font-face{font-family:Lalezar;src:url(lalezar-arabic-400-normal.woff2) format('woff2')}
+:root{--b:3mm;--navy:#0B2A43;--navy2:#061A2B;--blue:#0B5F87;--amber:#FCA311;--amber2:#E08C05;--cream:#F7F5F0;--ink:#0E1B2B;--mute:#5B6B7C;--line:#E4DFD3}
+@page{margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{direction:ltr;font-family:D,sans-serif;color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sheet{width:var(--W,1148px);height:var(--H,819px);position:relative;overflow:hidden;page-break-after:always;direction:ltr;display:flex;background:#fff}
+.sheet:last-child{page-break-after:auto}
+.sheet>.pn:last-child{flex:1}
+/* panels: widths include bleed on outer edges */
+.pn{position:relative;height:100%;overflow:hidden;direction:rtl}
+.w100{width:100mm}.w97{width:97mm}
+.edgeL{width:calc(100mm + var(--b))}.edgeL.w97{width:calc(97mm + var(--b))}
+.edgeR{width:calc(100mm + var(--b))}.edgeR.w97{width:calc(97mm + var(--b))}
+.in{position:absolute;top:calc(var(--b) + 9mm);bottom:calc(var(--b) + 9mm);left:9mm;right:9mm}
+.edgeL .in{left:calc(var(--b) + 9mm)}.edgeR .in{right:calc(var(--b) + 9mm)}
+.dark{background:radial-gradient(120mm 120mm at 30% 75%,rgba(11,95,135,.55),transparent 70%),radial-gradient(90mm 90mm at 90% 5%,rgba(252,163,17,.12),transparent 70%),linear-gradient(170deg,var(--navy2),var(--navy) 60%,#0A3553);color:#fff}
+.creamBg{background:var(--cream)}
+.grid{position:absolute;inset:0;opacity:.10;background-image:linear-gradient(rgba(202,240,248,.9) .25mm,transparent .25mm),linear-gradient(90deg,rgba(202,240,248,.9) .25mm,transparent .25mm);background-size:9mm 9mm;-webkit-mask-image:radial-gradient(80mm 90mm at 50% 70%,#000,transparent 75%)}
+.amber{color:var(--amber)}
+.h-xl{font-family:V;font-weight:900;font-size:25pt;line-height:1.25}
+.h-l{font-family:V;font-weight:900;font-size:17pt;line-height:1.3}
+.h-m{font-family:V;font-weight:800;font-size:11.5pt;line-height:1.4}
+.p{font-size:8.6pt;line-height:1.75;color:var(--mute)}
+.dark .p{color:rgba(255,255,255,.72)}
+.kick{display:inline-flex;align-items:center;gap:2mm;font-family:V;font-weight:800;font-size:7.5pt;color:var(--amber2);letter-spacing:.02em}
+.kick i{display:inline-block;width:7mm;height:.6mm;background:var(--amber);border-radius:1mm}
+.dark .kick{color:var(--amber)}
+/* phone mockup */
+.phone{position:absolute;border-radius:6.5mm;background:linear-gradient(145deg,#2a3440,#0b1015 60%,#222c36);padding:1.3mm;box-shadow:0 5mm 12mm rgba(6,26,43,.35),0 0 0 .25mm rgba(255,255,255,.08) inset}
+.phone .scr{position:relative;width:100%;height:100%;border-radius:5.3mm;overflow:hidden;background:#0d1720}
+.phone img{position:absolute;left:0;top:0;width:100%;display:block}
+.phone .isl{position:absolute;top:1.6mm;left:50%;width:10mm;height:2.8mm;margin-left:-5mm;border-radius:2mm;background:#000;z-index:2}
+/* feature rows */
+.feat{display:flex;gap:3.2mm;align-items:flex-start;margin-top:4.2mm}
+.ic{flex:none;width:8.6mm;height:8.6mm;border-radius:2.6mm;background:var(--navy);display:grid;place-items:center}
+.ic svg{width:4.8mm;height:4.8mm;stroke:var(--amber);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.feat .t{font-family:V;font-weight:800;font-size:9.4pt;line-height:1.35}
+.feat .d{font-size:7.6pt;line-height:1.65;color:var(--mute);margin-top:.6mm}
+.chip{display:inline-block;padding:1.1mm 3mm;border-radius:10mm;font-family:V;font-weight:800;font-size:7pt;border:.3mm solid rgba(255,255,255,.28);color:#fff;margin:0 0 1.6mm 1.2mm}
+.chipL{border-color:var(--line);color:var(--ink);background:#fff}
+.band{position:absolute;left:0;right:0;bottom:0;height:calc(15mm + var(--b));background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;padding-bottom:var(--b);font-family:V;font-weight:900;font-size:10pt;gap:2.5mm}
+/* pains */
+.pain{display:flex;align-items:center;gap:2.6mm;padding:2.3mm 3mm;border-radius:3mm;background:#fff;border:.3mm solid var(--line);margin-top:2.2mm;font-family:V;font-weight:800;font-size:8.6pt}
+.pain b{flex:none;width:5.6mm;height:5.6mm;border-radius:50%;background:#E5383B;color:#fff;display:grid;place-items:center;font-size:7pt;font-family:D}
+.ok b{background:#16a34a}
+/* amaria */
+.am{display:inline-block;direction:rtl}
+.am .row{display:flex;align-items:flex-end;justify-content:center;gap:3mm}
+.am .bars{direction:ltr;display:flex;align-items:flex-end;gap:1mm;height:12mm;padding-bottom:2.1mm}
+.am .bars i{display:block;width:2.4mm;border-radius:.3mm}
+.am .word{font-family:D;font-weight:700;font-size:40pt;line-height:1}
+.am .tag{display:flex;align-items:center;justify-content:center;gap:1.6mm;margin-top:1.6mm;font-family:D;font-weight:700;font-size:6.4pt;white-space:nowrap}
+.am .tag s{text-decoration:none;font-weight:700}
+.am .tag u{display:block;width:7mm;height:.25mm;background:currentColor;opacity:.8}
+/* fold guides (screen version only) */
+.fold{position:absolute;top:0;bottom:0;width:0;border-left:.2mm dashed rgba(0,0,0,.0)}
+.num{font-family:Lalezar;font-weight:400}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16v-4M11 16V8M15 16v-6M19 16V5"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r=".5"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4M10 9H8M16 13H8M16 17H8"/></symbol>
+    <symbol id="i-brush" viewBox="0 0 24 24"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============ PAGE 1: OUTSIDE  [cover | back | flap] (left → right) ============ -->
+<section class="sheet">
+  <!-- COVER (front, left) -->
+  <div class="pn edgeL dark">
+    <div class="grid"></div>
+    <div class="in">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="kick"><i></i>نرم‌افزار مدیریت باشگاه</div>
+        <div style="font-family:D;font-size:6.8pt;color:rgba(255,255,255,.6)">محصولی از <b style="color:#fff">شرکت آماریا</b></div>
+      </div>
+      <img src="appicon.svg" style="width:17mm;height:17mm;border-radius:4.2mm;margin-top:10mm;box-shadow:0 3mm 8mm rgba(0,0,0,.4)">
+      <div class="h-xl" style="margin-top:5mm;font-size:29pt">اپ هوشمند<br><span class="amber">زمین پدل</span></div>
+      <div style="font-family:V;font-weight:800;font-size:10.5pt;margin-top:3mm;color:rgba(255,255,255,.88)">نرم‌افزار جامع مدیریت باشگاه پدل</div>
+      <div class="p" style="margin-top:2mm;max-width:62mm">رزرو آنلاین، فروشگاه، تورنومنت و گزارش مالی؛ همه در یک اپ اختصاصی با نام باشگاه شما.</div>
+      <div class="phone" style="width:40mm;height:86.6mm;left:5mm;bottom:12mm;transform:rotate(-7deg)"><div class="scr"><img src="shots/home.png"></div><div class="isl"></div></div>
+      <div class="phone" style="width:43mm;height:93mm;left:34mm;bottom:4mm;transform:rotate(5deg)"><div class="scr"><img src="shots/dash.png"></div><div class="isl"></div></div>
+    </div>
+  </div>
+
+  <!-- BACK (middle) -->
+  <div class="pn w100 dark" style="background:linear-gradient(180deg,#081F33,#0B2A43)">
+    <div class="in" style="text-align:center">
+      <div class="kick" style="justify-content:center"><i></i>شروع همکاری<i></i></div>
+      <div class="h-l" style="margin-top:3mm">همین امروز<br><span class="amber">باشگاهت رو هوشمند کن</span></div>
+      <div style="display:flex;flex-direction:column;gap:2.4mm;margin-top:6mm;text-align:right">
+        <div style="display:flex;gap:3mm;align-items:center"><span class="num" style="flex:none;width:8mm;height:8mm;border-radius:50%;background:var(--amber);color:#1b1300;display:grid;place-items:center;font-size:13pt">۱</span><div><div class="h-m" style="font-size:9.6pt">تماس و مشاوره‌ی رایگان</div><div class="p" style="font-size:7.4pt;line-height:1.5">نیازهای باشگاه شما را بررسی می‌کنیم.</div></div></div>
+        <div style="display:flex;gap:3mm;align-items:center"><span class="num" style="flex:none;width:8mm;height:8mm;border-radius:50%;background:var(--amber);color:#1b1300;display:grid;place-items:center;font-size:13pt">۲</span><div><div class="h-m" style="font-size:9.6pt">دموی زنده روی گوشی شما</div><div class="p" style="font-size:7.4pt;line-height:1.5">پنل مدیریت و اپ بازیکن را از نزدیک ببینید.</div></div></div>
+        <div style="display:flex;gap:3mm;align-items:center"><span class="num" style="flex:none;width:8mm;height:8mm;border-radius:50%;background:var(--amber);color:#1b1300;display:grid;place-items:center;font-size:13pt">۳</span><div><div class="h-m" style="font-size:9.6pt">راه‌اندازی با برند باشگاه</div><div class="p" style="font-size:7.4pt;line-height:1.5">لوگو، رنگ‌ها و زمین‌های شما؛ آماده‌ی استفاده.</div></div></div>
+      </div>
+      <div style="margin-top:6mm;border-radius:5mm;background:linear-gradient(135deg,#FFB627,#FCA311 50%,#E07B00);color:#1b1000;padding:4.2mm 3mm 3.6mm;box-shadow:0 3mm 10mm rgba(252,163,17,.3)">
+        <div style="font-family:V;font-weight:900;font-size:9.5pt">برای دموی رایگان تماس بگیرید</div>
+        <div class="num" style="font-size:27pt;line-height:1.2;direction:ltr;margin-top:1mm;letter-spacing:.02em">۰۹۰۵ ۸۲۳ ۵۷۵۹</div>
+        <div style="font-family:V;font-weight:800;font-size:9pt">اشکان ضیایی</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:3.5mm;margin-top:5mm;text-align:right">
+        <div style="flex:none;width:21mm;height:21mm;background:#fff;border-radius:3mm;padding:2mm"><img src="qr.svg" style="width:100%;height:100%;display:block"></div>
+        <div><div class="h-m" style="font-size:9pt">دموی آنلاین را اسکن کنید</div><div style="font-family:Arial,sans-serif;font-size:7.2pt;color:rgba(255,255,255,.7);direction:ltr;text-align:right;margin-top:.6mm">paddel-a2i7.vercel.app</div></div>
+      </div>
+      <div style="position:absolute;left:0;right:0;bottom:0;text-align:center">
+        <div style="font-family:D;font-size:6.6pt;color:rgba(255,255,255,.6);margin-bottom:2mm">طراحی و توسعه</div>
+        <div class="am" style="color:#fff"><div class="row"><div class="word" style="font-size:30pt">آمـاریا</div><div class="bars" style="height:9mm;padding-bottom:1.6mm"><i style="height:2.4mm;width:1.8mm;background:#16a99a"></i><i style="height:4.6mm;width:1.8mm;background:#16a99a"></i><i style="height:7mm;width:1.8mm;background:#2a6b7d"></i><i style="height:10mm;width:1.8mm;background:#c8202a"></i></div></div>
+          <div class="tag" style="color:#dfe8f1;font-size:5.6pt"><u></u>تحلیل داده <s style="color:#16a99a">|</s> هوش تجاری <s style="color:#d9262e">|</s> رشد هوشمند<u></u></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLAP (right, folds in) -->
+  <div class="pn edgeR w97 creamBg">
+    <div class="in">
+      <div class="kick"><i></i>چالش امروز باشگاه‌ها</div>
+      <div class="h-l" style="margin-top:3mm">هنوز باشگاهت رو<br><span style="color:var(--blue)">دستی</span> اداره می‌کنی؟</div>
+      <div style="margin-top:4mm">
+        <div class="pain"><b>✕</b>رزرو با تماس و پیام واتس‌اپ</div>
+        <div class="pain"><b>✕</b>سانس‌های خالی و بی‌برنامه</div>
+        <div class="pain"><b>✕</b>لغوهای لحظه‌ی آخر بدون جریمه</div>
+        <div class="pain"><b>✕</b>حساب‌وکتاب با دفترچه و اکسل</div>
+        <div class="pain"><b>✕</b>مشتری‌هایی که هم‌بازی پیدا نمی‌کنن</div>
+      </div>
+      <div style="margin-top:6mm;border-radius:4mm;background:var(--navy);color:#fff;padding:4.5mm 4mm">
+        <div class="kick" style="color:var(--amber)"><i></i>راه‌حل</div>
+        <div class="h-m" style="margin-top:1.5mm;font-size:12pt">همه‌ی این‌ها، در<br><span class="amber">یک اپ هوشمند</span></div>
+        <div class="p" style="margin-top:1.5mm;font-size:7.6pt;line-height:1.7;color:rgba(255,255,255,.78)">رزرو، پرداخت، جریمه‌ی لغو، فروشگاه و گزارش‌ها خودکار انجام می‌شوند؛ شما فقط باشگاه را مدیریت کنید.</div>
+      </div>
+      <div class="phone" style="width:30mm;height:65mm;left:-2mm;bottom:-24mm;transform:rotate(-8deg);opacity:.95"><div class="scr"><img src="shots/notify.png"></div><div class="isl"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGE 2: INSIDE  [P3 | P2 | P1] (left → right, read right → left) ============ -->
+<section class="sheet">
+  <!-- P3 (left, behind flap) : revenue -->
+  <div class="pn edgeL w97 creamBg">
+    <div class="in">
+      <div class="kick"><i></i>۰۳ — درآمد بیشتر</div>
+      <div class="h-l" style="margin-top:2.5mm">درآمد تازه،<br><span style="color:var(--blue)">هزینه‌ی کمتر</span></div>
+      <div class="feat"><div class="ic"><svg><use href="#i-bag"/></svg></div><div><div class="t">فروشگاه آنلاین باشگاه</div><div class="d">فروش راکت، توپ، پوشاک و جلسه‌ی تمرین؛ پرداخت با کیف پول یا امتیاز و مدیریت سفارش‌ها.</div></div></div>
+      <div class="feat"><div class="ic"><svg><use href="#i-file"/></svg></div><div><div class="t">گزارش مالی دقیق</div><div class="d">درآمد، بازگشت وجه، تعداد رزرو و رشد نسبت به دوره‌ی قبل با نمودار.</div></div></div>
+      <div class="feat"><div class="ic"><svg><use href="#i-shield"/></svg></div><div><div class="t">پرداخت امن ایرانی</div><div class="d">اتصال به درگاه‌های زرین‌پال، زیبال و نکست‌پی؛ همه‌ی محاسبات سمت سرور.</div></div></div>
+      <div class="feat"><div class="ic"><svg><use href="#i-brush"/></svg></div><div><div class="t">با برند باشگاه شما</div><div class="d">لوگو، پوستر و بنرهای صفحه‌ی اصلی را خودتان از پنل عوض کنید.</div></div></div>
+      <div class="phone" style="width:33mm;height:71.4mm;right:2mm;bottom:3mm;transform:rotate(4deg)"><div class="scr"><img src="shots/market.png"></div><div class="isl"></div></div>
+      <div class="phone" style="width:33mm;height:71.4mm;left:3mm;bottom:10mm;transform:rotate(-5deg)"><div class="scr"><img src="shots/finance.png"></div><div class="isl"></div></div>
+    </div>
+  </div>
+
+  <!-- P2 (middle): for the owner -->
+  <div class="pn w100 dark">
+    <div class="grid"></div>
+    <div class="in">
+      <div class="kick"><i></i>۰۲ — برای شما، مدیر باشگاه</div>
+      <div class="h-l" style="margin-top:2.5mm">کنترل امور باشگاه،<br><span class="amber">زیر نظر خودت</span></div>
+      <div class="phone" style="width:44mm;height:95.2mm;left:50%;margin-left:-22mm;top:25mm"><div class="scr"><img src="shots/dash2.png"></div><div class="isl"></div></div>
+      <div style="position:absolute;left:0;right:0;bottom:0">
+        <div class="feat" style="margin-top:0"><div class="ic" style="background:var(--amber)"><svg style="stroke:var(--navy)"><use href="#i-chart"/></svg></div><div><div class="t">داشبورد لحظه‌ای</div><div class="d" style="color:rgba(255,255,255,.7)">درآمد امروز، رزروها، کاربران و روند ۱۴ روز اخیر.</div></div></div>
+        <div class="feat" style="margin-top:3mm"><div class="ic" style="background:var(--amber)"><svg style="stroke:var(--navy)"><use href="#i-tag"/></svg></div><div><div class="t">قیمت‌گذاری هوشمند زمین‌ها</div><div class="d" style="color:rgba(255,255,255,.7)">قیمت متفاوت برای ساعت‌های پرتقاضا و آخر هفته.</div></div></div>
+        <div class="feat" style="margin-top:3mm"><div class="ic" style="background:var(--amber)"><svg style="stroke:var(--navy)"><use href="#i-refresh"/></svg></div><div><div class="t">لغو و بازگشت وجه خودکار</div><div class="d" style="color:rgba(255,255,255,.7)">پله‌های جریمه‌ی لغو را خودتان تعیین کنید.</div></div></div>
+        <div class="feat" style="margin-top:3mm"><div class="ic" style="background:var(--amber)"><svg style="stroke:var(--navy)"><use href="#i-bell"/></svg></div><div><div class="t">اعلان و تخفیف با یک کلیک</div><div class="d" style="color:rgba(255,255,255,.7)">پیام به همه‌ی بازیکنان برای پر کردن سانس‌های خالی.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- P1 (right, first read): for players -->
+  <div class="pn edgeR creamBg">
+    <div class="in">
+      <div class="kick"><i></i>۰۱ — برای مشتری‌های شما</div>
+      <div class="h-l" style="margin-top:2.5mm">رزرو آنلاین،<br><span style="color:var(--blue)">۲۴ ساعته و بی‌دردسر</span></div>
+      <div class="feat"><div class="ic"><svg><use href="#i-cal"/></svg></div><div><div class="t">رزرو با تقویم شمسی</div><div class="d">روز، ساعت و زمین را انتخاب می‌کنند و در چند ثانیه پرداخت؛ بدون تماس تلفنی.</div></div></div>
+      <div class="feat"><div class="ic"><svg><use href="#i-users"/></svg></div><div><div class="t">بازی‌های باز و هم‌بازی</div><div class="d">زمین‌شان را باز می‌گذارند، هم‌بازی پیدا می‌کنند و هزینه خودکار تقسیم می‌شود.</div></div></div>
+      <div class="feat"><div class="ic"><svg><use href="#i-trophy"/></svg></div><div><div class="t">تورنومنت و رنکینگ</div><div class="d">ثبت‌نام با پارتنر، براکت زنده، امتیاز و رنکینگ مردان و زنان.</div></div></div>
+      <div class="feat"><div class="ic"><svg><use href="#i-wallet"/></svg></div><div><div class="t">کیف پول و امتیاز</div><div class="d">شارژ آنلاین، بازگشت خودکار وجه و بن رزرو با امتیاز.</div></div></div>
+      <div class="feat"><div class="ic"><svg><use href="#i-phone"/></svg></div><div><div class="t">نصب روی همه‌ی گوشی‌ها</div><div class="d">iPhone، اندروید و دسکتاپ؛ بدون نیاز به اپ‌استور.</div></div></div>
+      <div class="phone" style="width:30mm;height:65mm;left:1mm;bottom:-6mm;transform:rotate(-6deg)"><div class="scr"><img src="shots/booking.png"></div><div class="isl"></div></div>
+      <div class="phone" style="width:30mm;height:65mm;left:27mm;bottom:-12mm;transform:rotate(5deg)"><div class="scr"><img src="shots/matches.png"></div><div class="isl"></div></div>
+    </div>
+  </div>
+</section>
+<script>
+if(location.hash==='#screen'){const r=document.documentElement.style;r.setProperty('--b','0mm');r.setProperty('--W','1125px');r.setProperty('--H','796px');}
+</script>
+</body>
+</html>

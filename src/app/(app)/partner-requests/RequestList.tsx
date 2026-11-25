@@ -135,7 +135,7 @@ function RequestCard({ request, canRespond }: { request: RequestDto; canRespond:
   }
 
   return (
-    <div className={cn('card p-4', request.status === 'PENDING' && 'ring-1 ring-accent/25')}>
+    <div className={cn('card p-4', request.status === 'PENDING' && 'ring-1 ring-electric-500/25')}>
       <div className="flex items-start gap-3">
         <Avatar
           firstName={first || '؟'}

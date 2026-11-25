@@ -50,7 +50,9 @@ export function slotStartsForDay(court: Court, dayKeyStr: string): Date[] {
   const starts: Date[] = [];
   const duration = court.slotDurationMinutes;
 
-  for (let m = court.openingMinute; m + duration <= court.closingMinute; m += duration) {
+  /* ۲۳:۵۹ که قبلاً به‌جای «نیمه‌شب» ذخیره شده، همان ۲۴:۰۰ است */
+  const closing = court.closingMinute === 23 * 60 + 59 ? 24 * 60 : court.closingMinute;
+  for (let m = court.openingMinute; m + duration <= closing; m += duration) {
     starts.push(zonedToUtc(gy, gm, gd, m));
   }
   return starts;
@@ -87,6 +89,7 @@ export async function getCourtAvailability(
     }),
   ]);
 
+  /* مقدار null یعنی رزرو مشتری متفرقه — سانس همچنان گرفته شده است */
   const takenMap = new Map(taken.map((t) => [t.startsAt.getTime(), t.booking.userId]));
   const now = Date.now();
   const leadMs = court.minLeadTimeMinutes * 60_000;
@@ -94,10 +97,11 @@ export async function getCourtAvailability(
   const slots: AvailabilitySlot[] = starts.map((startsAt) => {
     const endsAt = new Date(startsAt.getTime() + court.slotDurationMinutes * 60_000);
     const { price, ruleName } = priceForSlot(court, court.pricingRules, startsAt);
-    const ownerId = takenMap.get(startsAt.getTime());
+    const isTaken = takenMap.has(startsAt.getTime());
+    const ownerId = takenMap.get(startsAt.getTime()) ?? null;
 
     let reason: AvailabilitySlot['reason'] = null;
-    if (ownerId) reason = 'BOOKED';
+    if (isTaken) reason = 'BOOKED';
     else if (startsAt.getTime() <= now) reason = 'PAST';
     else if (startsAt.getTime() - now < leadMs) reason = 'LEAD_TIME';
     else if (blackouts.some((b) => b.startsAt < endsAt && b.endsAt > startsAt)) reason = 'BLACKOUT';
@@ -132,7 +136,12 @@ function courtSummary(court: Court) {
 }
 
 export interface CreateBookingInput {
-  userId: string;
+  /** خالی فقط برای رزرو تلفنیِ مشتری متفرقه (بدون حساب) — آن‌وقت guest لازم است */
+  userId?: string | null;
+  /** مشتری متفرقه که ثبت‌نام نکرده؛ فقط در رزرو تلفنی */
+  guest?: { name: string; phone?: string };
+  /** پرداخت کارت به کارت در رزرو تلفنی: از کیف پول کم نمی‌شود */
+  cardToCard?: { amount: bigint; receipt?: string };
   courtId: string;
   /** زمان شروع سانس‌های انتخاب‌شده — باید پشت‌سرهم باشند */
   slotStarts: Date[];
@@ -141,6 +150,10 @@ export interface CreateBookingInput {
   performedBy?: string;
   /** رزرو ادمین بدون کسر از کیف پول */
   skipPayment?: boolean;
+  /** ادمینی که رزرو را ثبت کرد (رزرو تلفنی) */
+  createdById?: string;
+  /** بدون اعلان — رزروی که مدیر برای خود باشگاه می‌گیرد */
+  silent?: boolean;
   /** کد بن رزروی که با امتیاز خریده شده و روی این رزرو خرج می‌شود */
   voucherCode?: string;
   /** باقی‌مانده‌ی هزینه به‌جای کیف پول، با امتیاز پرداخت شود */
@@ -160,6 +173,12 @@ export interface CreateBookingInput {
 export async function createBooking(input: CreateBookingInput) {
   if (input.slotStarts.length === 0) {
     throw new AppError('حداقل یک سانس باید انتخاب شود.');
+  }
+  if (!input.userId && !input.guest?.name.trim()) {
+    throw new AppError('نام مشتری را وارد کنید.', 400);
+  }
+  if (input.cardToCard && input.skipPayment) {
+    throw new AppError('رزرو رایگان نمی‌تواند کارت به کارت هم باشد.', 400);
   }
 
   const court = await prisma.court.findUnique({
@@ -193,9 +212,12 @@ export async function createBooking(input: CreateBookingInput) {
 
   for (const start of starts) {
     if (!validStarts.has(start.getTime())) {
-      // ممکن است سانس‌ها به روز بعد سرریز کرده باشند
-      const alt = new Set(slotStartsForDay(court, dayKey(start)).map((d) => d.getTime()));
-      if (!alt.has(start.getTime())) {
+      /* ممکن است سانس‌ها به روز بعد سرریز کرده باشند، یا سانسِ بعد از نیمه‌شب
+         جزو ساعات کاریِ روز قبل باشد (زمینی که تا بامداد باز است) */
+      const fits = [dayKey(start), dayKey(addDays(start, -1))].some((k) =>
+        slotStartsForDay(court, k).some((d) => d.getTime() === start.getTime()),
+      );
+      if (!fits) {
         throw new AppError('سانس انتخاب‌شده با ساعات کاری زمین هم‌خوانی ندارد.');
       }
     }
@@ -229,19 +251,38 @@ export async function createBooking(input: CreateBookingInput) {
   });
   const totalPrice = priced.reduce((sum, s) => sum + s.price, 0n);
 
+  /* تنظیمات امتیاز پیش از تراکنش خوانده می‌شود، نه داخل آن. getPointEconomy
+     از اتصال‌های عمومی استفاده می‌کند؛ وقتی ۵۰ نفر هم‌زمان یک سانس را می‌زدند،
+     همه‌ی اتصال‌ها دستِ تراکنش‌هایی بود که پشت قفلِ تراکنشِ برنده منتظر بودند و
+     برنده برای همین خواندن اتصالی پیدا نمی‌کرد — قفلِ متقابل تا پایان مهلت. */
+  const economy = await getPointEconomy();
+
   const booking = await prisma.$transaction(
     async (tx) => {
       const created = await tx.booking.create({
         data: {
           code: generateBookingCode(),
-          userId: input.userId,
+          userId: input.userId ?? null,
+          guestName: input.userId ? null : input.guest?.name,
+          guestPhone: input.userId ? null : input.guest?.phone || null,
+          paymentMethod: input.skipPayment
+            ? 'FREE'
+            : input.cardToCard
+              ? 'CARD_TO_CARD'
+              : input.payWithPoints
+                ? 'POINTS'
+                : 'WALLET',
+          cardAmount: input.cardToCard?.amount ?? null,
+          cardReceipt: input.cardToCard?.receipt ?? null,
           courtId: court.id,
           startsAt: starts[0],
           endsAt,
           slotCount: starts.length,
           status: 'CONFIRMED',
           source: input.source ?? 'PLAYER',
-          totalPrice: input.skipPayment ? 0n : totalPrice,
+          createdById: input.createdById,
+          /* در کارت به کارت، مبلغی که واقعاً واریز شده درآمد رزرو است */
+          totalPrice: input.skipPayment ? 0n : input.cardToCard ? input.cardToCard.amount : totalPrice,
           notes: input.notes,
           priceBreakdown: priced.map((p) => ({
             startsAt: p.startsAt.toISOString(),
@@ -282,15 +323,36 @@ export async function createBooking(input: CreateBookingInput) {
          ترتیب مهم است: اول بن تخفیف را کم می‌کنیم، بعد باقی‌مانده را از
          امتیاز یا کیف پول برمی‌داریم. هر سه در همین تراکنش‌اند، پس حالتی
          که بن سوخته ولی پول کم نشده (یا برعکس) پیش نمی‌آید. */
-      let payable = input.skipPayment ? 0n : totalPrice;
+      /* کارت به کارت بیرون از سامانه تسویه شده است؛ اینجا فقط ثبت می‌شود.
+         بازیکنِ دارای حساب پاداش وفاداری‌اش را مثل پرداخت عادی می‌گیرد. */
+      if (input.cardToCard) {
+        const reward = rialToPoints(input.cardToCard.amount, economy.rialPerRewardPoint);
+        if (input.userId && reward > 0) {
+          await mutatePoints(tx, {
+            userId: input.userId,
+            amount: reward,
+            type: 'BOOKING_REWARD',
+            description: `پاداش رزرو ${court.name}`,
+            referenceKey: `booking:${created.id}:reward`,
+            metadata: { bookingId: created.id, paidRial: input.cardToCard.amount.toString() },
+          });
+        }
+        return tx.booking.findUniqueOrThrow({ where: { id: created.id } });
+      }
 
-      if (!input.skipPayment && input.voucherCode && payable > 0n) {
+      let payable = input.skipPayment ? 0n : totalPrice;
+      /* بعد از این نقطه پرداخت از کیف پول/امتیاز است و حساب کاربری لازم دارد */
+      const payerId = input.userId;
+      if (payable > 0n && !payerId) {
+        throw new AppError('مشتری متفرقه کیف پول ندارد؛ کارت به کارت یا رایگان را انتخاب کنید.', 400);
+      }
+
+      if (!input.skipPayment && input.voucherCode && payable > 0n && payerId) {
         const voucher = await lockVoucherForUse(tx, {
           code: input.voucherCode,
-          userId: input.userId,
+          userId: payerId,
           for: 'BOOKING',
         });
-        const economy = await getPointEconomy();
         assertVoucherHourAllowed(
           voucher,
           priced.map((p) => p.startsAt),
@@ -311,12 +373,11 @@ export async function createBooking(input: CreateBookingInput) {
         });
       }
 
-      if (payable > 0n) {
+      if (payable > 0n && payerId) {
         if (input.payWithPoints) {
-          const economy = await getPointEconomy();
           const cost = rialToPoints(payable, economy.rialPerPoint);
           await mutatePoints(tx, {
-            userId: input.userId,
+            userId: payerId,
             amount: -cost,
             type: 'BOOKING_PAYMENT',
             description: `پرداخت رزرو ${court.name} با امتیاز`,
@@ -328,7 +389,7 @@ export async function createBooking(input: CreateBookingInput) {
           await tx.booking.update({ where: { id: created.id }, data: { totalPrice: 0n } });
         } else {
           await mutateWallet(tx, {
-            userId: input.userId,
+            userId: payerId,
             amount: -payable,
             type: 'BOOKING_PAYMENT',
             description: `پرداخت رزرو ${court.name}`,
@@ -341,11 +402,10 @@ export async function createBooking(input: CreateBookingInput) {
              فقط روی پولِ واقعاً پرداخت‌شده. اگر بابت رزروی که با امتیاز یا
              با بن انجام شده هم امتیاز می‌دادیم، یک چرخه‌ی بی‌پایان درست
              می‌شد: امتیاز → رزرو رایگان → امتیاز بیشتر. */
-          const economy = await getPointEconomy();
           const reward = rialToPoints(payable, economy.rialPerRewardPoint);
           if (reward > 0) {
             await mutatePoints(tx, {
-              userId: input.userId,
+              userId: payerId,
               amount: reward,
               type: 'BOOKING_REWARD',
               description: `پاداش رزرو ${court.name}`,
@@ -361,11 +421,21 @@ export async function createBooking(input: CreateBookingInput) {
     { isolationLevel: 'ReadCommitted', timeout: 20_000 },
   );
 
+  /* مشتری متفرقه حسابی ندارد که اعلان بگیرد */
+  if (input.silent || !input.userId) return booking;
+
+  const byDesk = input.createdById && input.createdById !== input.userId;
   await notify({
     userId: input.userId,
     type: 'BOOKING_CONFIRMED',
-    title: 'رزرو شما ثبت شد 🎾',
-    body: `${court.name} — ${formatDateTime(booking.startsAt)} · ${formatToman(booking.totalPrice)}`,
+    title: byDesk ? 'پذیرش باشگاه برایتان زمین رزرو کرد 🎾' : 'رزرو شما ثبت شد 🎾',
+    body:
+      `${court.name} — ${formatDateTime(booking.startsAt)} · ` +
+      (booking.paymentMethod === 'CARD_TO_CARD'
+        ? `${formatToman(booking.totalPrice)} به‌صورت کارت به کارت پرداخت شد`
+        : booking.totalPrice > 0n
+          ? `${formatToman(booking.totalPrice)}${byDesk ? ' از کیف پول شما کسر شد' : ''}`
+          : 'رایگان'),
     actionUrl: `/bookings/${booking.id}`,
     data: { bookingId: booking.id, code: booking.code },
   });

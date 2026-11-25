@@ -5,6 +5,7 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Avatar } from '@/components/ui/Avatar';
 import { LevelBadge } from '@/components/ui/LevelBadge';
 import { UserSearch } from './UserSearch';
+import { BulkDeleteUsers } from './BulkDeleteUsers';
 import { formatNumber, formatToman, maskPhone } from '@/lib/utils';
 import { toFaDigits } from '@/lib/datetime';
 import { Icon } from '@/components/ui/Icon';
@@ -32,7 +33,7 @@ export default async function AdminUsersPage({
             ],
           }
         : {}),
-      ...(role === 'ADMIN' || role === 'PLAYER' ? { role } : {}),
+      ...(role === 'ADMIN' || role === 'PLAYER' || role === 'STAFF' ? { role } : {}),
       ...(level ? { profile: { level: level as never } } : {}),
     },
     orderBy: { createdAt: 'desc' },
@@ -49,6 +50,17 @@ export default async function AdminUsersPage({
       <AdminHeader
         title="مدیریت کاربران"
         subtitle={`${toFaDigits(users.length)} کاربر نمایش داده شده`}
+        action={
+          <BulkDeleteUsers
+            candidates={users
+              .filter((u) => u.role !== 'ADMIN')
+              .map((u) => ({
+                id: u.id,
+                username: u.username,
+                name: `${u.profile?.firstName ?? ''} ${u.profile?.lastName ?? ''}`.trim() || u.username,
+              }))}
+          />
+        }
       />
 
       <div className="space-y-4 px-4 py-5 sm:px-6 lg:px-8">
@@ -75,6 +87,7 @@ export default async function AdminUsersPage({
                         {u.profile?.firstName} {u.profile?.lastName}
                       </p>
                       {u.role === 'ADMIN' && <span className="badge-brand shrink-0">مدیر</span>}
+                      {u.role === 'STAFF' && <span className="badge-brand shrink-0">پذیرش</span>}
                       {u.status === 'SUSPENDED' && (
                         <span className="badge-danger shrink-0">غیرفعال</span>
                       )}

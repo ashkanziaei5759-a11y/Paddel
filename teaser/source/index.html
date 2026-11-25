@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<style>
+@font-face{font-family:Dana;src:url(DanaFaNum-Light.ttf) format('truetype');font-weight:300}
+@font-face{font-family:Dana;src:url(DanaFaNum-Regular.ttf) format('truetype');font-weight:400}
+@font-face{font-family:Dana;src:url(DanaFaNum-Bold.ttf) format('truetype');font-weight:700 900}
+:root{--navy:#001a2c;--navy2:#003049;--blue:#0B5F87;--amber:#FCA311;--sky:#CAF0F8}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:var(--navy);font-family:Dana,system-ui,sans-serif;color:#fff}
+.layer{position:absolute;inset:0;will-change:opacity,transform}
+.en{font-family:Dana,sans-serif;direction:ltr;letter-spacing:.02em}
+.amber{color:var(--amber)}
+
+/* background */
+#bg{background:
+  radial-gradient(900px 700px at 28% 55%, rgba(11,95,135,.55), transparent 70%),
+  radial-gradient(700px 600px at 85% 20%, rgba(0,69,106,.6), transparent 70%),
+  radial-gradient(600px 500px at 90% 95%, rgba(252,163,17,.10), transparent 70%),
+  linear-gradient(135deg,#00121f 0%,#002438 55%,#013a57 100%)}
+#grid{opacity:.16;background-image:
+  linear-gradient(rgba(202,240,248,.35) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(202,240,248,.35) 1px,transparent 1px);
+  background-size:80px 80px;
+  -webkit-mask-image:radial-gradient(1100px 700px at 50% 60%,#000 20%,transparent 75%)}
+#ball{position:absolute;width:520px;height:520px;border-radius:50%;left:-120px;top:620px;
+  background:radial-gradient(circle at 35% 35%,#e9ff6b,#b8d629 55%,#7f9a12 100%);opacity:.08;filter:blur(2px)}
+
+/* hook scenes */
+.full{position:absolute;inset:-60px;background-size:cover;background-position:center 30%}
+.scrim{position:absolute;inset:0;background:linear-gradient(270deg,rgba(0,18,31,.92) 0%,rgba(0,18,31,.75) 45%,rgba(0,18,31,.15) 100%)}
+.scrimC{position:absolute;inset:0;background:radial-gradient(1000px 520px at 50% 50%,rgba(0,18,31,.88),rgba(0,18,31,.55) 70%,rgba(0,18,31,.35))}
+.hook{position:absolute;right:140px;top:50%;transform:translateY(-50%);width:980px;text-align:right}
+.hook h1{font-size:92px;font-weight:900;line-height:1.3}
+.hook p{font-size:40px;color:var(--sky);margin-top:26px;opacity:.9}
+.panel{position:absolute;top:-80px;width:660px;height:1240px;background-size:cover;background-position:center}
+.hookC{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center}
+.hookC h1{font-size:96px;font-weight:900;line-height:1.3}
+.hookC p{font-size:42px;color:var(--sky);margin-top:24px}
+.w{display:inline-block}
+
+/* logo scene */
+#logoWrap{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);text-align:center}
+#logoImg{width:230px;height:230px;border-radius:56px;box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.08)}
+.ring{position:absolute;left:50%;top:44%;width:260px;height:260px;margin:-130px 0 0 -130px;border-radius:50%;border:3px solid var(--amber)}
+#brand{font-size:30px;letter-spacing:.55em;margin-top:40px;color:var(--sky);font-weight:700}
+#brandFa{font-size:78px;font-weight:900;margin-top:8px}
+#brandTag{font-size:36px;margin-top:10px;color:#fff;opacity:.85}
+
+/* phone */
+#stage{position:absolute;left:230px;top:50%;width:470px;height:1000px;margin-top:-500px;perspective:2000px}
+#phone{position:absolute;inset:0;border-radius:74px;background:linear-gradient(145deg,#2a3440,#0b1015 60%,#222c36);
+  padding:15px;box-shadow:0 60px 120px rgba(0,0,0,.55),0 0 0 2px rgba(255,255,255,.07) inset,0 0 0 1px #000;transform-style:preserve-3d}
+#screen{position:relative;width:100%;height:100%;border-radius:60px;overflow:hidden;background:#0d1720}
+#screen img{position:absolute;left:0;top:58px;width:100%;height:calc(100% - 58px);object-fit:cover;object-position:top}
+#sbar{position:absolute;left:0;right:0;top:0;height:58px;background:#101b25;z-index:3;display:flex;align-items:center;justify-content:space-between;padding:8px 44px 0;font-size:19px;font-weight:700;direction:ltr}
+#island{position:absolute;top:26px;left:50%;width:122px;height:34px;margin-left:-61px;border-radius:20px;background:#000;z-index:5}
+#glow{position:absolute;left:465px;top:540px;width:900px;height:900px;margin:-450px 0 0 -450px;border-radius:50%;
+  background:radial-gradient(circle,rgba(11,140,200,.55),rgba(11,95,135,.18) 45%,transparent 70%)}
+#shine{position:absolute;inset:0;border-radius:60px;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.05) 50%,transparent 60%);z-index:4;pointer-events:none}
+
+/* feature text */
+.feat{position:absolute;right:150px;top:50%;width:900px;transform:translateY(-50%);text-align:right}
+.kick{display:inline-flex;align-items:center;gap:14px;padding:10px 22px 10px 12px;border-radius:40px;background:rgba(252,163,17,.14);border:1px solid rgba(252,163,17,.45);font-size:24px;font-weight:700;color:var(--amber)}
+.kick b{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--amber);color:#1b1300;font-size:20px}
+.feat h2{font-size:88px;font-weight:900;line-height:1.25;margin-top:30px}
+.feat .sub{font-size:38px;color:var(--sky);margin-top:22px;opacity:.92}
+.chips{display:flex;flex-wrap:wrap;gap:16px;margin-top:44px;justify-content:flex-start}
+.chip{padding:16px 28px;border-radius:22px;background:rgba(255,255,255,.07);border:1px solid rgba(202,240,248,.18);font-size:30px;font-weight:700;backdrop-filter:blur(6px)}
+.chip i{font-style:normal;color:var(--amber);margin-left:10px}
+
+/* outro */
+#outro{text-align:center}
+#oLogo{position:absolute;left:50%;top:230px;width:170px;height:170px;margin-left:-85px;border-radius:42px;box-shadow:0 25px 70px rgba(0,0,0,.5)}
+#oTitle{position:absolute;left:0;right:0;top:430px;font-size:104px;font-weight:900}
+#oTag{position:absolute;left:0;right:0;top:585px;font-size:52px;font-weight:700}
+#oEn{position:absolute;left:0;right:0;top:668px;font-size:34px;color:var(--sky)}
+#cta{position:absolute;left:50%;top:760px;transform:translateX(-50%);padding:24px 64px;border-radius:26px;
+  background:linear-gradient(135deg,#FCA311,#E08C05);color:#1b1300;font-size:40px;font-weight:900;white-space:nowrap;box-shadow:0 20px 60px rgba(252,163,17,.35)}
+#cta span{font-size:28px;font-weight:700;opacity:.8;margin-right:14px}
+#oMeta{position:absolute;left:0;right:0;top:905px;font-size:26px;color:rgba(255,255,255,.7)}
+#flash{background:#fff}
+#vign{background:radial-gradient(1400px 900px at 50% 50%,transparent 60%,rgba(0,0,0,.45))}
+</style>
+</head>
+<body>
+<div id="bg" class="layer"></div>
+<div id="grid" class="layer"></div>
+
+
+<!-- S1 hook -->
+<div id="s1" class="layer">
+  <div id="s1img" class="full" style="background-image:url(poster.jpg)"></div>
+  <div class="scrim"></div>
+  <div class="hook">
+    <h1 id="s1a">هنوز برای رزرو زمین،<br><span class="amber">کلی تماس</span> می‌گیری؟</h1>
+    <p id="s1b" class="en" style="text-align:right">Still calling around to book a padel court?</p>
+  </div>
+</div>
+
+<!-- S2 hook -->
+<div id="s2" class="layer">
+  <div id="p1" class="panel" style="left:0;background-image:url(court-1.jpg)"></div>
+  <div id="p2" class="panel" style="left:630px;background-image:url(court-2.jpg)"></div>
+  <div id="p3" class="panel" style="left:1260px;background-image:url(court-3.jpg)"></div>
+  <div class="scrimC"></div>
+  <div class="hookC">
+    <h1 id="s2a">هم‌بازی کم میاری؟<br><span class="amber">بازی کنسل</span> می‌شه؟</h1>
+    <p id="s2b" class="en">Short on players? Match cancelled — again?</p>
+  </div>
+</div>
+
+<!-- S3 logo -->
+<div id="s3" class="layer">
+  <div id="ring1" class="ring"></div><div id="ring2" class="ring"></div>
+  <div id="logoWrap">
+    <img id="logoImg" src="logo-256.png">
+    <div id="brand" class="en">PERSIAN PADEL</div>
+    <div id="brandFa">پرشین پدل</div>
+    <div id="brandTag">همه‌ی باشگاه پدل، <span class="amber">در جیب تو</span></div>
+  </div>
+</div>
+
+<!-- phone -->
+<div id="glow"></div>
+<div id="stage"><div id="phone"><div id="screen">
+  <img id="imA"><img id="imB"><div id="sbar"><span>۹:۴۱</span><span style="letter-spacing:4px;font-size:15px">▮▮▮ ◔ ▭</span></div><div id="island"></div><div id="shine"></div>
+</div></div></div>
+
+<!-- feature texts -->
+<div id="f0" class="feat">
+  <div class="kick en"><b>★</b>ALL-IN-ONE</div>
+  <h2>یک اپ،<br><span class="amber">تمام باشگاه</span></h2>
+  <div class="sub en" style="text-align:right">One app. Your entire padel club.</div>
+  <div class="chips"><div class="chip">رزرو</div><div class="chip">هم‌بازی</div><div class="chip">تورنومنت</div><div class="chip">رنکینگ</div><div class="chip">کیف پول</div></div>
+</div>
+<div id="f1" class="feat">
+  <div class="kick en"><b>1</b>BOOK</div>
+  <h2>رزرو زمین<br>در <span class="amber">چند ثانیه</span></h2>
+  <div class="sub en" style="text-align:right">Pick a day, grab a free slot, choose your court.</div>
+  <div class="chips"><div class="chip"><i>●</i>تقویم شمسی</div><div class="chip"><i>●</i>سانس‌های آزاد، لحظه‌ای</div><div class="chip"><i>●</i>رزرو چند سانس پشت‌سرهم</div></div>
+</div>
+<div id="f2" class="feat">
+  <div class="kick en"><b>2</b>PLAY</div>
+  <h2>هم‌بازی پیدا کن،<br><span class="amber">هزینه رو تقسیم کن</span></h2>
+  <div class="sub en" style="text-align:right">Join open matches and split the court fee.</div>
+  <div class="chips"><div class="chip"><i>●</i>بازی‌های باز</div><div class="chip"><i>●</i>فیلتر بر اساس سطح</div><div class="chip"><i>●</i>سهم هر نفر، خودکار</div></div>
+</div>
+<div id="f3" class="feat">
+  <div class="kick en"><b>3</b>COMPETE</div>
+  <h2>تورنومنت‌ها،<br><span class="amber">زنده و هیجانی</span></h2>
+  <div class="sub en" style="text-align:right">Register with a partner, follow brackets live.</div>
+  <div class="chips"><div class="chip"><i>●</i>ثبت‌نام با پارتنر</div><div class="chip"><i>●</i>گروهی + حذفی</div><div class="chip"><i>●</i>جدول و براکت زنده</div></div>
+</div>
+<div id="f4" class="feat">
+  <div class="kick en"><b>4</b>RISE</div>
+  <h2>امتیاز بگیر،<br><span class="amber">بالا برو</span></h2>
+  <div class="sub en" style="text-align:right">Earn points with every match. Climb the ranking.</div>
+  <div class="chips"><div class="chip"><i>●</i>رنکینگ مردان و زنان</div><div class="chip"><i>●</i>سطح‌بندی بازیکنان</div><div class="chip"><i>●</i>فروشگاه امتیازی</div></div>
+</div>
+<div id="f5" class="feat">
+  <div class="kick en"><b>5</b>PAY</div>
+  <h2>کیف پول هوشمند،<br><span class="amber">پرداخت امن</span></h2>
+  <div class="sub en" style="text-align:right">Top up in a tap. Automatic refunds if plans change.</div>
+  <div class="chips"><div class="chip"><i>●</i>درگاه بانکی</div><div class="chip"><i>●</i>بازگشت خودکار وجه</div><div class="chip"><i>●</i>تاریخچه‌ی کامل</div></div>
+</div>
+
+<!-- outro -->
+<div id="outro" class="layer">
+  <img id="oLogo" src="logo-256.png">
+  <div id="oTitle">پرشین پدل</div>
+  <div id="oTag">کمتر هماهنگی، <span class="amber">بیشتر بازی!</span></div>
+  <div id="oEn" class="en">Less planning. More padel.</div>
+  <div id="cta">همین حالا نصب کن<span class="en">Install now</span></div>
+  <div id="oMeta" class="en">iPhone · Android · Desktop &nbsp;|&nbsp; <span style="font-family:Arial,sans-serif">paddel-a2i7.vercel.app</span></div>
+</div>
+
+<div id="vign" class="layer"></div>
+<div id="flash" class="layer" style="opacity:0"></div>
+
+<script>
+const FPS=30;
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ramp=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3);
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const back=x=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const $=id=>document.getElementById(id);
+const set=(el,o,tf)=>{el.style.opacity=o;if(tf!==undefined)el.style.transform=tf;};
+
+// timeline aligned to music downbeats (0.05 + 2k)
+const T={s1:[0,4.05],s2:[4.05,8.05],s3:[8.05,12.05],f0:[12.05,16.05],f1:[16.05,24.05],f2:[24.05,30.05],f3:[30.05,36.05],f4:[36.05,42.05],f5:[42.05,48.05],out:[48.05,55.5]};
+const FEATS=['f0','f1','f2','f3','f4','f5'];
+window.CLIPS={}; // filled from node: {f0:[paths],...}
+
+function inOut(t,[a,b],d=0,dur=.7,outDur=.4){const i=eo(ramp(t,a+d,a+d+dur));const o=b>=55?0:ramp(t,b-outDur,b);return [i,o];}
+
+function stagger(t,range,els,base=0,step=.12){
+  els.forEach((el,k)=>{const [i,o]=inOut(t,range,base+k*step);
+    el.style.opacity=i*(1-o);el.style.transform=`translateY(${(1-i)*50-o*30}px)`;});
+}
+
+async function render(t){
+  // background drift
+  $('grid').style.backgroundPosition=`${t*12}px ${t*6}px`;
+  
+
+  // S1
+  {const [i,o]=inOut(t,T.s1,0,.5,.45);$('s1').style.opacity=(t<.4?ramp(t,0,.4):1)*(1-o);
+   $('s1img').style.transform=`scale(${1.08+t*.03}) translateX(${-t*10}px)`;
+   const h=$('s1a'),p=$('s1b');const a=eo(ramp(t,.25,1.05)),b=eo(ramp(t,.8,1.5));
+   h.style.opacity=a;h.style.transform=`translateX(${(1-a)*-80}px)`;p.style.opacity=b;p.style.transform=`translateY(${(1-b)*30}px)`;
+   $('s1').style.display=t<T.s1[1]+.01?'block':'none';}
+  // S2
+  {const [a,b]=T.s2;const on=t>=a-.01&&t<b+.01;$('s2').style.display=on?'block':'none';
+   if(on){const o=ramp(t,b-.4,b);const k=t-a;$('s2').style.opacity=1-o;
+    const e=eo(ramp(t,a,a+.8));
+    $('p1').style.transform=`translateY(${(1-e)*-1200 + k*18}px)`;
+    $('p2').style.transform=`translateY(${(1-e)*1200 - k*18}px)`;
+    $('p3').style.transform=`translateY(${(1-e)*-1200 + k*18}px)`;
+    const h=eo(ramp(t,a+.45,a+1.1)),p=eo(ramp(t,a+.9,a+1.5));
+    $('s2a').style.opacity=h;$('s2a').style.transform=`scale(${.85+.15*back(h)})`;
+    $('s2b').style.opacity=p;$('s2b').style.transform=`translateY(${(1-p)*30}px)`;}}
+  // S3 logo
+  {const [a,b]=T.s3;const on=t>=a-.01&&t<b+.01;$('s3').style.display=on?'block':'none';
+   if(on){const o=ramp(t,b-.35,b);$('s3').style.opacity=1-o;
+    const l=ramp(t,a+.05,a+.75);$('logoImg').style.transform=`scale(${back(l)*(1+o*.3)}) rotate(${(1-eo(l))*-25}deg)`;$('logoImg').style.opacity=l>0?1:0;
+    [['ring1',.1],['ring2',.35]].forEach(([id,d])=>{const r=ramp(t,a+d,a+d+1.4);$(id).style.transform=`scale(${1+eo(r)*2.2})`;$(id).style.opacity=(1-r)*(r>0?.9:0);});
+    [['brand',.55],['brandFa',.75],['brandTag',1.05]].forEach(([id,d])=>{const e=eo(ramp(t,a+d,a+d+.6));$(id).style.opacity=e;$(id).style.transform=`translateY(${(1-e)*40}px)`;});
+    $('brand').style.letterSpacing=`${.9-.35*eo(ramp(t,a+.55,a+1.6))}em`;}}
+
+  // phone (persistent 12.05 → 48.05)
+  const pa=T.f0[0],pb=T.f5[1];
+  const pon=t>=pa-.01&&t<pb+.01;
+  $('stage').style.display=pon?'block':'none';$('glow').style.display=pon?'block':'none';
+  if(pon){
+    const e=eo(ramp(t,pa,pa+.9)),x=eio(ramp(t,pb-.5,pb));
+    const fl=Math.sin(t*1.6)*9;
+    const ry=10+Math.sin(t*.7)*4 + (1-e)*-30;
+    $('stage').style.opacity=clamp(e*1.5)*(1-x);
+    $('phone').style.transform=`translateY(${(1-e)*900+fl+x*300}px) rotateY(${ry}deg) rotateZ(${(1-e)*-8}deg)`;
+    // beat pulse after the drop (beats at 0.05+0.5k)
+    const beat=((t-0.05)%0.5+0.5)%0.5; const pulse=t>=16.05?Math.exp(-beat*7)*.35:0;
+    $('glow').style.opacity=(0.75+pulse)*(1-x)*e;$('glow').style.transform=`scale(${1+pulse*.25})`;
+    $('shine').style.backgroundPosition=`${Math.sin(t*.5)*200}px 0`;
+    // screens
+    let cur=FEATS.findIndex(f=>t>=T[f][0]&&t<T[f][1]);if(cur<0)cur=t<pa?0:FEATS.length-1;
+    const f=FEATS[cur],[a,b]=T[f];
+    const frames=CLIPS[f];const i=Math.min(frames.length-1,Math.max(0,Math.floor((t-a)*FPS)));
+    const A=$('imA'),B=$('imB');const tr=ramp(t,a,a+.35);
+    const src=frames[i];if(A.getAttribute('src')!==src)A.setAttribute('src',src);
+    if(cur>0&&tr<1){const pf=CLIPS[FEATS[cur-1]];const ps=pf[pf.length-1];if(B.getAttribute('src')!==ps)B.setAttribute('src',ps);
+      const k=eio(tr);B.style.display='block';B.style.transform=`translateX(${k*105}%)`;A.style.transform=`translateX(${(k-1)*105}%)`;B.style.opacity=1;}
+    else{B.style.display='none';A.style.transform='none';}
+    const ds=[A];if(B.style.display!=='none')ds.push(B);
+    await Promise.all(ds.map(im=>im.complete&&im.naturalWidth?Promise.resolve():im.decode().catch(()=>{})));
+  }
+  // feature texts
+  FEATS.forEach(f=>{const el=$(f),[a,b]=T[f];const on=t>=a-.01&&t<b+.01;el.style.display=on?'block':'none';
+    if(on){const parts=[el.querySelector('.kick'),el.querySelector('h2'),el.querySelector('.sub'),...el.querySelectorAll('.chip')];
+      stagger(t,[a,b],parts,.15,.09);}});
+
+  // outro
+  {const [a,b]=T.out;const on=t>=a-.01;$('outro').style.display=on?'block':'none';
+   if(on){const l=ramp(t,a+.2,a+.9);$('oLogo').style.opacity=l>0?1:0;$('oLogo').style.transform=`scale(${back(l)})`;
+    [['oTitle',.45],['oTag',.75],['oEn',.95],['oMeta',1.6]].forEach(([id,d])=>{const e=eo(ramp(t,a+d,a+d+.6));$(id).style.opacity=e;$(id).style.transform=`translateY(${(1-e)*40}px)`;});
+    const c=ramp(t,a+1.25,a+1.95);const cp=t>a+2?1+Math.sin((t-a)*4)*.02:back(c);$('cta').style.opacity=c>0?1:0;$('cta').style.transform=`translateX(-50%) scale(${cp})`;
+    const fo=ramp(t,b-.6,b);document.body.style.filter=`brightness(${1-fo})`;}
+   else document.body.style.filter='none';}
+
+  // flashes on key downbeats
+  let fl=0;for(const [ft,s] of [[8.05,.55],[16.05,.7],[32.05,.35],[48.05,.5]]){if(t>=ft)fl=Math.max(fl,s*Math.exp(-(t-ft)*9));}
+  $('flash').style.opacity=fl;
+}
+window.render=render;
+</script>
+</body>
+</html>

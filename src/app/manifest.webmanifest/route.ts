@@ -50,8 +50,8 @@ export async function GET() {
     display: 'standalone',
     display_override: ['standalone', 'minimal-ui'],
     orientation: 'portrait',
-    background_color: '#00071A',
-    theme_color: '#000E2A',
+    background_color: '#1C2D7D',
+    theme_color: '#1C2D7D',
     categories: ['sports', 'lifestyle'],
     icons: [
       ...(usingDefaultIcon

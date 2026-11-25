@@ -4,6 +4,7 @@ import { getGateway } from '@/lib/payments';
 import { mutateWallet } from '@/lib/wallet';
 import { notify } from '@/lib/notifications';
 import { formatToman } from '@/lib/utils';
+import { appUrl } from '@/lib/app-url';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -15,7 +16,7 @@ export const dynamic = 'force-dynamic';
  */
 async function handle(req: NextRequest) {
   const url = new URL(req.url);
-  const base = process.env.NEXT_PUBLIC_APP_URL || url.origin;
+  const base = appUrl() || url.origin;
 
   const params: Record<string, string> = {};
   url.searchParams.forEach((value, key) => { params[key] = value; });
@@ -46,7 +47,18 @@ async function handle(req: NextRequest) {
   if (payment.status === 'SUCCESS') return redirect('success');
 
   const gateway = getGateway(payment.provider);
-  const providerRef = gateway.extractRef(params) || payment.providerRef;
+  const returnedRef = gateway.extractRef(params);
+
+  /* شناسه‌ی درگاهِ برگشتی باید همانی باشد که هنگام شروع پرداخت ذخیره شد.
+     پارامترهای این آدرس دست کاربر است؛ اگر شناسه‌ی پرداختِ موفقِ دیگری را
+     بفرستد، زرین‌پال (کد ۱۰۱) و زیبال (۲۰۱) آن را «قبلاً تأییدشده» یعنی موفق
+     برمی‌گردانند. محدودیت یکتای (provider, providerRef) جلوی شارژ را می‌گیرد،
+     ولی این‌جا صریح و پیش از تماس با درگاه رد می‌کنیم. */
+  if (payment.providerRef && returnedRef && String(returnedRef) !== payment.providerRef) {
+    console.warn('[payment] callback ref mismatch', { paymentId: payment.id });
+    return redirect('failed', 'اطلاعات بازگشت از درگاه با این تراکنش هم‌خوانی ندارد.');
+  }
+  const providerRef = payment.providerRef || returnedRef;
 
   if (!providerRef) {
     await prisma.payment.updateMany({

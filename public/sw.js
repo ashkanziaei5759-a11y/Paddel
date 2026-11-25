@@ -3,7 +3,7 @@
  * راهبرد: Network-first برای صفحات و API، Cache-first برای دارایی‌های ثابت.
  * ------------------------------------------------------------------------ */
 
-const VERSION = 'pp-v2';
+const VERSION = 'pp-v3';
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 
@@ -110,5 +110,70 @@ self.addEventListener('notificationclick', (event) => {
       }
       return self.clients.openWindow(target);
     }),
+  );
+});
+
+/* ---------------- اعلان روی گوشی (Web Push) ---------------- */
+
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { body: event.data ? event.data.text() : '' };
+  }
+
+  const title = data.title || 'باشگاه پدل';
+  const options = {
+    body: data.body || '',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    image: data.image || undefined,
+    dir: 'rtl',
+    lang: 'fa',
+    tag: data.tag || undefined,
+    renotify: Boolean(data.tag),
+    data: { url: data.url || '/notifications' },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+/* لمس اعلان: اگر اپ باز است همان پنجره به صفحه‌ی مقصد می‌رود، وگرنه باز می‌شود */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url || '/notifications', self.location.origin).href;
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+          return client.focus().then((c) => (c && 'navigate' in c ? c.navigate(target) : undefined));
+        }
+      }
+      return self.clients.openWindow(target);
+    }),
+  );
+});
+
+/* مرورگر گاهی اشتراک را عوض می‌کند؛ اشتراک تازه را دوباره ثبت می‌کنیم */
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    fetch('/api/push')
+      .then((r) => r.json())
+      .then((json) =>
+        self.registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: json.data.publicKey,
+        }),
+      )
+      .then((sub) =>
+        fetch('/api/push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sub.toJSON()),
+        }),
+      )
+      .catch(() => undefined),
   );
 });

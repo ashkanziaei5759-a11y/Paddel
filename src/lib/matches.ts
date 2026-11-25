@@ -119,26 +119,28 @@ export async function joinMatch(input: JoinLeaveInput) {
 
       await assertLevelAllowed(tx, input.userId, full.levelPolicy, full.allowedLevels);
 
-      await mutateWallet(tx, {
-        userId: input.userId,
-        amount: -full.sharePerPlayer,
-        type: 'MATCH_JOIN',
-        description: `سهم بازی ${full.booking.court.name} — ${formatDateTime(full.booking.startsAt)}`,
-        referenceKey: `match:${full.id}:join:${input.userId}`,
-        bookingId: full.bookingId,
-        metadata: { openMatchId: full.id },
-      });
-
       /* جای بازیکن از همین لحظه رزرو و سهمش گرفته می‌شود، حتی وقتی منتظر
          تأیید میزبان است — وگرنه دو نفر می‌توانستند روی یک جای خالی منتظر
-         بمانند و ظرفیت بیش از اندازه فروخته شود. رد شدن، سهم را برمی‌گرداند. */
-      await tx.openMatchPlayer.create({
+         بمانند و ظرفیت بیش از اندازه فروخته شود. رد شدن، سهم را برمی‌گرداند.
+         کلید تراکنش به شناسه‌ی همین جایگاه گره می‌خورد تا اگر بازیکنی پس از رد
+         شدن یا خروج دوباره درخواست داد، کسر سهم به‌اشتباه «تکراری» حساب نشود. */
+      const seat = await tx.openMatchPlayer.create({
         data: {
           matchId: full.id,
           userId: input.userId,
           paidAmount: full.sharePerPlayer,
           status: full.requiresApproval ? 'PENDING' : 'APPROVED',
         },
+      });
+
+      await mutateWallet(tx, {
+        userId: input.userId,
+        amount: -full.sharePerPlayer,
+        type: 'MATCH_JOIN',
+        description: `سهم بازی ${full.booking.court.name} — ${formatDateTime(full.booking.startsAt)}`,
+        referenceKey: `match-seat:${seat.id}:join`,
+        bookingId: full.bookingId,
+        metadata: { openMatchId: full.id },
       });
 
       const seatsTaken = full.players.length + 1;
@@ -154,7 +156,7 @@ export async function joinMatch(input: JoinLeaveInput) {
 
       /* تراکنش MATCH_JOIN را به بازی وصل می‌کنیم تا در تاریخچه قابل ردیابی باشد */
       await tx.walletTransaction.updateMany({
-        where: { referenceKey: `match:${full.id}:join:${input.userId}` },
+        where: { referenceKey: `match-seat:${seat.id}:join` },
         data: { openMatchId: full.id },
       });
 
@@ -297,7 +299,7 @@ export async function rejectMatchPlayer(input: HostDecisionInput) {
       amount: seat.paidAmount,
       type: 'MATCH_LEAVE_REFUND',
       description: `بازگشت سهم بازی ${match.booking.court.name}`,
-      referenceKey: `match:${match.id}:leave:${input.playerUserId}`,
+      referenceKey: `match-seat:${seat.id}:refund`,
       bookingId: match.bookingId,
       metadata: { openMatchId: match.id },
     });
@@ -362,7 +364,7 @@ export async function leaveMatch(input: JoinLeaveInput) {
       amount: seat.paidAmount,
       type: 'MATCH_LEAVE_REFUND',
       description: `بازگشت سهم بازی ${full.booking.court.name}`,
-      referenceKey: `match:${full.id}:leave:${input.userId}`,
+      referenceKey: `match-seat:${seat.id}:refund`,
       bookingId: full.bookingId,
       metadata: { openMatchId: full.id },
     });
@@ -373,7 +375,7 @@ export async function leaveMatch(input: JoinLeaveInput) {
       data: { escrowBalance: { decrement: seat.paidAmount }, status: 'OPEN' },
     });
     await tx.walletTransaction.updateMany({
-      where: { referenceKey: `match:${full.id}:leave:${input.userId}` },
+      where: { referenceKey: `match-seat:${seat.id}:refund` },
       data: { openMatchId: full.id },
     });
 
@@ -403,17 +405,41 @@ export async function settleMatch(matchId: string, performedBy?: string) {
 
     const full = await tx.openMatch.findUniqueOrThrow({
       where: { id: matchId },
-      include: { booking: { include: { court: { select: { name: true } } } } },
+      include: { players: true, booking: { include: { court: { select: { name: true } } } } },
     });
 
     if (full.booking.endsAt.getTime() > Date.now()) {
       throw new AppError('بازی هنوز تمام نشده است.', 409);
     }
 
-    if (full.escrowBalance > 0n) {
+    /* درخواستی که میزبان تا پایان بازی تأیید نکرده، یعنی آن بازیکن بازی
+       نکرده است؛ سهمش به خودش برمی‌گردد و به میزبان پرداخت نمی‌شود. */
+    let payout = full.escrowBalance;
+    for (const seat of full.players) {
+      if (seat.status !== 'PENDING' || seat.paidAmount <= 0n) continue;
+      await mutateWallet(tx, {
+        userId: seat.userId,
+        amount: seat.paidAmount,
+        type: 'MATCH_LEAVE_REFUND',
+        description: `بازگشت سهم — درخواست پیوستن به بازی ${full.booking.court.name} تأیید نشد`,
+        referenceKey: `match-seat:${seat.id}:refund`,
+        bookingId: full.bookingId,
+        performedBy,
+        metadata: { openMatchId: full.id, reason: 'NOT_APPROVED' },
+      });
+      await tx.walletTransaction.updateMany({
+        where: { referenceKey: `match-seat:${seat.id}:refund` },
+        data: { openMatchId: full.id },
+      });
+      await tx.openMatchPlayer.delete({ where: { id: seat.id } });
+      payout -= seat.paidAmount;
+    }
+    if (payout < 0n) payout = 0n;
+
+    if (payout > 0n) {
       await mutateWallet(tx, {
         userId: full.hostId,
-        amount: full.escrowBalance,
+        amount: payout,
         type: 'MATCH_PAYOUT',
         description: `سهم بازیکنان بازی ${full.booking.court.name}`,
         referenceKey: `match:${full.id}:payout`,
@@ -432,7 +458,7 @@ export async function settleMatch(matchId: string, performedBy?: string) {
       data: { escrowBalance: 0n, status: 'COMPLETED', settledAt: new Date() },
     });
 
-    return { paidOut: full.escrowBalance };
+    return { paidOut: payout };
   });
 }
 
@@ -467,12 +493,12 @@ export async function cancelOpenMatch(
       amount: seat.paidAmount,
       type: 'MATCH_LEAVE_REFUND',
       description: `بازگشت سهم بازی لغو‌شده‌ی ${full.booking.court.name}`,
-      referenceKey: `match:${full.id}:cancel:${seat.userId}`,
+      referenceKey: `match-seat:${seat.id}:refund`,
       bookingId: full.bookingId,
       metadata: { openMatchId: full.id, reason },
     });
     await tx.walletTransaction.updateMany({
-      where: { referenceKey: `match:${full.id}:cancel:${seat.userId}` },
+      where: { referenceKey: `match-seat:${seat.id}:refund` },
       data: { openMatchId: full.id },
     });
     refunded += seat.paidAmount;
@@ -522,4 +548,43 @@ async function assertLevelAllowed(
 /** خلاصه‌ای که به کاربر نشان داده می‌شود */
 export function describeShare(share: bigint, capacity: number) {
   return `${formatToman(share)} برای هر نفر · ${toFaDigits(capacity)} نفره`;
+}
+
+/**
+ * تسویه‌ی خودکار بازی‌هایی که زمانشان تمام شده.
+ *
+ * زمان‌بند سرور (cron/reminders) هر دقیقه صدایش می‌زند. هر بازی جداگانه و زیر
+ * قفل خودش تسویه می‌شود؛ settleMatch بازیِ تسویه‌شده را دوباره پرداخت نمی‌کند،
+ * پس اجرای هم‌زمان یا تکراری بی‌خطر است.
+ */
+export async function settleDueMatches(now = new Date()): Promise<number> {
+  const due = await prisma.openMatch.findMany({
+    where: {
+      status: { in: ['OPEN', 'FULL'] },
+      booking: { endsAt: { lte: now }, status: { not: 'CANCELLED' } },
+    },
+    select: { id: true, hostId: true, booking: { select: { court: { select: { name: true } } } } },
+    take: 50,
+  });
+
+  let settled = 0;
+  for (const m of due) {
+    try {
+      const { paidOut } = await settleMatch(m.id);
+      settled++;
+      if (paidOut > 0n) {
+        await notify({
+          userId: m.hostId,
+          type: 'MATCH_SETTLED',
+          title: 'سهم بازیکنان به کیف پول شما واریز شد',
+          body: `بازی ${m.booking.court.name} تسویه شد و ${formatToman(paidOut)} به کیف پول شما اضافه شد.`,
+          actionUrl: '/wallet',
+        });
+      }
+    } catch (error) {
+      if (error instanceof AppError && error.status === 409) continue;
+      console.error(`[matches] settle ${m.id} failed:`, error);
+    }
+  }
+  return settled;
 }

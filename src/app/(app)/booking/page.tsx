@@ -37,7 +37,9 @@ export default async function BookingPage() {
     );
   }
 
-  const maxAdvanceDays = Math.max(...courts.map((c) => c.advanceBookingDays));
+  const isAdmin = user.role === 'ADMIN';
+  /* مدیر کل محدودیت «چند روز جلوتر» ندارد */
+  const maxAdvanceDays = isAdmin ? 365 : Math.max(...courts.map((c) => c.advanceBookingDays));
 
   return (
     <>
@@ -57,6 +59,7 @@ export default async function BookingPage() {
           todayKey={dayKey(new Date())}
           balance={(wallet?.balance ?? 0n).toString()}
           maxAdvanceDays={maxAdvanceDays}
+          adminFree={isAdmin}
         />
       </div>
     </>

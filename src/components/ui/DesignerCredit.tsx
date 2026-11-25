@@ -12,7 +12,7 @@ export function DesignerCredit({ className }: { className?: string }) {
   return (
     <div className={cn('flex justify-center', className)}>
       <a
-        href="https://ashkanz.netlify.app/"
+        href="https://ashkanz.vercel.app/"
         target="_blank"
         rel="noopener noreferrer"
         dir="ltr"

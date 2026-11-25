@@ -157,6 +157,12 @@ export function formatTime(date: Date): string {
   return toFaDigits(`${String(p.hour).padStart(2, '0')}:${String(p.minute).padStart(2, '0')}`);
 }
 
+/** «۰۰:۰۰» یا «۰۲:۰۰ بامداد» برای ساعت پایانی که از نیمه‌شب گذشته است */
+export function formatClosingMinute(minutes: number): string {
+  if (minutes === 24 * 60) return `${formatMinutes(minutes)} (نیمه‌شب)`;
+  return minutes > 24 * 60 ? `${formatMinutes(minutes)} بامداد` : formatMinutes(minutes);
+}
+
 export function formatMinutes(minutes: number): string {
   const h = Math.floor(minutes / 60) % 24;
   const m = minutes % 60;

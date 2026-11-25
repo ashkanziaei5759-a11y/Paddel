@@ -1,27 +1,20 @@
 import { NextRequest } from 'next/server';
-import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth/rbac';
 import { rateLimit } from '@/lib/rate-limit';
-import { notify, notifyMany } from '@/lib/notifications';
+import { broadcast, notify } from '@/lib/notifications';
 import { AppError, handleApiError, ok } from '@/lib/api';
+import { adminNotifySchema } from '@/lib/validation';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const schema = z.object({
-  title: z.string().trim().min(2, 'عنوان کوتاه است.').max(120),
-  body: z.string().trim().min(2, 'متن پیام کوتاه است.').max(1000),
-  /* یا برای یک نفر، یا برای همه‌ی بازیکنان فعال */
-  audience: z.enum(['USER', 'ALL_PLAYERS']),
-  userId: z.string().min(1).optional(),
-});
-
 /**
- * پیام مدیر به بازیکنان.
+ * پیام مدیر به بازیکنان — روی صندوق اعلان و گوشی‌شان.
  *
- * ارسال همگانی می‌تواند هزاران ردیف بسازد، پس با سقف نرخ محدود شده است تا
- * یک اشتباه، صندوق اعلان همه را پر نکند.
+ * می‌تواند تصویر (بنر/خبر) و لینک داشته باشد، و پیام همگانی را می‌شود برای
+ * زمان مشخصی زمان‌بندی کرد (یک قانون «زمان‌دار» ساخته می‌شود).
+ * ارسال همگانی هزاران ردیف می‌سازد، پس با سقف نرخ محدود شده است.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -32,7 +25,7 @@ export async function POST(req: NextRequest) {
       throw new AppError('تعداد پیام‌های ارسالی در این ساعت زیاد بوده است.', 429);
     }
 
-    const input = schema.parse(await req.json());
+    const input = adminNotifySchema.parse(await req.json());
 
     if (input.audience === 'USER') {
       if (!input.userId) throw new AppError('بازیکن را انتخاب کنید.', 400);
@@ -47,9 +40,28 @@ export async function POST(req: NextRequest) {
         type: 'ADMIN_MESSAGE',
         title: input.title,
         body: input.body,
-        actionUrl: '/notifications',
+        actionUrl: input.actionUrl ?? '/notifications',
+        imageUrl: input.imageUrl,
       });
       return ok({ sent: 1 });
+    }
+
+    if (input.scheduleAt) {
+      const runAt = new Date(input.scheduleAt);
+      if (runAt.getTime() < Date.now() - 60_000) throw new AppError('زمان ارسال گذشته است.', 400);
+      await prisma.notificationRule.create({
+        data: {
+          name: `اطلاعیه: ${input.title}`.slice(0, 80),
+          trigger: 'SCHEDULED',
+          runAt,
+          title: input.title,
+          body: input.body,
+          actionUrl: input.actionUrl ?? null,
+          imageUrl: input.imageUrl ?? null,
+          createdById: admin.id,
+        },
+      });
+      return ok({ scheduled: runAt.toISOString() });
     }
 
     const players = await prisma.user.findMany({
@@ -57,17 +69,16 @@ export async function POST(req: NextRequest) {
       select: { id: true },
     });
 
-    await notifyMany(
-      players.map((p) => ({
-        userId: p.id,
-        type: 'ADMIN_MESSAGE' as const,
-        title: input.title,
-        body: input.body,
-        actionUrl: '/notifications',
-      })),
-    );
+    const sent = await broadcast({
+      userIds: players.map((p) => p.id),
+      type: input.imageUrl ? 'CLUB_NEWS' : 'ADMIN_MESSAGE',
+      title: input.title,
+      body: input.body,
+      actionUrl: input.actionUrl ?? '/notifications',
+      imageUrl: input.imageUrl,
+    });
 
-    return ok({ sent: players.length });
+    return ok({ sent });
   } catch (error) {
     return handleApiError(error);
   }

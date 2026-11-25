@@ -37,3 +37,21 @@ export async function requireAdmin(): Promise<SessionUser> {
   if (user.role !== 'ADMIN') throw new AuthError('دسترسی شما به این بخش مجاز نیست.', 403);
   return user;
 }
+
+/** مدیر کل یا ادمین پذیرش (STAFF) */
+export function isStaff(role: SessionUser['role']): boolean {
+  return role === 'ADMIN' || role === 'STAFF';
+}
+
+/** صفحات پیشخوان پذیرش — رزرو تلفنی و فهرست رزروها */
+export async function requireStaffPage(): Promise<SessionUser> {
+  const user = await requirePage();
+  if (!isStaff(user.role)) redirect('/home');
+  return user;
+}
+
+export async function requireStaff(): Promise<SessionUser> {
+  const user = await requireUser();
+  if (!isStaff(user.role)) throw new AuthError('دسترسی شما به این بخش مجاز نیست.', 403);
+  return user;
+}

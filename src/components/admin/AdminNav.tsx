@@ -2,14 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowLeftRight, BellRing, CalendarDays, ChartColumn, ImagePlay, Images, LandPlot, LayoutDashboard, Newspaper, Palette, Settings, ShoppingBag, TrendingUp, Trophy, Users, type LucideIcon } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { ArrowLeftRight, BellRing, PhoneCall, ShieldCheck, CalendarDays, ChartColumn, ImagePlay, Images, LandPlot, LayoutDashboard, Newspaper, Palette, Settings, ShoppingBag, TrendingUp, Trophy, Users, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const ITEMS: { href: string; label: string; Icon: LucideIcon; exact?: boolean }[] = [
+type NavItem = { href: string; label: string; Icon: LucideIcon; exact?: boolean };
+
+const ITEMS: NavItem[] = [
   { href: '/admin', label: 'داشبورد', Icon: LayoutDashboard, exact: true },
+  { href: '/admin/bookings/new', label: 'رزرو تلفنی', Icon: PhoneCall },
+  { href: '/admin/bookings', label: 'رزروها', Icon: CalendarDays, exact: true },
   { href: '/admin/users', label: 'کاربران', Icon: Users },
+  { href: '/admin/staff', label: 'ادمین‌ها', Icon: ShieldCheck },
   { href: '/admin/courts', label: 'زمین‌ها', Icon: LandPlot },
-  { href: '/admin/bookings', label: 'رزروها', Icon: CalendarDays },
   { href: '/admin/tournaments', label: 'تورنومنت‌ها', Icon: Trophy },
   { href: '/admin/store', label: 'فروشگاه', Icon: ShoppingBag },
   { href: '/admin/banners', label: 'بنرها', Icon: ImagePlay },
@@ -22,37 +27,53 @@ const ITEMS: { href: string; label: string; Icon: LucideIcon; exact?: boolean }[
   { href: '/admin/settings', label: 'تنظیمات', Icon: Settings },
 ];
 
+/** ادمین پذیرش فقط رزرو تلفنی و فهرست رزروها را می‌بیند */
+const STAFF_ITEMS = ITEMS.filter((i) => i.href.startsWith('/admin/bookings'));
+
 export function AdminNav({
   fullName,
   username,
   logoUrl,
+  role,
 }: {
   fullName: string;
   username: string;
   logoUrl: string;
+  role: 'ADMIN' | 'STAFF';
 }) {
   const pathname = usePathname();
-  const isActive = (item: (typeof ITEMS)[number]) =>
+  const items = role === 'ADMIN' ? ITEMS : STAFF_ITEMS;
+  const isActive = (item: NavItem) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
+
+  /* اگر صفحه‌ی فعلی پایین منو باشد (مثلاً تنظیمات روی لپ‌تاپ کم‌ارتفاع)، گزینه‌اش دیده شود */
+  const navRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    navRef.current
+      ?.querySelector<HTMLElement>('[aria-current="page"]')
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [pathname]);
 
   return (
     <>
       {/* ---- کناره‌ی دسکتاپ ---- */}
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-brand-gradient p-5 lg:flex">
-        <div className="relative mb-8 flex items-center gap-3">
+        <div className="relative mb-6 flex shrink-0 items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoUrl} alt="" width={44} height={44} className="h-11 w-11 rounded-2xl object-cover" />
           <div>
-            <p className="text-sm font-black text-white">پنل مدیریت</p>
+            <p className="text-sm font-black text-white">{role === 'ADMIN' ? 'پنل مدیریت' : 'پیشخوان پذیرش'}</p>
             <p className="text-[10px] font-bold tracking-widest text-sky-light/60">PERSIAN PADEL</p>
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1">
-          {ITEMS.map((item) => (
+        {/* min-h-0 + overflow: روی لپ‌تاپ‌های کم‌ارتفاع منو داخل خودش اسکرول می‌خورد */}
+        <nav ref={navRef} className="admin-nav-scroll -mx-2 min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-2">
+          {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive(item) ? 'page' : undefined}
               className={cn(
                 'flex items-center gap-3 rounded-2xl px-4 py-3 text-xs font-bold transition-all duration-200',
                 isActive(item)
@@ -66,7 +87,7 @@ export function AdminNav({
           ))}
         </nav>
 
-        <div className="mt-6 space-y-2 border-t border-white/10 pt-4">
+        <div className="mt-4 shrink-0 space-y-2 border-t border-white/10 pt-4">
           <div className="px-2">
             <p className="truncate text-xs font-extrabold text-white">{fullName}</p>
             <p className="num truncate text-[10px] font-bold text-sky-light/60" dir="ltr">
@@ -89,7 +110,7 @@ export function AdminNav({
         style={{ paddingBottom: 'var(--safe-bottom)' }}
       >
         <div className="no-scrollbar flex items-stretch overflow-x-auto px-1">
-          {ITEMS.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}

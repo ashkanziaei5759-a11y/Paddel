@@ -22,9 +22,16 @@ interface BookingDto {
   totalPrice: string;
   courtName: string;
   userName: string;
-  username: string;
-  userId: string;
+  username: string | null;
+  /** خالی یعنی مشتری متفرقه (بدون حساب کاربری) */
+  userId: string | null;
+  guestPhone: string | null;
+  paymentMethod: 'WALLET' | 'POINTS' | 'CARD_TO_CARD' | 'FREE' | null;
+  cardAmount: string | null;
+  cardReceipt: string | null;
   refundAmount: string | null;
+  /** ادمینی که رزرو تلفنی را ثبت کرد */
+  createdBy: string | null;
 }
 
 const STATUS_STYLE: Record<string, string> = {
@@ -35,14 +42,17 @@ const STATUS_STYLE: Record<string, string> = {
   NO_SHOW: 'badge-muted',
 };
 
-export function AdminBookingRow({ booking }: { booking: BookingDto }) {
+export function AdminBookingRow({ booking, isAdmin }: { booking: BookingDto; isAdmin: boolean }) {
   const router = useRouter();
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [manualRefund, setManualRefund] = useState('');
 
-  const canCancel = booking.status === 'CONFIRMED' || booking.status === 'PENDING';
+  /* لغو رزرو فقط با مدیر کل */
+  const canCancel = isAdmin && (booking.status === 'CONFIRMED' || booking.status === 'PENDING');
+  /* پولِ این رزرو از کیف پول نیامده و بازگشتش هم بیرون از سامانه است */
+  const offWallet = !booking.userId || booking.paymentMethod === 'CARD_TO_CARD';
 
   async function cancel(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,13 +67,18 @@ export function AdminBookingRow({ booking }: { booking: BookingDto }) {
           reason: String(form.get('reason') || '') || undefined,
           overrideRefundToman: manualRefund ? Number(manualRefund) : undefined,
           adjustmentNote: String(form.get('note') || '') || undefined,
+          message: String(form.get('message') || '') || undefined,
         }),
       });
       const json = await res.json();
 
       if (!res.ok || !json.ok) { toast.error(json.error || 'لغو رزرو ناموفق بود.'); return; }
 
-      toast.success(`رزرو لغو شد. مبلغ ${formatToman(BigInt(json.data.refundAmount))} بازگشت داده شد.`);
+      toast.success(
+        offWallet
+          ? `رزرو لغو شد. مبلغ ${formatToman(BigInt(json.data.refundAmount))} را دستی (کارت به کارت) به مشتری برگردانید.`
+          : `رزرو لغو شد. مبلغ ${formatToman(BigInt(json.data.refundAmount))} بازگشت داده شد.`,
+      );
       setOpen(false);
       router.refresh();
     } catch {
@@ -84,17 +99,34 @@ export function AdminBookingRow({ booking }: { booking: BookingDto }) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <Link
-            href={`/admin/users/${booking.userId}`}
-            className="truncate text-xs font-extrabold text-brand-800 hover:text-accent-600"
-          >
-            {booking.userName}
-          </Link>
+          {isAdmin && booking.userId ? (
+            <Link
+              href={`/admin/users/${booking.userId}`}
+              className="truncate text-xs font-extrabold text-brand-800 hover:text-accent-600"
+            >
+              {booking.userName}
+            </Link>
+          ) : (
+            <p className="truncate text-xs font-extrabold text-brand-800">
+              {booking.userName}
+              {!booking.userId && <span className="badge-muted mr-1.5 text-[9px]">متفرقه</span>}
+            </p>
+          )}
           <p className="num truncate text-[10px] font-semibold text-brand-400">
             {booking.courtName} <Dot />
             {formatDateTime(new Date(booking.startsAt), { withWeekday: false })}
           </p>
-          <p className="num mt-0.5 text-[10px] font-bold text-brand-300">{booking.code}</p>
+          <p className="num mt-0.5 text-[10px] font-bold text-brand-300">
+            {booking.code}
+            {booking.createdBy && <span className="font-semibold"> · ثبت تلفنی: {booking.createdBy}</span>}
+            {booking.guestPhone && <span className="font-semibold"> · {booking.guestPhone}</span>}
+          </p>
+          {booking.paymentMethod === 'CARD_TO_CARD' && (
+            <p className="num mt-0.5 text-[10px] font-bold text-accent-700">
+              کارت به کارت {formatToman(BigInt(booking.cardAmount ?? '0'))}
+              {booking.cardReceipt && <> · فیش {booking.cardReceipt}</>}
+            </p>
+          )}
         </div>
 
         <div className="shrink-0 text-left">
@@ -129,10 +161,26 @@ export function AdminBookingRow({ booking }: { booking: BookingDto }) {
             <p className="num mt-1 font-bold text-brand-600">
               مبلغ پرداختی: {formatToman(BigInt(booking.totalPrice))}
             </p>
+            {offWallet && (
+              <p className="mt-1.5 font-bold leading-6 text-accent-700">
+                این رزرو از کیف پول پرداخت نشده است؛ مبلغ بازگشتی به کیف پول نمی‌رود و باید دستی به
+                مشتری برگردانده شود.
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="label" htmlFor={`reason-${booking.id}`}>دلیل لغو</label>
+            <label className="label" htmlFor={`message-${booking.id}`}>پیام برای بازیکن</label>
+            <textarea
+              id={`message-${booking.id}`} name="message" maxLength={500}
+              className="field min-h-[80px] resize-y py-2.5 leading-7"
+              placeholder="مثلاً: به دلیل تعمیرات زمین، رزرو شما لغو شد. مبلغ کامل به کیف پولتان برگشت. عذرخواهی می‌کنیم."
+            />
+            <p className="helper">در اعلان‌های بازیکن و روی گوشی‌اش نمایش داده می‌شود.</p>
+          </div>
+
+          <div>
+            <label className="label" htmlFor={`reason-${booking.id}`}>دلیل لغو (داخلی)</label>
             <input
               id={`reason-${booking.id}`} name="reason" className="field"
               placeholder="مثلاً: تعمیرات زمین"

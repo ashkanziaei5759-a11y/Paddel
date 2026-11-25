@@ -93,18 +93,20 @@ export function PendingRequests({
                 onClick={() => decide(p.userId, 'APPROVE')}
                 disabled={busy !== null}
                 aria-label={`تأیید ${p.firstName} ${p.lastName}`}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-success/15 text-success transition hover:bg-success/25 disabled:opacity-50"
+                className="flex h-9 items-center justify-center gap-1 rounded-xl bg-success px-3 text-[11px] font-extrabold text-white transition hover:opacity-90 disabled:opacity-50"
               >
                 {busy === p.userId ? <Spinner /> : <Check className="h-4 w-4" strokeWidth={2.6} />}
+                تأیید
               </button>
               <button
                 type="button"
                 onClick={() => decide(p.userId, 'REJECT')}
                 disabled={busy !== null}
                 aria-label={`رد ${p.firstName} ${p.lastName}`}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-danger/10 text-danger transition hover:bg-danger/20 disabled:opacity-50"
+                className="flex h-9 items-center justify-center gap-1 rounded-xl bg-danger/10 px-3 text-[11px] font-extrabold text-danger transition hover:bg-danger/20 disabled:opacity-50"
               >
                 <X className="h-4 w-4" strokeWidth={2.6} />
+                رد
               </button>
             </div>
           </li>

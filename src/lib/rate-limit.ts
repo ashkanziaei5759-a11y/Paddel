@@ -55,8 +55,6 @@ export async function purgeExpiredRateLimits(): Promise<number> {
 }
 
 export const RATE_LIMITS = {
-  OTP_REQUEST: { limit: 3, window: 10 * 60 },
-  OTP_VERIFY: { limit: 10, window: 10 * 60 },
   LOGIN: { limit: 10, window: 10 * 60 },
   SIGNUP: { limit: 5, window: 60 * 60 },
   PAYMENT_INIT: { limit: 10, window: 10 * 60 },

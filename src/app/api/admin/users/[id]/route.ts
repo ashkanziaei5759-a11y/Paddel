@@ -7,6 +7,7 @@ import { notify } from '@/lib/notifications';
 import { AppError, handleApiError, ok } from '@/lib/api';
 import { adminUpdateUserSchema } from '@/lib/validation';
 import { LEVEL_LABEL } from '@/lib/constants';
+import { deleteUserCompletely } from '@/lib/user-deletion';
 
 export const runtime = 'nodejs';
 
@@ -110,6 +111,27 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     }
 
     return ok({ user: updated });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+/**
+ * حذف کامل حساب کاربر — فقط مدیر کل.
+ * برای جلوگیری از حذف اشتباهی، نام کاربری باید در بدنه‌ی درخواست تکرار شود.
+ */
+export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  try {
+    const admin = await requireAdmin();
+    const { id } = await ctx.params;
+    const body = (await req.json().catch(() => ({}))) as { confirmUsername?: unknown };
+
+    const result = await deleteUserCompletely({
+      userId: id,
+      actorId: admin.id,
+      confirmUsername: typeof body.confirmUsername === 'string' ? body.confirmUsername : '',
+    });
+    return ok(result);
   } catch (error) {
     return handleApiError(error);
   }

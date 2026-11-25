@@ -11,6 +11,10 @@
     دوباره اجرایش کنید. هر مرحله‌ای که قبلاً انجام شده باشد، رد می‌شود.
 .EXAMPLE
     .\Install.ps1 -Domain persianpdl.ir -DbPassword 'YourStrongPass!23'
+.EXAMPLE
+    .\Install.ps1 -Domain persianpdl.ir -NoSeed
+    فقط حساب مدیر و تنظیمات پایه، بدون زمین و کالای اولیه.
+    (در هر دو حالت، جز مدیر هیچ کاربری ساخته نمی‌شود.)
 #>
 [CmdletBinding()]
 param(
@@ -19,6 +23,9 @@ param(
 
     # رمز کاربر پایگاه داده. اگر ندهید، ساخته می‌شود و در پایان نشان داده می‌شود.
     [string]$DbPassword,
+
+    # رمز حساب مدیر (admin). اگر ندهید، یک رمز تصادفی قوی ساخته و در پایان نشان داده می‌شود.
+    [string]$AdminPassword,
 
     # مسیر نصب اپ
     [string]$InstallPath = 'C:\PersianPadel',
@@ -29,7 +36,7 @@ param(
     # از نصب IIS و تنظیم ریورس‌پروکسی صرف‌نظر کن (اگر خودتان تنظیم کرده‌اید)
     [switch]$SkipIIS,
 
-    # داده‌ی نمونه (زمین‌ها، بازیکنان آزمایشی) را وارد نکن — برای تحویل واقعی
+    # زمین‌ها، قیمت‌ها و کالاهای اولیه را هم وارد نکن (همه را از پنل بسازید)
     [switch]$NoSeed
 )
 
@@ -292,13 +299,6 @@ CRON_SECRET="$cronSecret"
 # --- نشانی برنامه ---
 NEXT_PUBLIC_APP_URL="https://$Domain"
 APP_TIMEZONE="Asia/Tehran"
-
-# --- پیامک ---
-# تا وقتی روی console باشد، کد تأیید فقط در لاگ سرور چاپ می‌شود و
-# پیامکی ارسال نمی‌گردد. برای راه‌اندازی واقعی حتماً عوضش کنید.
-OTP_PROVIDER=console
-OTP_LENGTH=5
-OTP_TTL_SECONDS=120
 # KAVENEGAR_API_KEY=""
 # KAVENEGAR_TEMPLATE="verify"
 
@@ -341,6 +341,11 @@ if (-not $envLine) { Write-Fail 'DATABASE_URL در .env پیدا نشد.'; exit 
 $dbUrl = $envLine.Line -replace '^DATABASE_URL=', '' -replace '^"', '' -replace '"$', ''
 $env:DATABASE_URL = $dbUrl
 $env:DIRECT_URL   = $dbUrl
+# موتورهای ویندوزیِ داخل بسته را صریح معرفی می‌کنیم تا prisma سراغ دانلود
+# از اینترنت خارجی نرود (روی سرورهای ایرانی معمولاً در دسترس نیست).
+$env:PRISMA_SCHEMA_ENGINE_BINARY = Join-Path $InstallPath 'node_modules\@prisma\engines\schema-engine-windows.exe'
+$env:PRISMA_QUERY_ENGINE_LIBRARY = Join-Path $InstallPath 'node_modules\.prisma\client\query_engine-windows.dll.node'
+$env:PRISMA_HIDE_UPDATE_MESSAGE = '1'
 
 Push-Location $InstallPath
 try {
@@ -356,21 +361,40 @@ try {
     }
     Write-Ok "$tableCount جدول در پایگاه داده تأیید شد."
 
-    if (-not $NoSeed) {
-        $seed = Join-Path $InstallPath 'prisma\seed.js'
-        if (Test-Path $seed) {
+    # حساب مدیر همیشه ساخته می‌شود و هیچ بازیکن یا تورنومنت آزمایشی ساخته نمی‌شود؛
+    # -NoSeed زمین‌ها، کالاها و خبر آموزشی اولیه را هم کنار می‌گذارد. بدون این، نصب واقعی هیچ مدیری
+    # نداشت و راهی برای ورود به پنل نمی‌ماند.
+    $seed = Join-Path $InstallPath 'prisma\seed.js'
+    if (Test-Path $seed) {
+        # رمز پیش‌فرض مدیر در کد عمومی است؛ روی سرور واقعی هرگز استفاده نشود.
+        # seed رمز را فقط هنگام «ساختن» مدیر می‌گذارد، پس اگر مدیر از اجرای قبلی
+        # وجود دارد، رمزش دست نمی‌خورد و رمز جدید را هم نشان نمی‌دهیم.
+        $adminExists = & node -e "const{PrismaClient}=require('@prisma/client');const c=new PrismaClient();c.user.count({where:{username:'admin'}}).then(n=>{console.log(n);return c.`$disconnect()}).catch(()=>{console.log(0)})" 2>$null
+        $script:AdminCreated = ([int]$adminExists -lt 1)
+        if (-not $AdminPassword) { $AdminPassword = New-DbPassword }
+
+        $env:SEED_ESSENTIALS_ONLY = if ($NoSeed) { '1' } else { '' }
+        $env:SEED_ADMIN_PASSWORD = $AdminPassword
+        try {
             & node $seed 2>&1 | ForEach-Object { Write-Host "    $_" }
             if ($LASTEXITCODE -ne 0) { throw 'ورود داده‌ی اولیه ناموفق بود.' }
+        } finally {
+            Remove-Item Env:SEED_ESSENTIALS_ONLY -ErrorAction SilentlyContinue
+            Remove-Item Env:SEED_ADMIN_PASSWORD -ErrorAction SilentlyContinue
+        }
 
-            # «موفق» گفتنِ اسکریپت کافی نیست؛ خودمان می‌شماریم
-            $userCount = & node -e "const{PrismaClient}=require('@prisma/client');const c=new PrismaClient();c.user.count().then(n=>{console.log(n);return c.`$disconnect()}).catch(()=>{console.log(0)})" 2>$null
-            if ([int]$userCount -lt 1) {
-                throw 'داده‌ی اولیه وارد نشد — هیچ کاربری ساخته نشد.'
-            }
-            Write-Ok "داده‌ی اولیه وارد شد ($userCount کاربر)."
+        # «موفق» گفتنِ اسکریپت کافی نیست؛ خودمان می‌شماریم
+        $userCount = & node -e "const{PrismaClient}=require('@prisma/client');const c=new PrismaClient();c.user.count().then(n=>{console.log(n);return c.`$disconnect()}).catch(()=>{console.log(0)})" 2>$null
+        if ([int]$userCount -lt 1) {
+            throw 'داده‌ی اولیه وارد نشد — هیچ کاربری ساخته نشد.'
+        }
+        if ($NoSeed) {
+            Write-Ok 'حساب مدیر و تنظیمات پایه ساخته شد (بدون زمین و کالای اولیه).'
+        } else {
+            Write-Ok 'داده‌ی اولیه وارد شد: حساب مدیر، ۳ زمین با قیمت، کالاهای فروشگاه (بدون هیچ بازیکن آزمایشی).'
         }
     } else {
-        Write-Warn2 'داده‌ی نمونه وارد نشد (NoSeed-).'
+        Write-Warn2 'فایل seed.js پیدا نشد؛ حساب مدیر ساخته نشد.'
     }
 } finally {
     Pop-Location
@@ -442,10 +466,17 @@ Write-Host ''
 Write-Host '   رمز پایگاه داده (یادداشت کنید):' -ForegroundColor Yellow
 Write-Host "     $DbPassword" -ForegroundColor White
 Write-Host ''
+if ($script:AdminCreated) {
+    Write-Host '   ورود به پنل مدیریت (یادداشت کنید):' -ForegroundColor Yellow
+    Write-Host '     نام کاربری : admin' -ForegroundColor White
+    Write-Host "     رمز عبور   : $AdminPassword" -ForegroundColor White
+} else {
+    Write-Host '   حساب مدیر از قبل وجود داشت؛ رمزش تغییری نکرد.' -ForegroundColor Yellow
+}
+Write-Host ''
 Write-Host '   کارهای باقی‌مانده:' -ForegroundColor Cyan
 Write-Host '     ۱. دامنه را به IP این سرور اشاره دهید (رکورد A).'
 Write-Host "     ۲. گواهی SSL بگیرید:  .\Setup-SSL.ps1 -Domain $Domain"
-Write-Host '     ۳. سرویس پیامک را در .env تنظیم کنید (OTP_PROVIDER).'
-Write-Host '     ۴. درگاه پرداخت را وصل کنید — docs\PAYMENT-GATEWAY.md'
-Write-Host '     ۵. رمز مدیر را از پنل عوض کنید.'
+Write-Host '     ۳. درگاه پرداخت را وصل کنید — docs\PAYMENT-GATEWAY.md'
+Write-Host '     ۴. رمز مدیر را یادداشت کنید و در صورت تمایل از پنل عوضش کنید.'
 Write-Host ''

@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { CourtCreateButton } from './CourtCreateButton';
 import { formatToman } from '@/lib/utils';
-import { formatMinutes, toFaDigits } from '@/lib/datetime';
+import { formatClosingMinute, formatMinutes, toFaDigits } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = { title: 'مدیریت زمین‌ها' };
@@ -47,7 +47,7 @@ export default async function AdminCourtsPage() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-black">{court.name}</p>
                     <p className="num mt-1 text-[11px] font-bold text-sky-light/70">
-                      {formatMinutes(court.openingMinute)} تا {formatMinutes(court.closingMinute)}
+                      {formatMinutes(court.openingMinute)} تا {formatClosingMinute(court.closingMinute)}
                     </p>
                   </div>
                   <span

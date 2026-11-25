@@ -24,7 +24,8 @@ export default async function RankingPage() {
 
   const [profiles, unread, recentPoints] = await Promise.all([
     prisma.profile.findMany({
-      where: { user: { status: 'ACTIVE', role: { in: ['PLAYER', 'ADMIN'] } } },
+      /* فقط بازیکنان — مدیر و ادمین پذیرش در رنکینگ نیستند */
+      where: { user: { status: 'ACTIVE', role: 'PLAYER' } },
       select: {
         userId: true,
         firstName: true,

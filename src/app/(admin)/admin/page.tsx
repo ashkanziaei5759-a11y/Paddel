@@ -10,6 +10,7 @@ import { BarSeries, KpiTile } from '@/components/admin/charts/Charts';
 import { TOURNAMENT_STATUS_LABEL, BOOKING_STATUS_LABEL } from '@/lib/constants';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { Dot } from '@/components/ui/Dot';
+import { bookingCustomerName } from '@/lib/booking-customer';
 
 export const metadata: Metadata = { title: 'داشبورد مدیریت' };
 export const dynamic = 'force-dynamic';
@@ -201,7 +202,7 @@ export default async function AdminDashboard() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-extrabold text-brand-800">
-                      {b.user.profile?.firstName} {b.user.profile?.lastName}
+                      {bookingCustomerName(b)}
                     </p>
                     <p className="truncate text-[10px] font-semibold text-brand-400">
                       {b.court.name} <Dot />{formatDateTime(b.startsAt, { withWeekday: false })}
